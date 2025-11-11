@@ -1,74 +1,77 @@
 "use client";
 
-import { useState } from "react";
-import { Globe } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Globe, Languages } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface LanguageSelectorProps {
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
+interface LanguageDetectorProps {
+  currentDetectedLanguage: string;
+  isDetecting?: boolean;
+  confidence?: number;
   disabled?: boolean;
 }
 
-const languages = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "hi", name: "हिंदी", flag: "🇮🇳" },
-  { code: "sa", name: "संस्कृत", flag: "🕉️" },
-];
+const languageInfo = {
+  "en": { name: "English", flag: "🇺🇸", native: "English" },
+  "hi": { name: "हिंदी", flag: "🇮🇳", native: "हिंदी" },
+  "sa": { name: "संस्कृत", flag: "🕉️", native: "संस्कृत" }
+};
 
-export function LanguageSelector({ selectedLanguage, onLanguageChange, disabled }: LanguageSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function LanguageDetector({
+  currentDetectedLanguage,
+  isDetecting = false,
+  confidence = 1.0,
+  disabled = false
+}: LanguageDetectorProps) {
+  const [showDetails, setShowDetails] = useState(false);
 
-  const currentLanguage = languages.find(lang => lang.code === selectedLanguage) || languages[0];
+  const language = languageInfo[currentDetectedLanguage as keyof typeof languageInfo] || languageInfo.en;
 
   return (
-    <div className="flex items-center space-x-2">
-      <Globe className="h-4 w-4 text-gray-500" />
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={disabled}
-            className="h-8 px-2 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100/50 transition-all duration-200"
-          >
-            <span className="mr-1">{currentLanguage.flag}</span>
-            <span className="max-w-[60px] truncate">{currentLanguage.name}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="start" 
-          className="w-48 bg-white/95 backdrop-blur-sm border border-gray-200/60 shadow-lg"
-        >
-          {languages.map((language) => (
-            <DropdownMenuItem
-              key={language.code}
-              onClick={() => {
-                onLanguageChange(language.code);
-                setIsOpen(false);
-              }}
-              className={`cursor-pointer flex items-center space-x-3 py-2 px-3 hover:bg-orange-50/80 transition-colors ${
-                selectedLanguage === language.code ? 'bg-orange-50/90 text-orange-800' : 'text-gray-700'
+    <TooltipProvider>
+      <div className="flex items-center space-x-2">
+        <Globe className="h-4 w-4 text-gray-500" />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-50/50 cursor-default'
               }`}
+              onClick={() => !disabled && setShowDetails(!showDetails)}
             >
+              <Languages className="h-3 w-3 text-gray-400" />
               <span className="text-base">{language.flag}</span>
-              <span className="font-medium">{language.name}</span>
-              {selectedLanguage === language.code && (
-                <Badge variant="secondary" className="ml-auto text-xs bg-orange-100 text-orange-700">
-                  Active
-                </Badge>
+              <span className="text-xs font-medium text-gray-600">{language.native}</span>
+              {isDetecting && (
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <div className="space-y-1">
+              <p className="font-medium">
+                <span className="mr-2">{language.flag}</span>
+                Auto-detected: {language.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                Language automatically detected from your question
+              </p>
+              {confidence < 1.0 && (
+                <p className="text-xs text-amber-600">
+                  Detection confidence: {Math.round(confidence * 100)}%
+                </p>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+        
+        {showDetails && !disabled && (
+          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+            Auto-detected
+          </Badge>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

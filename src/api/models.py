@@ -9,7 +9,7 @@ class QuestionRequest(BaseModel):
     """Question request model."""
     user_id: str = "default"
     question: str
-    preferred_language: str = "en"
+    preferred_language: Optional[str] = None  # Auto-detect if not provided
 
 
 class ContextResponse(BaseModel):

@@ -41,9 +41,9 @@ async def query(request: QuestionRequest):
             analytics.track_query(request.user_id, request.question, response_time, cached=True)
             return cached_result
 
-        # Generate new response with preferred language
+        # Generate new response with auto-detected language (if preferred_language is None)
         result = qa_system.ask(request.question, request.user_id, request.preferred_language)
-
+        
         # Cache the result
         response_cache.set(request.question, result)
 

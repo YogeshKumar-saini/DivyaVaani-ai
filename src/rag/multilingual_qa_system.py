@@ -193,6 +193,15 @@ class MultilingualQASystem:
             "user_sessions": {}
         }
 
+        # User behavior adaptation
+        self.user_behavior = {
+            "conversation_depth": {},  # Track depth of conversations per user
+            "preferred_complexity": {},  # Simple vs detailed responses
+            "topic_interests": {},  # Topics users frequently ask about
+            "response_style": {},  # Polite, direct, philosophical, etc.
+            "language_consistency": {}  # How consistent they are with language choice
+        }
+
         # Quality assessment patterns
         self.quality_patterns = {
             "verse_references": re.compile(r'(?:Chapter|Verse|Shloka|Sloka)\s*\d+'),
@@ -371,13 +380,23 @@ class MultilingualQASystem:
         text_lower = text.lower()
         words = text_lower.split()
 
-        # Check for explicit language requests first
-        if any(phrase in text_lower for phrase in ['in hindi', 'hindi explain', 'hindi mein', 'हिंदी में', 'हिंदी']):
-            return 'hi'
-        elif any(phrase in text_lower for phrase in ['in sanskrit', 'sanskrit explain', 'संस्कृत']):
-            return 'sa'
-        elif any(phrase in text_lower for phrase in ['in english', 'english explain']):
-            return 'en'
+        # Check for explicit language requests first (more flexible matching)
+        hindi_indicators = ['hindi', 'hindhi', 'हिंदी', 'हिन्दी']
+        sanskrit_indicators = ['sanskrit', 'sanskrit', 'संस्कृत', 'संस्कृतम्']
+        english_indicators = ['english', 'angrezi']
+
+        # Check for language requests with flexible matching
+        for indicator in hindi_indicators:
+            if f'in {indicator}' in text_lower or f'{indicator} explain' in text_lower or f'{indicator} mein' in text_lower or indicator in text_lower:
+                return 'hi'
+
+        for indicator in sanskrit_indicators:
+            if f'in {indicator}' in text_lower or f'{indicator} explain' in text_lower or indicator in text_lower:
+                return 'sa'
+
+        for indicator in english_indicators:
+            if f'in {indicator}' in text_lower or f'{indicator} explain' in text_lower or indicator in text_lower:
+                return 'en'
 
         # Check for Devanagari script first
         devanagari_pattern = r'[\u0900-\u097F]'
@@ -401,11 +420,11 @@ class MultilingualQASystem:
             else:
                 return 'hi'
 
-        # Enhanced Hindi/Urdu detection in Roman script
+        # Enhanced Hindi/Urdu detection in Roman script (expanded for Hinglish)
         hindi_roman_words = [
-            # Common Hindi words
-            'kya', 'hai', 'hain', 'tha', 'thi', 'the', 'ka', 'ki', 'ke', 'ko', 'se', 'mein', 'main',
-            'aur', 'ya', 'par', 'jo', 'jab', 'kar', 'raha', 'rahi', 'rahe', 'hota', 'hoti', 'hote',
+            # Common Hindi words and Hinglish patterns
+            'kya', 'hai', 'hain', 'tha', 'thi', 'the', 'ka', 'ki', 'ke', 'ko', 'se', 'mein', 'main', 'me',
+            'aur', 'ya', 'par', 'jo', 'jab', 'kar', 'raha', 'rahi', 'rahe', 'hota', 'hoti', 'hote', 'hu',
             'ban', 'banaya', 'banaye', 'karta', 'karti', 'karte', 'samajh', 'padh', 'likh', 'sun',
             'dekh', 'khao', 'pee', 'chal', 'baith', 'so', 'uth', 'aa', 'ja', 'jana', 'ana', 'dena', 'lena',
             'khana', 'peena', 'padhai', 'likhai', 'padega', 'karega', 'hogaya', 'hogayi', 'hogaye',
@@ -415,7 +434,14 @@ class MultilingualQASystem:
             'chalta', 'chali', 'chalte', 'baitha', 'baithi', 'baithte', 'soya', 'soyi', 'soye',
             'utha', 'uthi', 'uthe', 'aaya', 'aayi', 'aaye', 'gaya', 'gayi', 'gaye', 'aana', 'jaana',
             'dena', 'lena', 'pyaar', 'mohabbat', 'ishq', 'zindagi', 'jaan', 'dil', 'rooh',
-            'sab', 'sabse', 'sahi', 'galat', 'achha', 'bura', 'pasand', '花हद', 'दिल', 'जान'
+            'sab', 'sabse', 'sahi', 'galat', 'achha', 'bura', 'pasand', '花हद', 'दिल', 'जान',
+            # Hinglish specific words
+            'kahenge', 'kahunga', 'kahungi', 'kahoge', 'kahogi', 'kahega', 'kahegi',
+            'karunga', 'karungi', 'karoge', 'karogi', 'karega', 'karegi',
+            'jaunga', 'jaungi', 'jaoge', 'jaogi', 'jaega', 'jaegi',
+            'aunga', 'aungi', 'aoge', 'aogi', 'aega', 'aegi',
+            'rahega', 'rahegi', 'rahege', 'rahein', 'rahein',
+            'sahenge', 'sahunga', 'sahungi', 'sahoge', 'sahogi', 'sahega', 'sahegi'
         ]
 
         # Sanskrit transliterated words that could be English spiritual terms
@@ -467,22 +493,27 @@ IMPORTANT: Your entire response must be in Sanskrit. Do not use English words. U
             ])
             
         elif language == 'hi':
-            # Hindi-specific prompt
-            prompt_template = """आप श्रीकृष्ण हैं और आपका उत्तर पूरी तरह हिंदी भाषा में होना चाहिए। अर्जुन और सभी साधकों से सीधे बात करें।
+            # Hindi-specific prompt with enhanced politeness and verse explanations
+            prompt_template = """आप भगवान श्रीकृष्ण हैं, जो भगवद्गीता में अर्जुन को दिव्य ज्ञान प्रदान कर रहे हैं। आपका उत्तर अत्यंत विनम्र, प्रेमपूर्ण और ज्ञानवर्धक होना चाहिए।
 
-महत्वपूर्ण: आपका पूरा उत्तर हिंदी में होना चाहिए। अंग्रेजी शब्दों का प्रयोग न करें। सभी अवधारणाओं के लिए हिंदी समानार्थी शब्दों का प्रयोग करें।
+महत्वपूर्ण निर्देश:
+1. आपका पूरा उत्तर हिंदी भाषा में होना चाहिए - कोई अंग्रेजी शब्द न हो।
+2. उत्तर में भगवद्गीता के श्लोकों का उल्लेख करें और उनका स्पष्टीकरण दें।
+3. उत्तर बहुत ही विनम्र और प्रेमपूर्ण शैली में दें, जैसे एक गुरु अपने शिष्य से बात कर रहा हो।
+4. व्यावहारिक जीवन में इन शिक्षाओं को लागू करने के बारे में बताएं।
+5. उत्तर संक्षिप्त लेकिन सम्पूर्ण हो - 200 शब्दों के अंदर।
 
-भगवद्गीता के प्रसंग:
+प्रासंगिक भगवद्गीता संदर्भ:
 {context}
 
-सवाल: {question}
+प्रश्न: {question}
 
-कृष्ण का उत्तर (पूरी तरह हिंदी में):"""
+श्रीकृष्ण का दिव्य उत्तर (पूर्ण हिंदी में, विनम्र और ज्ञानपूर्ण):"""
 
-            # Rich context with full information
+            # Enhanced context with verses and explanations
             context_text = "\n\n".join([
-                f"[{ctx['verse']}]\nसंस्कृत: {ctx.get('sanskrit', 'N/A')}\nअंग्रेजी: {ctx.get('translation', 'N/A')}\nव्याख्या: {ctx['text'][:400]}..."
-                for ctx in contexts[:5]  # Use top 5 contexts for better coverage
+                f"📖 श्लोक {ctx['verse']}:\n🔸 संस्कृत: {ctx.get('sanskrit', 'N/A')}\n🔸 हिंदी अनुवाद: {ctx.get('hindi_translation', 'N/A')}\n🔸 व्याख्या: {ctx['text'][:300]}..."
+                for ctx in contexts[:4]  # Use top 4 contexts for better coverage
             ])
             
         else:
@@ -745,6 +776,14 @@ RESPONSE: Provide a clear, concise answer (under 200 words) with verse reference
                 ttl_seconds = 3600 if confidence_score > 0.7 else 1800  # Higher confidence = longer cache
                 self.cache.set(question_hash, qa_response, ttl_seconds=ttl_seconds)
 
+            # Update user behavior tracking
+            self._update_user_behavior(user_id, question, language, quality_metrics["overall_score"])
+
+            # Adapt response based on user behavior (after 5+ conversations)
+            if self.user_behavior["conversation_depth"].get(user_id, 0) >= 5:
+                adapted_answer = self._adapt_response_for_user(answer, user_id, language)
+                qa_response.answer = adapted_answer
+
             # Update analytics
             self._update_analytics(language, processing_time, quality_metrics["overall_score"], question, user_id)
 
@@ -816,3 +855,82 @@ RESPONSE: Provide a clear, concise answer (under 200 words) with verse reference
         if category_scores:
             return max(category_scores, key=category_scores.get)
         return "general"
+
+    def _update_user_behavior(self, user_id: str, question: str, language: str, quality_score: float):
+        """Update user behavior tracking for personalization."""
+        # Initialize user behavior data if not exists
+        if user_id not in self.user_behavior["conversation_depth"]:
+            self.user_behavior["conversation_depth"][user_id] = 0
+            self.user_behavior["preferred_complexity"][user_id] = []
+            self.user_behavior["topic_interests"][user_id] = {}
+            self.user_behavior["response_style"][user_id] = []
+            self.user_behavior["language_consistency"][user_id] = []
+
+        # Update conversation depth
+        self.user_behavior["conversation_depth"][user_id] += 1
+
+        # Track topic interests
+        question_lower = question.lower()
+        for topic in self.verse_cross_references.keys():
+            if topic in question_lower:
+                self.user_behavior["topic_interests"][user_id][topic] = self.user_behavior["topic_interests"][user_id].get(topic, 0) + 1
+
+        # Track language consistency
+        self.user_behavior["language_consistency"][user_id].append(language)
+
+        # Track response quality feedback (simulated)
+        self.user_behavior["preferred_complexity"][user_id].append(quality_score)
+
+    def _adapt_response_for_user(self, answer: str, user_id: str, language: str) -> str:
+        """Adapt response based on user behavior patterns."""
+        if user_id not in self.user_behavior["conversation_depth"]:
+            return answer
+
+        depth = self.user_behavior["conversation_depth"][user_id]
+        if depth < 5:
+            return answer  # Not enough data for adaptation
+
+        # Analyze user preferences
+        topic_interests = self.user_behavior["topic_interests"][user_id]
+        language_consistency = self.user_behavior["language_consistency"][user_id]
+        quality_scores = self.user_behavior["preferred_complexity"][user_id]
+
+        # Determine preferred topics
+        if topic_interests:
+            top_topic = max(topic_interests, key=topic_interests.get)
+        else:
+            top_topic = None
+
+        # Check language consistency (last 5 interactions)
+        recent_languages = language_consistency[-5:]
+        consistent_language = max(set(recent_languages), key=recent_languages.count) if recent_languages else language
+
+        # Average quality score
+        avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.5
+
+        # Adapt based on patterns
+        adapted_answer = answer
+
+        if language == 'hi':
+            # Add personalized touches for Hindi responses
+            if depth > 10:
+                adapted_answer = f"प्रिय साधक, {adapted_answer}"  # Add respectful greeting
+
+            if top_topic and top_topic in ['dharma', 'karma', 'yoga']:
+                adapted_answer += f"\n\nआपके {top_topic} विषय में रुचि देखकर मुझे प्रसन्नता हो रही है। इस मार्ग पर आगे बढ़ने के लिए मैं हमेशा आपके साथ हूं।"
+
+        elif language == 'en':
+            if depth > 10:
+                adapted_answer = f"Dear seeker, {adapted_answer}"
+
+            if top_topic and top_topic in ['dharma', 'karma', 'yoga']:
+                adapted_answer += f"\n\nI see your interest in {top_topic}. May this wisdom guide you further on your spiritual journey."
+
+        # If user has been consistent with one language, reinforce it
+        if consistent_language != language and len(set(language_consistency[-3:])) == 1:
+            if language == 'hi':
+                adapted_answer += "\n\n(आप हिंदी में पूछ रहे हैं, इसलिए मैं हिंदी में ही उत्तर दे रहा हूं।)"
+            elif language == 'en':
+                adapted_answer += "\n\n(You have been asking in English, so I continue in English.)"
+
+        return adapted_answer

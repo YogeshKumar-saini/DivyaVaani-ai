@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # API
     api_host: str = Field(default="0.0.0.0", env="API_HOST")
     api_port: int = Field(default=8000, env="API_PORT")
+
+    # Frontend
+    next_public_api_base_url: str = Field(default="http://localhost:8000", env="NEXT_PUBLIC_API_BASE_URL")
     
     class Config:
         env_file = ".env"

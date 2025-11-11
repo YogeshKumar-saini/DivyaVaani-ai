@@ -195,13 +195,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 : 'bg-white/90 text-gray-900 border-white/40 hover:bg-white hover:border-orange-200/50'
             }`}
           >
-            {message.type === 'bot' ? (
-              <TypingText text={message.content} speed={10} />
-            ) : (
-              <div className="leading-relaxed">
-                {processText(message.content)}
-              </div>
-            )}
+            <div className="leading-relaxed">
+              {processText(message.content)}
+            </div>
           </div>
 
           {/* Enhanced Sources Display */}

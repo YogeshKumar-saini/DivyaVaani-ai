@@ -1,6 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import {
   Send,
   Loader2,
@@ -16,8 +15,6 @@ interface ChatInputProps {
   onSubmit: () => void;
   onFeedback: (rating: string) => void;
   feedbackSubmitted?: boolean;
-  selectedLanguage: string;
-  onLanguageChange: (language: string) => void;
 }
 
 export function ChatInput({
@@ -26,9 +23,7 @@ export function ChatInput({
   isLoading,
   onSubmit,
   onFeedback,
-  feedbackSubmitted = false,
-  selectedLanguage,
-  onLanguageChange
+  feedbackSubmitted = false
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,8 +54,8 @@ export function ChatInput({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder="🕉️ Ask about dharma, karma, yoga, life, or any spiritual matter..."
-          className="w-full resize-none rounded-2xl border border-orange-200/50 bg-white pl-24 pr-14 py-4 text-sm shadow-lg focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/20 disabled:bg-gray-50 disabled:text-gray-400 transition-all duration-300 placeholder:text-gray-500"
+          placeholder="🕉️ Ask about dharma, karma, yoga, life, or any spiritual matter... (Language will be auto-detected)"
+          className="w-full resize-none rounded-2xl border border-orange-200/50 bg-white pl-6 pr-14 py-4 text-sm shadow-lg focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/20 disabled:bg-gray-50 disabled:text-gray-400 transition-all duration-300 placeholder:text-gray-500"
           rows={1}
           disabled={isLoading}
           style={{ minHeight: '52px', maxHeight: '200px' }}
@@ -76,13 +71,6 @@ export function ChatInput({
             <Send className="h-4 w-4" />
           )}
         </button>
-        <div className="absolute bottom-2.5 left-3">
-          <LanguageSelector
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={onLanguageChange}
-            disabled={isLoading}
-          />
-        </div>
       </div>
 
       {/* Feedback Buttons */}

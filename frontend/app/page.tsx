@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
+import { LanguageDetector } from "@/components/LanguageSelector";
 import { AnalyticsCard, PopularQuestionsCard, SystemStatusCard, ActivityCard, SearchHistoryCard } from "@/components/sidebar";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import '../components/sidebar/animations.css';
@@ -71,7 +72,9 @@ export default function BhagavadGitaAssistant() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [detectedLanguage, setDetectedLanguage] = useState('en');
+  const [detectionConfidence, setDetectionConfidence] = useState(1.0);
+  const [isDetecting, setIsDetecting] = useState(false);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -206,51 +209,97 @@ export default function BhagavadGitaAssistant() {
     setMessages(prev => [...prev, newMessage]);
   };
 
-  // Detect language from text
-  const detectLanguage = (text: string): string => {
+  // Auto-detect language from text
+  const detectLanguageFromText = (text: string): { language: string; confidence: number } => {
     const devanagariRegex = /[\u0900-\u097F]/;
     const textLower = text.toLowerCase();
-    
-    // Check for explicit language requests first
-    if (textLower.includes('in hindi') || textLower.includes('hindi explain') || textLower.includes('hindi mein')) {
-      return 'hi';
-    } else if (textLower.includes('in sanskrit') || textLower.includes('sanskrit explain')) {
-      return 'sa';
-    } else if (textLower.includes('in english') || textLower.includes('english explain')) {
-      return 'en';
+    let confidence = 0.8; // Default confidence
+
+    // Check for explicit language requests first (more flexible matching)
+    const hindiIndicators = ['hindi', 'hindhi', 'हिंदी', 'हिन्दी'];
+    const sanskritIndicators = ['sanskrit', 'sanskrit', 'संस्कृत', 'संस्कृतम्'];
+    const englishIndicators = ['english', 'angrezi'];
+
+    // Check for language requests with flexible matching
+    for (const indicator of hindiIndicators) {
+      if (textLower.includes(`in ${indicator}`) || textLower.includes(`${indicator} explain`) || textLower.includes(`${indicator} mein`) || textLower.includes(indicator)) {
+        return { language: 'hi', confidence: 1.0 };
+      }
+    }
+
+    for (const indicator of sanskritIndicators) {
+      if (textLower.includes(`in ${indicator}`) || textLower.includes(`${indicator} explain`) || textLower.includes(indicator)) {
+        return { language: 'sa', confidence: 1.0 };
+      }
+    }
+
+    for (const indicator of englishIndicators) {
+      if (textLower.includes(`in ${indicator}`) || textLower.includes(`${indicator} explain`) || textLower.includes(indicator)) {
+        return { language: 'en', confidence: 1.0 };
+      }
     }
 
     // Check for Devanagari script
     if (devanagariRegex.test(text)) {
-      return 'hi'; // Assume Devanagari is Hindi unless clearly Sanskrit
+      // Check for Sanskrit-specific patterns
+      const sanskritPatterns = ['आमुक्तये', 'परमेश्वराय', 'नारायणाय', 'हराय', 'विष्णवे', 'शिवाय'];
+      const sanskritCount = sanskritPatterns.filter(word => text.includes(word)).length;
+      
+      if (sanskritCount >= 2) {
+        return { language: 'sa', confidence: 0.9 };
+      }
+      return { language: 'hi', confidence: 0.8 };
     }
 
-    // Check for Hindi words in Roman script
-    const hindiWords = ['kya', 'hai', 'hain', 'ka', 'ki', 'ke', 'ko', 'se', 'mein', 'main', 'aur', 'ya', 'par', 'kar', 'raha', 'dharma', 'karma', 'kya'];
+    // Enhanced Hindi detection in Roman script (expanded for Hinglish)
+    const hindiWords = [
+      'kya', 'hai', 'hain', 'ka', 'ki', 'ke', 'ko', 'se', 'mein', 'main', 'me', 'aur', 'ya', 'par', 'kar', 'raha',
+      'hota', 'hoti', 'hote', 'hu', 'karta', 'karti', 'karte', 'ban', 'banaya', 'banaye', 'samajh', 'padh', 'likh', 'sun',
+      'dharma', 'karma', 'yoga', 'bhagavan', 'shri', 'krishna', 'krishna', 'bhagavadgita', 'shloka',
+      // Hinglish specific words
+      'kahenge', 'kahunga', 'kahungi', 'kahoge', 'kahogi', 'kahega', 'kahegi',
+      'karunga', 'karungi', 'karoge', 'karogi', 'karega', 'karegi'
+    ];
+    const sanskritTerms = [
+      'krishna', 'arjuna', 'bhagavad', 'gita', 'dharma', 'karma', 'yoga', 'brahma', 'shiva', 'vishnu',
+      'atman', 'paramatma', 'moksha', 'samsara', 'satya', 'asura', 'kali', 'loka', 'shloka', 'mantra'
+    ];
+
     const hindiCount = hindiWords.filter(word => textLower.includes(word)).length;
-    
-    if (hindiCount >= 2) {
-      return 'hi';
+    const sanskritCount = sanskritTerms.filter(word => textLower.includes(word)).length;
+
+    // Context analysis - enhanced for Hinglish
+    const hasHindiGrammar = hindiWords.some(word => textLower.includes(word) && ['kya', 'hai', 'kar', 'raha', 'hota', 'hu'].includes(word));
+
+    if (hasHindiGrammar && sanskritCount >= 1) {
+      return { language: 'hi', confidence: 0.8 };
+    } else if (hindiCount >= 2) {
+      return { language: 'hi', confidence: 0.7 };
+    } else if (sanskritCount >= 3) {
+      return { language: 'sa', confidence: 0.7 };
     }
 
-    return 'en'; // Default to English
+    return { language: 'en', confidence: 0.6 };
   };
 
-
-
   const askQuestion = async () => {
-      if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
-      const question = input.trim();
-      const languageToUse = selectedLanguage;
-      console.log('Selected language:', selectedLanguage, 'Language to use:', languageToUse);
-      setInput('');
-      setIsLoading(true);
+    const question = input.trim();
+    
+    // Auto-detect language
+    setIsDetecting(true);
+    const detection = detectLanguageFromText(question);
+    setDetectedLanguage(detection.language);
+    setDetectionConfidence(detection.confidence);
+    setIsDetecting(false);
 
-      // Add to search history
-      addToSearchHistory(question, languageToUse);
+    setInput('');
+    setIsLoading(true);
 
-      addMessage('user', question);
+    // Add to search history
+    addToSearchHistory(question, detection.language);
+    addMessage('user', question);
 
     try {
       const response = await fetch(`${API_BASE}/query`, {
@@ -259,7 +308,7 @@ export default function BhagavadGitaAssistant() {
         body: JSON.stringify({
           user_id: userId.current,
           question,
-          preferred_language: languageToUse, // Use selected or detected language
+          preferred_language: null, // Auto-detect on backend
         }),
       });
 
@@ -294,8 +343,6 @@ export default function BhagavadGitaAssistant() {
     }
   };
 
-
-
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-orange-50/30 via-white to-blue-50/30">
       {/* Sacred Background Pattern */}
@@ -312,6 +359,16 @@ export default function BhagavadGitaAssistant() {
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-w-0 pr-80">
           <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8 relative">
+            {/* Language Detection Indicator */}
+            <div className="mb-4 flex justify-center">
+              <LanguageDetector
+                currentDetectedLanguage={detectedLanguage}
+                isDetecting={isDetecting}
+                confidence={detectionConfidence}
+                disabled={isLoading}
+              />
+            </div>
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto chat-messages pb-32">
               <div className="max-w-3xl mx-auto space-y-6 py-6">
@@ -342,8 +399,6 @@ export default function BhagavadGitaAssistant() {
                   onSubmit={askQuestion}
                   onFeedback={submitFeedback}
                   feedbackSubmitted={feedbackSubmitted}
-                  selectedLanguage={selectedLanguage}
-                  onLanguageChange={setSelectedLanguage}
                 />
               </div>
             </div>
