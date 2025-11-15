@@ -1,5 +1,6 @@
 """API routes package."""
 
-from . import query
+# Routes are now organized in text/ and voice/ subdirectories
+# Import from specific submodules as needed
 
-__all__ = ["query"]
+__all__ = []

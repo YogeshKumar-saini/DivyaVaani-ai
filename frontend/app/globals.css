@@ -117,12 +117,100 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-foreground;
+    background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 25%, #F0E68C 50%, #FFEFD5 75%, #F5DEB3 100%);
     background-attachment: fixed;
+  }
+
+  body {
+    @apply text-foreground;
   }
 }
 
 @layer utilities {
+  /* Professional gradient backgrounds */
+  .bg-gradient-professional {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .bg-gradient-spiritual {
+    background: linear-gradient(135deg, #FF9933 0%, #FF7E33 25%, #FF9933 50%, #138808 75%, #000080 100%);
+  }
+
+  .bg-gradient-saffron {
+    background: linear-gradient(135deg, #FF9933 0%, #FF7E33 50%, #FF9933 100%);
+  }
+
+  .bg-gradient-lotus {
+    background: linear-gradient(135deg, #FFE4B5 0%, #DDA0DD 50%, #FF6347 100%);
+  }
+
+  .bg-gradient-calm {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  }
+
+  .bg-gradient-warm {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  }
+
+  .bg-gradient-divine {
+    background: linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #DC143C 100%);
+  }
+
+  .bg-gradient-mandala {
+    background: radial-gradient(circle at center, #FFE4B5 0%, #DDA0DD 50%, #FF6347 100%);
+  }
+
+  /* Spiritual UI enhancements */
+  .bg-spiritual-gradient {
+    background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 25%, #F0E68C 50%, #FFEFD5 75%, #F5DEB3 100%);
+  }
+
+  .text-spiritual-gold {
+    color: #FFD700;
+  }
+
+  .text-saffron-orange {
+    color: #FF9933;
+  }
+
+  .border-saffron {
+    border-color: #FF9933;
+  }
+
+  .bg-lotus-white {
+    background-color: #F5F5DC;
+  }
+
+  .lotus-decoration::before {
+    content: '🪷';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    opacity: 0.1;
+    font-size: 2rem;
+    z-index: -1;
+  }
+
+  .om-decoration::after {
+    content: 'ॐ';
+    position: absolute;
+    bottom: -15px;
+    right: -15px;
+    opacity: 0.1;
+    font-size: 1.5rem;
+    color: #FF9933;
+    z-index: -1;
+  }
+
+  /* Enhanced card shadows */
+  .shadow-professional {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .shadow-professional-lg {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
   /* Smooth scrolling for chat messages */
   .chat-messages {
     scroll-behavior: smooth;
@@ -138,12 +226,13 @@
   }
 
   .chat-messages::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: rgba(156, 163, 175, 0.5);
     border-radius: 3px;
+    transition: background-color 0.2s ease;
   }
 
   .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: rgba(156, 163, 175, 0.8);
   }
 
   /* Auto-resize textarea animation */
@@ -153,26 +242,10 @@
 
   /* Message animations */
   .message-enter {
-    animation: messageSlideIn 0.3s ease-out;
+    animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes messageSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Fade in animation for new messages */
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
     from {
       opacity: 0;
       transform: translateY(20px) scale(0.95);
@@ -183,9 +256,35 @@
     }
   }
 
+  /* Fade in animation for new messages */
+  .animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Professional hover effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
   /* Focus styles for accessibility */
   .focus-ring:focus {
-    @apply ring-2 ring-blue-500 ring-offset-2;
+    @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
   }
 
   /* Loading animation for send button */
@@ -198,7 +297,101 @@
       opacity: 1;
     }
     50% {
+      opacity: 0.6;
+    }
+  }
+
+  /* Professional button hover effects */
+  .btn-professional {
+    @apply relative overflow-hidden transition-all duration-300 ease-out;
+  }
+
+  .btn-professional::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-professional:hover::before {
+    left: 100%;
+  }
+
+  /* Glass morphism effect */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  /* Professional text gradients */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-spiritual {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Enhanced input styles */
+  .input-professional {
+    @apply transition-all duration-300 ease-out;
+    @apply border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20;
+  }
+
+  .input-professional:focus {
+    @apply shadow-lg transform scale-[1.02];
+  }
+
+  /* Professional card hover effects */
+  .card-professional {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .card-professional:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+  }
+
+  /* Status indicator animations */
+  .status-pulse {
+    animation: statusPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
       opacity: 0.5;
     }
+  }
+
+  /* Professional loading spinner */
+  .spinner-professional {
+    animation: spin 1s linear infinite;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+  }
+
+  /* Enhanced tooltip styles */
+  .tooltip-professional {
+    @apply bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg;
+    @apply opacity-0 invisible transition-all duration-200;
+  }
+
+  .tooltip-professional.show {
+    @apply opacity-100 visible;
   }
 }

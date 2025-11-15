@@ -1,19 +1,9 @@
 import { TrendingUp, Users, Zap, Clock, Activity, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-interface Analytics {
-  total_queries: number;
-  unique_users: number;
-  cache_hits: number;
-  avg_response_time: number;
-  top_questions: [string, number][];
-  response_time_trend?: number;
-  cache_hit_rate?: number;
-  popular_language?: string;
-}
+import { AnalyticsData } from "@/lib/api/analytics-service";
 
 interface AnalyticsCardProps {
-  analytics: Analytics | null;
+  analytics: AnalyticsData | null;
   isLoading?: boolean;
 }
 
@@ -139,27 +129,17 @@ export function AnalyticsCard({ analytics, isLoading = false }: AnalyticsCardPro
         </div>
 
         {/* Additional Insights */}
-        <div className="pt-3 border-t border-orange-200">
-          <div className="flex items-center justify-between text-xs text-gray-600">
-            <div className="flex items-center">
-              <Award className="w-3 h-3 mr-1 text-orange-500" />
-              <span>Most Active Language</span>
-            </div>
-            <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
-              {analytics?.popular_language?.toUpperCase() || 'EN'}
-            </Badge>
-          </div>
-          
-          {analytics?.avg_response_time && (
-            <div className="flex items-center justify-between text-xs text-gray-600 mt-2">
+        {analytics?.avg_response_time && (
+          <div className="pt-3 border-t border-orange-200">
+            <div className="flex items-center justify-between text-xs text-gray-600">
               <span>Performance Status</span>
               <span className={getPerformanceColor(analytics.avg_response_time)}>
                 {analytics.avg_response_time < 200 ? 'Excellent' :
                  analytics.avg_response_time < 500 ? 'Good' : 'Needs Optimization'}
               </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

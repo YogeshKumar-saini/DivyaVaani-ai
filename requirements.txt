@@ -9,9 +9,8 @@ numpy==1.26.2
 
 # NLP & Embeddings
 sentence-transformers==2.2.2
-transformers==4.36.0
-torch==2.2.0
-tokenizers==0.15.2
+transformers>=4.40.0
+tokenizers>=0.15.2
 
 # Vector stores & search
 faiss-cpu==1.8.0
@@ -46,12 +45,37 @@ rouge-score==0.1.2
 # OCR (optional)
 easyocr==1.7.0
 
+# Google Cloud Speech & TTS
+google-cloud-speech==2.26.0
+google-cloud-texttospeech==2.16.3
+
+# Audio processing
+pyaudio==0.2.13
+sounddevice==0.4.6
+soundfile==0.12.1
+
+# PDF processing
+PyPDF2==3.0.1
+pdfplumber==0.10.3
+pytesseract==0.3.10
+Pillow==10.1.0
+tabula-py==2.9.0
+
+# Enhanced multimodal embeddings
+accelerate==0.25.0
+
 
 
 # API
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
+slowapi==0.1.9
+tenacity==8.2.3
+
+# Distributed Caching
+redis==5.0.1
+python-memcached==1.62
 
 # Utilities
 tqdm==4.66.1

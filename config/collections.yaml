@@ -1,0 +1,56 @@
+# Collection configurations for document processing pipeline
+
+collections:
+  bhagavad_gita:
+    source_files:
+      - data/bhagavad_gita.csv
+    processor: csv
+    schema_mapping:
+      content: combined_en
+      metadata:
+        - verse_number
+        - translation_in_english
+        - meaning_in_english
+    embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    enabled: true
+  
+  ramayana:
+    source_files:
+      - data/balakanda.csv
+      - data/ayodhyakand.csv
+      - data/aranyakanda.csv
+      - data/sundarakanda.csv
+      - data/kishkindakanda.csv
+    processor: csv
+    schema_mapping:
+      content: text
+      metadata:
+        - chapter
+        - verse
+    embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    enabled: true
+  
+  mahabharata:
+    source_files:
+      - data/mahabharat_1-2.csv
+    processor: csv
+    schema_mapping:
+      content: text
+      metadata:
+        - chapter
+        - verse
+    embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    enabled: false
+  
+  mahapuranas:
+    source_files:
+      - data/18_Mahapuranas_DataSet.xlsx
+    processor: excel
+    sheet_name: Sheet1
+    schema_mapping:
+      content: content
+      metadata:
+        - purana_name
+        - chapter
+    embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+    enabled: false

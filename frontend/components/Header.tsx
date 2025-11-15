@@ -1,46 +1,189 @@
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, Sparkles } from "lucide-react";
+'use client';
+
+import { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Avatar,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+} from '@mui/icons-material';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ROUTES } from "@/lib/utils/constants";
+import { HealthIndicator } from "@/components/shared/HealthIndicator";
 
 interface HeaderProps {
   isOnline: boolean;
 }
 
+const navLinks = [
+  { href: ROUTES.HOME, label: 'Home' },
+  { href: ROUTES.CHAT, label: 'Chat' },
+  { href: ROUTES.VOICE, label: 'Voice' },
+  { href: ROUTES.ANALYTICS, label: 'Analytics' },
+  { href: ROUTES.ABOUT, label: 'About' },
+];
+
 export function Header({ isOnline }: HeaderProps) {
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isHomePage = pathname === ROUTES.HOME;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleDrawerToggle = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const drawer = (
+    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+      <List>
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <ListItem key={link.href} disablePadding>
+              <ListItemButton
+                component={Link}
+                href={link.href}
+                selected={isActive}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.dark,
+                    },
+                  },
+                }}
+              >
+                <ListItemText primary={link.label} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+    </Box>
+  );
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-orange-200/50 bg-white/90 backdrop-blur-xl shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Sacred Om Symbol */}
-            <div className="relative">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 via-orange-500 to-red-600 shadow-lg ring-2 ring-orange-200/50">
-                <span className="text-lg font-bold text-white">ॐ</span>
-              </div>
-              <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-yellow-400 animate-pulse"></div>
-            </div>
+    <>
+      <AppBar
+        position="sticky"
+        elevation={1}
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Logo and Brand */}
+          <Box component={Link} href={ROUTES.HOME} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+            <Avatar
+              sx={{
+                bgcolor: 'primary.main',
+                width: 40,
+                height: 40,
+                mr: 2,
+                position: 'relative',
+              }}
+            >
+              <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+                ॐ
+              </Typography>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 12,
+                  height: 12,
+                  bgcolor: 'success.main',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s infinite',
+                }}
+              />
+            </Avatar>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                Bhagavad Gita AI
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Divine Spiritual Intelligence
+              </Typography>
+            </Box>
+          </Box>
 
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                भगवद् गीता AI
-              </h1>
-              <p className="text-xs text-gray-600 font-medium">Divine Spiritual Intelligence</p>
-            </div>
-          </div>
+          {/* Desktop Navigation */}
+          {!isHomePage && !isMobile && (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Button
+                    key={link.href}
+                    component={Link}
+                    href={link.href}
+                    variant={isActive ? "contained" : "text"}
+                    color={isActive ? "primary" : "inherit"}
+                    size="small"
+                  >
+                    {link.label}
+                  </Button>
+                );
+              })}
+            </Box>
+          )}
 
-          <div className="flex items-center space-x-6">
-            {/* Status Indicator */}
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/80 border border-gray-200/50 shadow-sm">
-              <div className={`h-2.5 w-2.5 rounded-full ${isOnline ? 'bg-green-500 shadow-green-500/50 shadow-lg' : 'bg-red-500 shadow-red-500/50 shadow-lg'} animate-pulse`}></div>
-              <span className={`text-sm font-medium ${isOnline ? 'text-green-700' : 'text-red-700'}`}>
-                {isOnline ? 'Online' : 'Offline'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+          {/* Right Side */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Health Status Indicator */}
+            <HealthIndicator variant="badge" showText={false} />
 
-      {/* Decorative border */}
-      <div className="h-px bg-gradient-to-r from-transparent via-orange-300/30 to-transparent"></div>
-    </header>
+            {/* Mobile Menu Button */}
+            {!isHomePage && isMobile && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileMenuOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
+        }}
+      >
+        {drawer}
+      </Drawer>
+    </>
   );
 }

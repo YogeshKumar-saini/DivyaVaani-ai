@@ -1,50 +1,127 @@
+'use client';
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/Header";
+import { AppProvider } from "@/lib/context/AppContext";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { orange, red, blue, green } from '@mui/material/colors';
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
-export const metadata: Metadata = {
-  title: "Bhagavad Gita AI Assistant - Enterprise Spiritual Intelligence Platform",
-  description: "Professional AI-powered spiritual guidance system providing intelligent answers from the Bhagavad Gita with advanced analytics and real-time insights.",
-  keywords: "Bhagavad Gita, AI Assistant, Spiritual Intelligence, Krishna, Arjuna, Hindu Philosophy, Sanskrit Wisdom",
-  authors: [{ name: "DivyaVaani AI" }],
-  viewport: "width=device-width, initial-scale=1",
-};
+// Create Material UI theme with spiritual colors
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: orange[600],
+      light: orange[400],
+      dark: orange[800],
+    },
+    secondary: {
+      main: blue[600],
+      light: blue[400],
+      dark: blue[800],
+    },
+    success: {
+      main: green[600],
+    },
+    error: {
+      main: red[600],
+    },
+    background: {
+      default: '#fafafa',
+      paper: '#ffffff',
+    },
+  },
+  typography: {
+    fontFamily: 'var(--font-inter), "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          textTransform: 'none',
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+        },
+      },
+    },
+  },
+});
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    // Check online status
+    const checkOnline = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001'}/health`);
+        setIsOnline(response.ok);
+      } catch {
+        setIsOnline(false);
+      }
+    };
+
+    checkOnline();
+    const interval = setInterval(checkOnline, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased bg-gradient-to-br from-orange-50 via-white to-blue-50 text-slate-900 min-h-screen relative overflow-x-hidden">
-        {/* Spiritual background pattern */}
-        <div className="fixed inset-0 opacity-5 pointer-events-none">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }} />
-        </div>
-
-        {/* Sacred geometry overlay */}
-        <div className="fixed inset-0 opacity-3 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <pattern id="sacred-geometry" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="10" cy="10" r="1" fill="#f97316" opacity="0.1"/>
-                <circle cx="10" cy="10" r="8" fill="none" stroke="#f97316" strokeWidth="0.2" opacity="0.05"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#sacred-geometry)" />
-          </svg>
-        </div>
-
-        {children}
+      <head>
+        <title>Bhagavad Gita AI - DivyaVaani</title>
+        <meta name="description" content="Professional AI-powered spiritual guidance system providing intelligent answers from the Bhagavad Gita" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body className="font-sans antialiased min-h-screen relative overflow-x-hidden">
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <ErrorBoundary>
+            <AppProvider>
+              <Header isOnline={isOnline} />
+              {children}
+            </AppProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   );

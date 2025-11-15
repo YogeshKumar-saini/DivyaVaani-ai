@@ -1,17 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, TrendingUp, Clock, Star, ExternalLink } from "lucide-react";
 import { useState } from "react";
-
-interface Analytics {
-  total_queries: number;
-  unique_users: number;
-  cache_hits: number;
-  avg_response_time: number;
-  top_questions: [string, number][];
-}
+import { AnalyticsData } from "@/lib/api/analytics-service";
 
 interface PopularQuestionsCardProps {
-  analytics: Analytics | null;
+  analytics: AnalyticsData | null;
   onQuestionClick?: (question: string) => void;
   onFavoriteToggle?: (question: string) => void;
 }
