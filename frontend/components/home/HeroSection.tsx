@@ -8,8 +8,6 @@ import {
   Typography,
   Button,
   Card,
-  CardContent,
-  Avatar,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -39,7 +37,7 @@ export function HeroSection() {
   const features = [
     { icon: LanguageIcon, text: 'Multilingual', color: theme.palette.secondary.main },
     { icon: MicIcon, text: 'Voice Enabled', color: theme.palette.success.main },
-    { icon: BookIcon, text: 'Bhagavad Gita', color: theme.palette.primary.main },
+    { icon: BookIcon, text: 'All Traditions', color: theme.palette.primary.main },
     { icon: BoltIcon, text: 'Real-time AI', color: theme.palette.warning.main },
   ];
 
@@ -47,6 +45,7 @@ export function HeroSection() {
     <Box
       sx={{
         minHeight: '100vh',
+        
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -60,87 +59,33 @@ export function HeroSection() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: `radial-gradient(circle at 50% 50%, ${theme.palette.primary.main}10 0%, transparent 50%)`,
+          // background: `radial-gradient(circle at 50% 50%, ${theme.palette.primary.main}10 0%, transparent 50%)`,
+          zIndex: -1,
         },
       }}
     >
-      {/* Background Om Symbols */}
-      <Typography
-        variant="h1"
-        sx={{
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        disablePictureInPicture
+        controls={false}
+        style={{
           position: 'absolute',
-          top: 80,
-          left: 80,
-          color: theme.palette.primary.main,
-          opacity: 0.1,
-          fontSize: '4rem',
-          animation: 'pulse 3s infinite',
-          display: { xs: 'none', md: 'block' },
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 1,
+          filter: 'brightness(0.4) contrast(0.8)',
         }}
-      >
-        ॐ
-      </Typography>
-      <Typography
-        variant="h3"
-        sx={{
-          position: 'absolute',
-          bottom: 80,
-          right: 80,
-          color: theme.palette.secondary.main,
-          opacity: 0.1,
-          animation: 'pulse 3s infinite 1.5s',
-          display: { xs: 'none', md: 'block' },
-        }}
-      >
-        ॰
-      </Typography>
+        src="/background.mp4"
+      />
+
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: 8 }}>
-        {/* Om Symbol Avatar */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Box sx={{ position: 'relative' }}>
-            <Avatar
-              sx={{
-                width: 120,
-                height: 120,
-                bgcolor: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.error.main})`,
-                boxShadow: theme.shadows[8],
-                border: `4px solid ${theme.palette.background.paper}`,
-                animation: 'float 3s ease-in-out infinite',
-              }}
-            >
-              <Typography variant="h2" sx={{ color: 'white', fontWeight: 'bold' }}>
-                ॐ
-              </Typography>
-            </Avatar>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: -8,
-                right: -8,
-                width: 24,
-                height: 24,
-                bgcolor: theme.palette.success.main,
-                borderRadius: '50%',
-                border: `3px solid ${theme.palette.background.paper}`,
-                animation: 'pulse 2s infinite',
-              }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: -8,
-                left: -8,
-                width: 24,
-                height: 24,
-                bgcolor: theme.palette.secondary.main,
-                borderRadius: '50%',
-                border: `3px solid ${theme.palette.background.paper}`,
-                animation: 'pulse 2s infinite 1s',
-              }}
-            />
-          </Box>
-        </Box>
 
         {/* Title */}
         <Typography
@@ -186,8 +131,8 @@ export function HeroSection() {
             lineHeight: 1.6,
           }}
         >
-          Experience divine wisdom from the Bhagavad Gita through advanced AI.
-          Ask questions in multiple languages and receive personalized spiritual guidance.
+          Experience divine wisdom from all spiritual traditions through advanced AI.
+          Ask questions in multiple languages and receive personalized spiritual guidance from universal teachings.
         </Typography>
 
         {/* CTA Buttons */}

@@ -1,13 +1,12 @@
 'use client';
 
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { AppProvider } from "@/lib/context/AppContext";
+import { ToastProvider } from "@/lib/context/ToastContext";
+import { ToastContainer } from "@/components/shared/ToastContainer";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { orange, red, blue, green } from '@mui/material/colors';
@@ -86,40 +85,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    // Check online status
-    const checkOnline = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001'}/health`);
-        setIsOnline(response.ok);
-      } catch {
-        setIsOnline(false);
-      }
-    };
-
-    checkOnline();
-    const interval = setInterval(checkOnline, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <title>Bhagavad Gita AI - DivyaVaani</title>
-        <meta name="description" content="Professional AI-powered spiritual guidance system providing intelligent answers from the Bhagavad Gita" />
+        <title>DivyaVaani AI - Universal Spiritual Guidance</title>
+        <meta name="description" content="Professional AI-powered spiritual guidance system providing intelligent answers from all spiritual traditions and religious wisdom" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body className="font-sans antialiased min-h-screen relative overflow-x-hidden">
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ErrorBoundary>
-            <AppProvider>
-              <Header isOnline={isOnline} />
-              {children}
-            </AppProvider>
+            <ToastProvider>
+              <AppProvider>
+                <Header />
+                {children}
+                <ToastContainer />
+              </AppProvider>
+            </ToastProvider>
           </ErrorBoundary>
         </ThemeProvider>
       </body>
