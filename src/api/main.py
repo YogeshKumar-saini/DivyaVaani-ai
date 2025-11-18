@@ -51,7 +51,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[f"{settings.rate_
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown."""
     # Startup
-    log.info("Starting Bhagavad Gita QA System", extra={"environment": settings.environment})
+    log.info("Starting DivyaVaani AI - Universal Spiritual Guidance System", extra={"environment": settings.environment})
 
     # Initialize system in background
     startup_task = asyncio.create_task(initialize_system())
@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    log.info("Shutting down Bhagavad Gita QA System")
+    log.info("Shutting down DivyaVaani AI System")
 
     # Cancel startup task if still running
     if not startup_task.done():
@@ -77,8 +77,8 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Bhagavad Gita QA System",
-    description="Production-ready question-answering system for Bhagavad Gita using RAG",
+    title="DivyaVaani AI - Universal Spiritual Guidance",
+    description="Production-ready AI-powered spiritual guidance system drawing from all spiritual traditions using RAG",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -262,22 +262,22 @@ async def cleanup_system():
 async def root(request: Request):
     """Root endpoint with rate limiting."""
     return {
-        "message": "Bhagavad Gita QA System API",
+        "message": "DivyaVaani AI - Universal Spiritual Guidance API",
         "version": "1.0.0",
         "environment": settings.environment,
-        "description": "Production-ready intelligent spiritual companion powered by Bhagavad Gita wisdom",
+        "description": "Production-ready intelligent spiritual companion powered by wisdom from all spiritual traditions",
         "features": [
-            "AI-powered responses with spiritual guidance",
-            "Multi-language support (English, Hindi, etc.)",
+            "AI-powered responses with universal spiritual guidance",
+            "Multi-language support (English, Hindi, Sanskrit, and more)",
             "Response caching for faster answers",
             "Usage analytics and feedback collection",
-            "Comprehensive Bhagavad Gita knowledge base",
+            "Comprehensive knowledge base from all spiritual traditions",
             "Rate limiting and security",
             "Structured logging and monitoring"
         ],
         "endpoints": {
             "GET /": "API information",
-            "POST /text/": "Ask questions about Bhagavad Gita teachings (text)",
+            "POST /text/": "Ask questions about spiritual teachings from all traditions (text)",
             "POST /voice/": "Voice query processing (speech-to-speech)",
             "POST /voice/stt/": "Convert speech to text",
             "POST /voice/tts/": "Convert text to speech",

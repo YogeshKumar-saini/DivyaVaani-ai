@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Delete } from '@mui/icons-material';
 import { useConversationalVoice } from '@/lib/hooks/useConversationalVoice';
 import { VoiceMessageBubble } from './VoiceMessageBubble';
-import { Box, Typography, IconButton, CircularProgress, Button, Chip, Alert, Divider } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Button, Chip, Alert } from '@mui/material';
 
 interface VoiceChatProps {
   userId?: string;
@@ -55,6 +55,7 @@ export function VoiceChat({ userId = 'default' }: VoiceChatProps) {
     if (isRecording && recordingTime >= 30) {
       handleStopRecording();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recordingTime, isRecording]);
 
   const handleStartRecording = async () => {

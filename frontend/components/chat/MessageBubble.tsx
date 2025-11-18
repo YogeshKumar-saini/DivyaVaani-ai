@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
-import { User, Sparkles, Copy, Check } from 'lucide-react';
+import { User, Sparkles, Copy, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface MessageBubbleProps {
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
   className?: string;
+  messageId?: string;
+  onRate?: (messageId: string, rating: number) => void;
 }
 
-export function MessageBubble({ type, content, timestamp, className = '' }: MessageBubbleProps) {
+const MessageBubbleComponent = ({ type, content, timestamp, className = '', messageId, onRate }: MessageBubbleProps) => {
   const [copied, setCopied] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [isAnimating, setIsAnimating] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsAnimating(false), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const copyToClipboard = async () => {
     try {
@@ -18,6 +27,13 @@ export function MessageBubble({ type, content, timestamp, className = '' }: Mess
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const handleRate = (value: number) => {
+    if (messageId && onRate) {
+      setRating(value);
+      onRate(messageId, value);
     }
   };
 
@@ -71,7 +87,14 @@ export function MessageBubble({ type, content, timestamp, className = '' }: Mess
   };
 
   return (
-    <div className={`group relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
+    <div 
+      className={`group relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${className} ${
+        isAnimating ? 'animate-in fade-in slide-in-from-bottom-4 duration-300' : ''
+      }`}
+      style={{
+        animationDelay: type === 'bot' ? '100ms' : '0ms',
+      }}
+    >
       <div className={`flex py-2 sm:py-4 ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
 
         {/* Bot Avatar */}
@@ -112,11 +135,41 @@ export function MessageBubble({ type, content, timestamp, className = '' }: Mess
             </div>
           </div>
 
-          {/* Timestamp */}
-          <div className={`mt-2 ${type === 'user' ? 'text-right' : 'text-left'}`}>
+          {/* Timestamp and Rating */}
+          <div className={`mt-2 flex items-center gap-3 ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <span className="text-xs text-gray-400 dark:text-gray-500">
               {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
+            
+            {/* Rating buttons for bot messages */}
+            {type === 'bot' && messageId && onRate && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button
+                  onClick={() => handleRate(1)}
+                  className={`p-1 rounded-md transition-all duration-200 ${
+                    rating === 1
+                      ? 'text-green-600 bg-green-50'
+                      : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  title="Helpful"
+                  aria-label="Rate as helpful"
+                >
+                  <ThumbsUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => handleRate(-1)}
+                  className={`p-1 rounded-md transition-all duration-200 ${
+                    rating === -1
+                      ? 'text-red-600 bg-red-50'
+                      : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                  }`}
+                  title="Not helpful"
+                  aria-label="Rate as not helpful"
+                >
+                  <ThumbsDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -131,4 +184,13 @@ export function MessageBubble({ type, content, timestamp, className = '' }: Mess
       </div>
     </div>
   );
-}
+};
+
+export const MessageBubble = React.memo(MessageBubbleComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.type === nextProps.type &&
+    prevProps.content === nextProps.content &&
+    prevProps.timestamp.getTime() === nextProps.timestamp.getTime() &&
+    prevProps.messageId === nextProps.messageId
+  );
+});

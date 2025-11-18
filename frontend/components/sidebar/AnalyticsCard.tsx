@@ -1,4 +1,4 @@
-import { TrendingUp, Users, Zap, Clock, Activity, Award } from "lucide-react";
+import { TrendingUp, Users, Zap, Clock, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnalyticsData } from "@/lib/api/analytics-service";
 
@@ -49,7 +49,7 @@ export function AnalyticsCard({ analytics, isLoading = false }: AnalyticsCardPro
     : 0;
 
   return (
-    <div className="sidebar-card bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-orange-200/30 sidebar-entrance sidebar-scrollable">
+    <div className="sidebar-card bg-white/25 backdrop-blur-2xl saturate-150 rounded-xl p-4 shadow-lg border border-white/30 sidebar-entrance sidebar-scrollable hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-orange-800 flex items-center">
           <Activity className="w-4 h-4 mr-2 text-orange-600 icon-rotate" />

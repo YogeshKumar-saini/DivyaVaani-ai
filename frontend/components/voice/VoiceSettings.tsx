@@ -188,7 +188,7 @@ export function VoiceSettings() {
           </Select>
         </FormControl>
         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-          Choose your spiritual guide's voice
+          Choose your spiritual guide&apos;s voice
         </Typography>
       </Box>
     </Box>

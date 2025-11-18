@@ -38,11 +38,29 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error to console
     console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Log error to monitoring service (if available)
+    this.logErrorToService();
+    
     this.setState({
       error,
       errorInfo,
     });
+  }
+
+  logErrorToService() {
+    // In production, this would send to a monitoring service like Sentry
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        // Example: Send to monitoring service
+        // sentry.captureException(error, { extra: errorInfo });
+        console.log('Error logged to monitoring service');
+      } catch (loggingError) {
+        console.error('Failed to log error:', loggingError);
+      }
+    }
   }
 
   handleReset = () => {

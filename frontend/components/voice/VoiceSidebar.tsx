@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Close, Mic, VolumeUp, Language, Settings, GraphicEq } from '@mui/icons-material';
-import { Box, IconButton, Typography, Select, MenuItem, FormControl, Switch, FormControlLabel, Slider, Button, Divider, useTheme } from '@mui/material';
+import { Close, Mic, VolumeUp, Language, GraphicEq } from '@mui/icons-material';
+import { Box, IconButton, Typography, Select, MenuItem, FormControl, Switch, FormControlLabel, Slider, Button, Divider } from '@mui/material';
 
 interface VoiceSidebarProps {
   onClose: () => void;

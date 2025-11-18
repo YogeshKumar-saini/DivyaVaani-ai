@@ -46,6 +46,7 @@ export function ChatInput({
     if (!input && textareaRef.current) {
       textareaRef.current.focus();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // only run on mount
 
   const handleSubmit = useCallback(() => {

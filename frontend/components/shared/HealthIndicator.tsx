@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Activity, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { analyticsService } from '@/lib/api/analytics-service';
-import { handleAPIError } from '@/lib/api/client';
 
 interface HealthStatus {
   status: string;

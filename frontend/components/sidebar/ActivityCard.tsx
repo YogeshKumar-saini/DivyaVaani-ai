@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import {
   Activity,
-  CheckCircle,
   Zap,
   Database,
   Globe,
   Clock,
-  TrendingUp,
   AlertCircle,
   RefreshCw,
   BarChart3,
@@ -55,7 +53,7 @@ export function ActivityCard({
     setDisplayActivities(activities);
   }, [activities]);
 
-  const getActivityIcon = (type: ActivityItem['type'], status: ActivityItem['status']) => {
+  const getActivityIcon = (type: ActivityItem['type']) => {
     const iconClass = "w-3 h-3";
     
     switch (type) {
@@ -155,7 +153,7 @@ export function ActivityCard({
   };
 
   return (
-    <div className="sidebar-card bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-orange-200/30 sidebar-entrance sidebar-scrollable">
+    <div className="sidebar-card bg-white/25 backdrop-blur-2xl saturate-150 rounded-xl p-4 shadow-lg border border-white/30 sidebar-entrance sidebar-scrollable hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center">
           <Activity className="w-4 h-4 mr-2 text-blue-500 icon-rotate" />
@@ -181,7 +179,7 @@ export function ActivityCard({
             <div className="flex items-start space-x-3">
               {/* Status indicator */}
               <div className={`mt-0.5 ${getStatusColor(activity.status)}`}>
-                {getActivityIcon(activity.type, activity.status)}
+                {getActivityIcon(activity.type)}
               </div>
               
               {/* Content */}

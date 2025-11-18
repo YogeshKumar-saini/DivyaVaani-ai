@@ -101,3 +101,63 @@ export function PageLoading() {
     </div>
   );
 }
+
+/**
+ * Card Loading Skeleton
+ * Skeleton for card layouts
+ */
+export function CardSkeleton({ count = 1 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <LoadingSkeleton className="h-6 w-3/4" />
+          <LoadingSkeleton className="h-4 w-full" />
+          <LoadingSkeleton className="h-4 w-5/6" />
+          <div className="flex space-x-2">
+            <LoadingSkeleton className="h-8 w-20" />
+            <LoadingSkeleton className="h-8 w-20" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/**
+ * List Loading Skeleton
+ * Skeleton for list items
+ */
+export function ListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center space-x-4 p-4 bg-white rounded-lg border border-gray-200">
+          <LoadingSkeleton className="h-12 w-12 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <LoadingSkeleton className="h-4 w-3/4" />
+            <LoadingSkeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Table Loading Skeleton
+ * Skeleton for table rows
+ */
+export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex space-x-4">
+          {Array.from({ length: columns }).map((_, j) => (
+            <LoadingSkeleton key={j} className="h-10 flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}

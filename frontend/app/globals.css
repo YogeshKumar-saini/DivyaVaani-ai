@@ -117,7 +117,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 25%, #F0E68C 50%, #FFEFD5 75%, #F5DEB3 100%);
+    background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 25%, #F0E68C 50%, #FFEFD5 75%, #F5DEB3 100);
     background-attachment: fixed;
   }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, Clock, Target, Award } from 'lucide-react';
+import { createTransition } from '@/lib/design-system';
 
 interface Context {
   idx: number;
@@ -19,7 +20,7 @@ interface ContextCardProps {
   className?: string;
 }
 
-export function ContextCard({ context, className = '' }: ContextCardProps) {
+const ContextCardComponent = ({ context, className = '' }: ContextCardProps) => {
   const getScoreColor = (score: number): string => {
     if (score >= 0.8) return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900';
     if (score >= 0.6) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900';
@@ -32,24 +33,23 @@ export function ContextCard({ context, className = '' }: ContextCardProps) {
     return <Clock className="h-3 w-3" />;
   };
 
-  const getScoreLabel = (score: number): string => {
-    if (score >= 0.8) return 'Excellent Match';
-    if (score >= 0.6) return 'Good Match';
-    return 'Related';
-  };
+
 
   return (
     <div 
-      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all duration-200 hover:border-amber-300 dark:hover:border-amber-600 ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-amber-400 dark:hover:border-amber-500 hover:scale-[1.02] ${className}`}
       role="article"
       aria-label={`Context reference from ${context.verse}`}
+      style={{
+        transition: createTransition(['all'], 'slow', 'easeOut'),
+      }}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+      <div className="flex items-start justify-between mb-4">
+        <span className="font-bold text-gray-900 dark:text-gray-100 text-base">
           {context.verse}
         </span>
-        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(context.score)}`}>
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${getScoreColor(context.score)}`}>
           {getScoreIcon(context.score)}
           <span>{(context.score * 100).toFixed(0)}%</span>
         </div>
@@ -130,3 +130,11 @@ export function ContextGrid({ contexts, className = '' }: ContextGridProps) {
     </div>
   );
 }
+
+
+export const ContextCard = React.memo(ContextCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.context.idx === nextProps.context.idx &&
+    prevProps.context.score === nextProps.context.score
+  );
+});
