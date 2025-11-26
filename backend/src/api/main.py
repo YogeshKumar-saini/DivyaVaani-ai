@@ -219,6 +219,7 @@ async def initialize_system():
         system_state.qa_system = MultilingualQASystem(
             retriever=retriever,
             groq_api_key=settings.groq_api_key,
+            gemini_api_key=settings.gemini_api_key,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
             enable_caching=True,

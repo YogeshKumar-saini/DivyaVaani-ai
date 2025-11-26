@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.retrieval import HybridRetriever
@@ -127,6 +128,7 @@ class MultilingualQASystem:
         self,
         retriever: HybridRetriever,
         groq_api_key: Optional[str] = None,
+        gemini_api_key: Optional[str] = None,
         temperature: float = 0.3,
         max_tokens: int = 500,
         enable_caching: bool = True,
@@ -136,6 +138,7 @@ class MultilingualQASystem:
     ):
         self.retriever = retriever
         self.groq_api_key = groq_api_key
+        self.gemini_api_key = gemini_api_key
         self.temperature = temperature
         self.max_tokens = max_tokens
 
@@ -152,6 +155,8 @@ class MultilingualQASystem:
         # Set API key only if provided
         if self.groq_api_key:
             os.environ["GROQ_API_KEY"] = self.groq_api_key
+        if self.gemini_api_key:
+            os.environ["GOOGLE_API_KEY"] = self.gemini_api_key
 
     def _generate_question_hash(self, question: str, language: str, user_id: str) -> str:
         """Generate a unique hash for question caching."""
@@ -219,13 +224,44 @@ class MultilingualQASystem:
             if memory_context:
                 context_text += memory_context
 
-            # Generate answer
-            llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=self.temperature, max_tokens=self.max_tokens)
-            system_message = SystemMessage(content="You are Krishna, the divine teacher from the Bhagavad Gita. Provide spiritually profound, practically applicable wisdom.")
-            messages = [system_message, HumanMessage(content=prompt_template.format(context=context_text, question=question))]
+            # Generate answer with fallback logic
+            try:
+                # Primary: Try Groq
+                try:
+                    llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=self.temperature, max_tokens=self.max_tokens)
+                    system_message = SystemMessage(content="You are Krishna, the divine teacher from the Bhagavad Gita. Provide spiritually profound, practically applicable wisdom.")
+                    messages = [system_message, HumanMessage(content=prompt_template.format(context=context_text, question=question))]
+                    
+                    response = llm.invoke(messages)
+                    answer = response.content.strip()
+                    model_used = "llama-3.1-8b-instant"
 
-            response = llm.invoke(messages)
-            answer = response.content.strip()
+                except Exception as e_groq:
+                    log.warning(f"Groq API failed: {e_groq}. Trying Gemini fallback...")
+                    
+                    # Secondary: Try Gemini
+                    if self.gemini_api_key:
+                        try:
+                            llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=self.temperature, max_tokens=self.max_tokens)
+                            system_message = SystemMessage(content="You are Krishna, the divine teacher from the Bhagavad Gita. Provide spiritually profound, practically applicable wisdom.")
+                            messages = [system_message, HumanMessage(content=prompt_template.format(context=context_text, question=question))]
+                            
+                            response = llm.invoke(messages)
+                            answer = response.content.strip()
+                            model_used = "gemini-pro"
+                        except Exception as e_gemini:
+                            log.warning(f"Gemini API failed: {e_gemini}. Using static fallback.")
+                            raise e_gemini # Re-raise to trigger static fallback
+                    else:
+                        log.warning("Gemini API key not configured. Using static fallback.")
+                        raise e_groq # Re-raise to trigger static fallback
+
+            except Exception as e:
+                log.warning(f"All LLM providers failed: {e}. Using fallback response.")
+                answer = self.language_processor.get_fallback_response(question.lower(), language)
+                # Append a note about the API key
+                answer += "\n\n(Note: This is a fallback response because the AI API keys are invalid or missing. Please configure valid GROQ_API_KEY or GEMINI_API_KEY in .env to get AI-generated responses.)"
+                model_used = "fallback"
 
             processing_time = (datetime.now() - start_time).total_seconds()
 
@@ -244,7 +280,7 @@ class MultilingualQASystem:
             qa_response = QAResponse(
                 answer=answer, sources=sources, contexts=formatted_contexts,
                 language=language, confidence_score=confidence_score,
-                processing_time=processing_time, model_used="llama-3.1-8b-instant",
+                processing_time=processing_time, model_used=model_used,
                 token_count=len(answer.split()) + len(prompt_template.split()) * 0.3,
                 quality_metrics=quality_metrics, cross_references=cross_references,
                 user_id=user_id, question_hash=question_hash
@@ -279,6 +315,10 @@ class MultilingualQASystem:
             }
 
         except Exception as e:
+            with open("debug_error.log", "a") as f:
+                f.write(f"DEBUG: Critical error in QA system: {e}\n")
+                import traceback
+                traceback.print_exc(file=f)
             log.error(f"Critical error in QA system: {e}")
             self.analytics_tracker.track_error()
 

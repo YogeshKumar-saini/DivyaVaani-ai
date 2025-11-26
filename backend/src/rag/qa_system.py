@@ -7,7 +7,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage
-from langchain.memory import ConversationBufferMemory
+from langchain_classic.memory import ConversationBufferMemory
 from src.retrieval import HybridRetriever
 from src.utils.logger import log
 

@@ -1,7 +1,7 @@
 """Conversation memory implementation using LangChain."""
 
 from typing import Optional, List, Dict, Any
-from langchain.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
+from langchain_classic.memory import ConversationBufferMemory, ConversationSummaryBufferMemory
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage
 

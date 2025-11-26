@@ -17,6 +17,7 @@ class Settings(BaseModel):
     gemini_api_key: Optional[str] = Field(default=None)
     openai_api_key: Optional[str] = Field(default=None)
     cohere_api_key: Optional[str] = Field(default=None)
+    huggingface_api_key: Optional[str] = Field(default=None)
 
     # Paths
     data_path: str = Field(default="data/bhagavad_gita.csv")
@@ -142,8 +143,8 @@ class Settings(BaseModel):
     def validate_api_keys(self):
         """Validate that required API keys are present."""
         if self.use_api_embeddings:
-            if not any([self.openai_api_key, self.cohere_api_key]):
-                raise ValueError("API embeddings enabled but no API key provided (OpenAI or Cohere)")
+            if not any([self.openai_api_key, self.cohere_api_key, self.huggingface_api_key]):
+                raise ValueError("API embeddings enabled but no API key provided (OpenAI, Cohere, or Hugging Face)")
 
         # In production, require at least one LLM API key
         if self.is_production and not self.groq_api_key:

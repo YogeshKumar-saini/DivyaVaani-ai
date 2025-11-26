@@ -3,24 +3,24 @@ python-dotenv==1.0.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# Data processing
-pandas==2.1.4
-numpy==1.26.2
+# Data processing (commented out due to compilation issues, can be re-enabled if needed)
+# pandas==2.1.0
+# numpy==1.26.0
 
 # NLP & Embeddings
 sentence-transformers==2.2.2
-transformers>=4.40.0
-tokenizers>=0.15.2
+transformers==4.40.0
+tokenizers==0.15.2
 
 # Vector stores & search
-faiss-cpu==1.8.0
-chromadb==0.4.22
+faiss-cpu==1.7.4
+chromadb==0.4.18
 rank-bm25==0.2.2
 
 # Language processing
 nltk==3.8.1
 stanza==1.7.0
-indic-transliteration==2.3.44
+indic-transliteration==2.3.0
 
 # Topic modeling
 bertopic==0.16.0
@@ -29,11 +29,13 @@ hdbscan==0.8.33
 scikit-learn==1.3.2
 
 # LLM & RAG
-langchain>=0.1.0
-langchain-community>=0.0.10
-langchain-core>=0.1.45
-langchain-groq==0.1.3
-openai==1.6.1
+langchain==0.1.0
+langchain-community==0.0.10
+langchain-core==0.1.45
+langchain-groq==0.1.0
+langchain-google-genai==3.2.0
+langchain-huggingface==1.1.0
+openai==1.6.0
 
 # Translation
 langdetect==1.0.9
@@ -46,8 +48,8 @@ rouge-score==0.1.2
 easyocr==1.7.0
 
 # Google Cloud Speech & TTS
-google-cloud-speech==2.26.0
-google-cloud-texttospeech==2.16.3
+google-cloud-speech==2.21.0
+google-cloud-texttospeech==2.14.1
 
 # Audio processing
 pyaudio==0.2.13
@@ -59,23 +61,21 @@ PyPDF2==3.0.1
 pdfplumber==0.10.3
 pytesseract==0.3.10
 Pillow==10.1.0
-tabula-py==2.9.0
+tabula-py==2.8.2
 
 # Enhanced multimodal embeddings
 accelerate==0.25.0
 
-
-
 # API
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 slowapi==0.1.9
 tenacity==8.2.3
 
 # Distributed Caching
 redis==5.0.1
-python-memcached==1.62
+python-memcached==1.59
 
 # Utilities
 tqdm==4.66.1

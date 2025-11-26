@@ -41,7 +41,9 @@ class EmbeddingGenerator:
             return settings.openai_api_key
         elif "cohere" in self.model_name.lower() or "embed-multilingual" in self.model_name.lower():
             return settings.cohere_api_key
-        # Add other API providers as needed
+        elif "sentence-transformers" in self.model_name.lower() or "huggingface" in self.model_name.lower() or "/" in self.model_name:
+            # Assume any other model with a slash is a Hugging Face model if API is enabled
+            return settings.huggingface_api_key
         return None
 
     def load_model(self):
@@ -116,6 +118,8 @@ class EmbeddingGenerator:
             return self._openai_embeddings(texts, normalize_embeddings)
         elif "cohere" in self.model_name.lower() or "embed-multilingual" in self.model_name.lower():
             return self._cohere_embeddings(texts, normalize_embeddings)
+        elif self.api_key and (settings.huggingface_api_key == self.api_key):
+             return self._huggingface_embeddings(texts, normalize_embeddings)
         else:
             log.warning(f"Unsupported API model: {self.model_name}, falling back to local")
             self.use_api = False
@@ -316,6 +320,88 @@ class EmbeddingGenerator:
                 raise
         except Exception as e:
             structured_logger.log_error(e, {"operation": "cohere_embedding_generation"})
+            raise
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((requests.exceptions.RequestException, requests.exceptions.Timeout)),
+        reraise=True
+    )
+    def _huggingface_embeddings(self, texts: List[str], normalize_embeddings: bool = True) -> np.ndarray:
+        """Generate embeddings using Hugging Face Inference API."""
+        if not self.api_key:
+            raise ValueError("Hugging Face API key not configured")
+
+        # Validate inputs
+        if not texts or not all(isinstance(t, str) and t.strip() for t in texts):
+            raise ValueError("Invalid input: texts must be non-empty strings")
+
+        start_time = time.time()
+        embeddings = []
+
+        try:
+            # Hugging Face API URL
+            api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+
+            # Process in batches
+            batch_size = min(32, len(texts))  # Conservative batch size for HF API
+
+            for i in range(0, len(texts), batch_size):
+                batch_texts = texts[i:i + batch_size]
+
+                response = requests.post(
+                    api_url,
+                    headers=headers,
+                    json={"inputs": batch_texts, "options": {"wait_for_model": True}},
+                    timeout=60
+                )
+                response.raise_for_status()
+
+                batch_embeddings = response.json()
+                
+                # Handle potential error response that is not a 4xx/5xx status
+                if isinstance(batch_embeddings, dict) and "error" in batch_embeddings:
+                    raise ValueError(f"Hugging Face API error: {batch_embeddings['error']}")
+                
+                # Ensure we have a list of lists (embeddings)
+                if isinstance(batch_embeddings, list) and len(batch_embeddings) > 0 and isinstance(batch_embeddings[0], list):
+                     embeddings.extend(batch_embeddings)
+                else:
+                     # Some models might return a single list if batch size is 1, or different format
+                     if len(batch_texts) == 1 and isinstance(batch_embeddings, list) and isinstance(batch_embeddings[0], float):
+                         embeddings.append(batch_embeddings)
+                     else:
+                         log.warning(f"Unexpected response format from HF API: {type(batch_embeddings)}")
+                         # Try to recover or raise error
+                         raise ValueError(f"Unexpected response format from HF API")
+
+                # Rate limiting
+                if i + batch_size < len(texts):
+                    time.sleep(0.2)
+
+            embeddings_array = np.array(embeddings)
+
+            if normalize_embeddings:
+                embeddings_array = normalize(embeddings_array)
+
+            processing_time = time.time() - start_time
+            log.info(f"Generated Hugging Face embeddings with shape: {embeddings_array.shape} in {processing_time:.2f}s")
+
+            structured_logger.log_performance(
+                operation="huggingface_embedding_generation",
+                duration=processing_time,
+                metadata={
+                    "text_count": len(texts),
+                    "model": self.model_name
+                }
+            )
+
+            return embeddings_array
+
+        except Exception as e:
+            structured_logger.log_error(e, {"operation": "huggingface_embedding_generation"})
             raise
 
     def _generate_local_embeddings(self, texts: List[str], batch_size: int = 64, normalize_embeddings: bool = True) -> np.ndarray:

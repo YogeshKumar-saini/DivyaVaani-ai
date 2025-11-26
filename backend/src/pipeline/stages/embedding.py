@@ -93,13 +93,17 @@ class EmbeddingStage(PipelineStage):
             np.save(embeddings_path, embeddings)
             log.info(f"Saved embeddings to {embeddings_path}")
             
+            # Track cache statistics if available
+            cache_hits = getattr(self.embedding_service, 'cache_hits', 0) if self.embedding_service else 0
+            cache_misses = len(documents) - cache_hits
+            
             # Create output batch
             output_batch = EmbeddedDocumentBatch(
                 documents=documents,
                 embeddings=embeddings,
                 embedding_model=collection.config.embedding_model,
-                cache_hits=0,  # TODO: Implement caching
-                cache_misses=len(documents),
+                cache_hits=cache_hits,
+                cache_misses=cache_misses,
                 metadata={
                     'embedding_dimension': embeddings.shape[1],
                     'embeddings_path': str(embeddings_path)
