@@ -22,7 +22,7 @@ export default function AboutPage() {
               DivyaVaani AI is an advanced spiritual companion powered by artificial intelligence and the collective wisdom of all spiritual traditions throughout human history. Our system combines cutting-edge natural language processing with deep knowledge from scriptures, philosophies, and spiritual teachings across cultures to provide universal spiritual guidance.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Whether you're seeking answers about dharma, karma, yoga, meditation, love, or life's deeper questions, DivyaVaani offers insights from the rich tapestry of global spiritual traditions, delivered through modern AI technology.
+              Whether you&rsquo;re seeking answers about dharma, karma, yoga, meditation, love, or life&rsquo;s deeper questions, DivyaVaani offers insights from the rich tapestry of global spiritual traditions, delivered through modern AI technology.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function AboutPage() {
           <section className="bg-white rounded-2xl p-8 shadow-lg border border-orange-200/50">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Global Spiritual Wisdom</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              DivyaVaani draws from the timeless wisdom of spiritual traditions across the world, including but not limited to Hinduism, Buddhism, Christianity, Islam, Sikhism, Taoism, and many other sacred teachings. We honor the essential truths that unite humanity's spiritual heritage.
+              DivyaVaani draws from the timeless wisdom of spiritual traditions across the world, including but not limited to Hinduism, Buddhism, Christianity, Islam, Sikhism, Taoism, and many other sacred teachings. We honor the essential truths that unite humanity&apos;s spiritual heritage.
             </p>
             <p className="text-gray-700 leading-relaxed mb-6">
               Our AI has been trained on sacred texts, philosophical works, and spiritual teachings from multiple cultures to provide contextually rich, compassionate, and insightful responses to your spiritual questions.
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 { q: 'What languages are supported?', a: 'We support 12+ languages including English, Hindi, Sanskrit, and many more.' },
                 { q: 'How does it handle different spiritual traditions?', a: 'Our AI provides guidance respectful to all traditions while focusing on universal spiritual principles.' },
                 { q: 'Can I use this for academic research?', a: 'Yes, but please verify important information with original authentic texts and scholars.' },
-                { q: 'Is this a replacement for religious authorities?', a: 'No, DivyaVaani provides general spiritual insights and guidance, not religious authority.' },
+                { q: 'Is this a replacement for religious authorities?', a: 'No, DivyaVaani provides general spiritual insights and guidance, not religious authority&rsquo;s.' },
               ].map((faq, idx) => (
                 <div key={idx} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
                   <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
