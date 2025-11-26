@@ -29,6 +29,11 @@ const theme = createTheme({
       light: blue[400],
       dark: blue[800],
     },
+    warning: {
+      main: '#fbbf24', // amber-400
+      light: '#fcd34d',
+      dark: '#f59e0b',
+    },
     success: {
       main: green[600],
     },
@@ -89,7 +94,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <title>DivyaVaani AI - Universal Spiritual Guidance</title>
+        <title>DivyaVaani AI - AI Spiritual Companion from Universal Wisdom</title>
         <meta name="description" content="Professional AI-powered spiritual guidance system providing intelligent answers from all spiritual traditions and religious wisdom" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>

@@ -35,10 +35,10 @@ export function HeroSection() {
   };
 
   const features = [
-    { icon: LanguageIcon, text: 'Multilingual', color: theme.palette.secondary.main },
-    { icon: MicIcon, text: 'Voice Enabled', color: theme.palette.success.main },
-    { icon: BookIcon, text: 'All Traditions', color: theme.palette.primary.main },
-    { icon: BoltIcon, text: 'Real-time AI', color: theme.palette.warning.main },
+    { icon: LanguageIcon, text: '12+ Languages', color: theme.palette.secondary.main },
+    { icon: MicIcon, text: 'Voice AI', color: theme.palette.success.main },
+    { icon: BookIcon, text: 'Universal Wisdom', color: theme.palette.primary.main },
+    { icon: BoltIcon, text: 'Instant Response', color: theme.palette.warning.main },
   ];
 
   return (

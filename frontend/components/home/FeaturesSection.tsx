@@ -1,5 +1,15 @@
+import { useRouter } from 'next/navigation';
 import { Globe, Mic, BookOpen, Zap, LucideIcon } from 'lucide-react';
-import { FEATURES } from '@/lib/utils/constants';
+import { FEATURES, ROUTES } from '@/lib/utils/constants';
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  IconButton,
+  useTheme,
+} from '@mui/material';
 
 const iconMap: Record<string, LucideIcon> = {
   Globe,
@@ -9,96 +19,217 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export function FeaturesSection() {
+  const theme = useTheme();
+  const router = useRouter();
+
+  const handleExplore = () => {
+    router.push(ROUTES.CHAT);
+  };
+
   return (
-    <section
+    <Box
       id="features"
-      className="relative py-22 px-4 lg:px-8 overflow-hidden"
+      sx={{
+        py: 8,
+        px: 4,
+        position: 'relative',
+        // background: `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 100%)`,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `radial-gradient(circle at 50% 50%, ${theme.palette.primary.main}05 0%, transparent 50%)`,
+          pointerEvents: 'none',
+        },
+      }}
     >
-      {/* BACKGROUND BLURRED LIGHTS */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-orange-50 via-yellow-25 to-white opacity-40"></div>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Title Section */}
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography
+            variant="h3"
+            component="h2"
+            sx={{
+              fontWeight: 'bold',
+              mb: 3,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.error.main})`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Powerful Features
+          </Typography>
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* TITLE */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-orange-600 via-red-500 to-yellow-600 bg-clip-text text-transparent">
-              Powerful Features
-            </span>
-          </h2>
-
-          <div className="relative inline-block">
-            <p className="text-base md:text-lg text-gray-700 max-w-xl mx-auto leading-relaxed">
+          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                maxWidth: 600,
+                mx: 'auto',
+                lineHeight: 1.6,
+              }}
+            >
               Experience spiritual wisdom through cutting-edge AI technology and divine guidance
-            </p>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-20 h-0.5 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-full opacity-60"></div>
-          </div>
-        </div>
+            </Typography>
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -4,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 60,
+                height: 2,
+                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
+                borderRadius: 1,
+                opacity: 0.6,
+              }}
+            />
+          </Box>
+        </Box>
 
-        {/* FEATURES GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {FEATURES.map((feature, i) => {
+        {/* Features Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: '1fr 1fr',
+              lg: '1fr 1fr 1fr 1fr'
+            },
+            gap: 3,
+            mb: 6,
+          }}
+        >
+          {FEATURES.map((feature, index) => {
             const Icon = iconMap[feature.icon as keyof typeof iconMap] || Globe;
 
             return (
-              <div
+              <Paper
                 key={feature.id}
-                className="group relative p-6 rounded-2xl
-                border border-white/40 shadow-lg
-                bg-gradient-to-br from-white/80 to-orange-50/50
-                backdrop-blur-lg transition-all duration-300
-                hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02]"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                elevation={2}
+                sx={{
+                  p: 3,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  borderRadius: 3,
+                  background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(255,255,255,0.8) 100%)`,
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${theme.palette.divider}`,
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                    borderColor: theme.palette.primary.main,
+                  },
+                }}
               >
-                {/* ICON */}
-                <div className="flex justify-center mb-4">
-                  <div className="h-14 w-14 rounded-xl flex items-center justify-center
-                  bg-gradient-to-br from-orange-500 via-red-500 to-yellow-500
-                  shadow-sm group-hover:shadow-lg group-hover:scale-105 transition-transform duration-300">
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
+                {/* Icon */}
+                <IconButton
+                  sx={{
+                    mb: 2,
+                    width: 56,
+                    height: 56,
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
+                    color: 'white',
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.warning.dark})`,
+                      transform: 'scale(1.1)',
+                    },
+                    transition: 'all 0.3s ease-in-out',
+                  }}
+                >
+                  <Icon fontSize="medium" />
+                </IconButton>
 
-                {/* TITLE */}
-                <h3 className="text-xl font-semibold text-center text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                {/* Title */}
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    mb: 2,
+                    color: theme.palette.text.primary,
+                    transition: 'color 0.3s ease-in-out',
+                  }}
+                >
                   {feature.title}
-                </h3>
+                </Typography>
 
-                {/* DESCRIPTION */}
-                <p className="text-gray-700 text-center leading-relaxed">
+                {/* Description */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    lineHeight: 1.6,
+                    flexGrow: 1,
+                  }}
+                >
                   {feature.description}
-                </p>
-
-                {/* MINI BAR DECOR */}
-                <div className="mt-6 flex justify-center">
-                  <div className="w-12 h-1 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </div>
-              </div>
+                </Typography>
+              </Paper>
             );
           })}
-        </div>
+        </Box>
 
-        {/* CTA SECTION */}
-        <div className="text-center mt-12">
-          <div className="inline-block px-6 py-4 rounded-xl shadow-lg
-          bg-gradient-to-br from-orange-100/30 via-yellow-50/30 to-orange-100/30
-          backdrop-blur-sm border border-white/50">
-            <p className="text-gray-800 text-lg font-medium mb-4 max-w-lg mx-auto">
+        {/* CTA Section */}
+        <Box sx={{ textAlign: 'center' }}>
+          <Paper
+            sx={{
+              display: 'inline-block',
+              px: 4,
+              py: 3,
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(255,255,255,0.9) 100%)`,
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${theme.palette.divider}`,
+              boxShadow: theme.shadows[4],
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{
+                mb: 3,
+                color: theme.palette.text.secondary,
+                maxWidth: 500,
+                mx: 'auto',
+                fontWeight: 500,
+              }}
+            >
               Experience the ancient wisdom that has guided millions through the ages
-            </p>
+            </Typography>
 
-            <button className="px-6 py-2 rounded-lg text-white font-medium
-            bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500
-            shadow-md hover:shadow-lg hover:scale-105 transition-all">
-              <span className="flex items-center gap-2">
-                Explore Spiritual Wisdom
-                <svg className="w-4 h-4" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleExplore}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 2,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
+                color: 'white',
+                fontWeight: 600,
+                boxShadow: theme.shadows[4],
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.warning.dark})`,
+                  boxShadow: theme.shadows[8],
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.3s ease-in-out',
+              }}
+            >
+              Explore Spiritual Wisdom
+            </Button>
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 }

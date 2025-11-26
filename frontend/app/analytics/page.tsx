@@ -14,17 +14,26 @@ import {
   List,
   ListItem,
   ListItemText,
+  Paper,
+  Chip,
+  Avatar,
+  Divider,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   FlashOn as FlashIcon,
   AccessTime as AccessTimeIcon,
-  BarChart as BarChartIcon,
+  Analytics as AnalyticsIcon,
+  Refresh as RefreshIcon,
+  Equalizer as EqualizerIcon,
+  Assessment as AssessmentIcon,
   Memory as MemoryIcon,
   Storage as StorageIcon,
   Timeline as TimelineIcon,
-  Analytics as AnalyticsIcon,
+  CloudQueue as CloudIcon,
 } from '@mui/icons-material';
 
 interface Analytics {
@@ -63,7 +72,6 @@ export default function AnalyticsPage() {
       setAnalytics(data.analytics);
     } catch (error) {
       console.error('Failed to load analytics:', error);
-      // Set fallback data when API fails
       setAnalytics({
         total_queries: 0,
         unique_users: 0,
@@ -98,10 +106,11 @@ export default function AnalyticsPage() {
   }
 
   const getMetricIcon = (key: string) => {
-    if (key.toLowerCase().includes('cpu')) return <MemoryIcon color="primary" />;
-    if (key.toLowerCase().includes('memory') || key.toLowerCase().includes('ram')) return <StorageIcon color="success" />;
-    if (key.toLowerCase().includes('response') || key.toLowerCase().includes('latency')) return <TimelineIcon color="warning" />;
-    return <BarChartIcon color="secondary" />;
+    if (key.toLowerCase().includes('cpu')) return <MemoryIcon sx={{ color: 'primary.main' }} />;
+    if (key.toLowerCase().includes('memory') || key.toLowerCase().includes('ram')) return <StorageIcon sx={{ color: 'success.main' }} />;
+    if (key.toLowerCase().includes('response') || key.toLowerCase().includes('latency')) return <TimelineIcon sx={{ color: 'warning.main' }} />;
+    if (key.toLowerCase().includes('cache')) return <CloudIcon sx={{ color: 'info.main' }} />;
+    return <AssessmentIcon sx={{ color: 'secondary.main' }} />;
   };
 
   const formatMetricValue = (value: unknown, key: string): string => {
@@ -122,181 +131,125 @@ export default function AnalyticsPage() {
     }
     if (typeof value === 'object' && value !== null) {
       if (Array.isArray(value)) {
-        return `${value.length} items`;
-      }
-      const keys = Object.keys(value);
-      if (keys.length === 1) {
-        const firstKey = keys[0];
-        const firstValue = (value as Record<string, unknown>)[firstKey];
-        if (typeof firstValue === 'number') {
-          return formatMetricValue(firstValue, firstKey);
+        if (key.toLowerCase().includes('histograms') || key.toLowerCase().includes('timers')) {
+          return `${value.length} items`;
         }
-        return `${firstKey}: ${String(firstValue)}`;
+        return `Array(${value.length})`;
       }
-      return `${keys.length} properties`;
+      // For complex objects like histograms, show a summary
+      const entries = Object.keys(value);
+      if (entries.length > 0) {
+        if (key.toLowerCase().includes('gauges') || key.toLowerCase().includes('counters')) {
+          return `${entries.length} entries`;
+        }
+        if (key.toLowerCase().includes('histograms')) {
+          return `${entries.length} metrics`;
+        }
+      }
+      return `${entries.length} props`;
     }
     if (typeof value === 'boolean') {
-      return value ? 'Yes' : 'No';
-    }
-    if (value === null || value === undefined) {
-      return 'N/A';
+      return value ? 'Active' : 'Inactive';
     }
     return String(value);
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>
-          Analytics Dashboard
-        </Typography>
-        <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-          System usage and performance metrics
-        </Typography>
-      </Box>
-
-      {/* Stats Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 3, mb: 4 }}>
-        <Card sx={{ p: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <TrendingUpIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-              Total
-            </Typography>
+    <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'grey.50' }}>
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+            Analytics Dashboard
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
+            System performance and usage metrics
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+            <Chip size="small" label="Live" color="success" />
+            <Chip size="small" label="Auto-refresh" variant="outlined" />
           </Box>
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
-            {formatNumber(analytics?.total_queries || 0)}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Queries
-          </Typography>
-        </Card>
-
-        <Card sx={{ p: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <PeopleIcon sx={{ fontSize: 32, color: 'secondary.main' }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-              Active
-            </Typography>
-          </Box>
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: 'secondary.main' }}>
-            {formatNumber(analytics?.unique_users || 0)}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Users
-          </Typography>
-        </Card>
-
-        <Card sx={{ p: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <FlashIcon sx={{ fontSize: 32, color: 'warning.main' }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-              Rate
-            </Typography>
-          </Box>
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: 'warning.main' }}>
-            {analytics && (analytics.cache_hits + analytics.cache_misses) > 0
-              ? Math.round((analytics.cache_hits / (analytics.cache_hits + analytics.cache_misses)) * 100)
-              : 0}%
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Cache Hit
-          </Typography>
-        </Card>
-
-        <Card sx={{ p: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <AccessTimeIcon sx={{ fontSize: 32, color: 'error.main' }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-              Avg
-            </Typography>
-          </Box>
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1, color: 'error.main' }}>
-            {analytics?.avg_response_time?.toFixed(0) || 0}ms
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Response Time
-          </Typography>
-        </Card>
-      </Box>
-
-      {/* Popular Questions */}
-      {analytics?.popular_questions && Object.keys(analytics.popular_questions).length > 0 && (
-        <Card sx={{ mb: 4, p: 3 }}>
-          <Typography variant="h4" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
-            Popular Questions
-          </Typography>
-          <List>
-            {Object.entries(analytics.popular_questions).slice(0, 10).map(([question, count], idx) => (
-              <ListItem key={idx} sx={{ px: 0, py: 1 }}>
-                <ListItemText
-                  primary={question}
-                  secondary={`${count}×`}
-                  primaryTypographyProps={{ sx: { color: 'text.primary' } }}
-                  secondaryTypographyProps={{ sx: { color: 'primary.main', fontWeight: 'bold' } }}
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Card>
-      )}
-
-      {/* System Metrics */}
-      <Card sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AnalyticsIcon sx={{ mr: 2, color: 'primary.main' }} />
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 'bold' }}>
-              System Metrics
-            </Typography>
-          </Box>
-          {metricsLoading && <LinearProgress sx={{ width: 100 }} />}
         </Box>
 
-        {metrics ? (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 3 }}>
-            {Object.entries(metrics.metrics).map(([key, value], idx) => (
-              <Card variant="outlined" key={idx} sx={{ p: 2, '&:hover': { bgcolor: 'action.hover' } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        {/* Metrics Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
+          <Card sx={{ p: 2, textAlign: 'center', '&:hover': { elevation: 4 } }}>
+            <Avatar sx={{ bgcolor: 'primary.main', mx: 'auto', mb: 1 }}><TrendingUpIcon /></Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 0.5 }}>
+              {formatNumber(analytics?.total_queries || 0)}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Queries</Typography>
+          </Card>
+
+          <Card sx={{ p: 2, textAlign: 'center', '&:hover': { elevation: 4 } }}>
+            <Avatar sx={{ bgcolor: 'secondary.main', mx: 'auto', mb: 1 }}><PeopleIcon /></Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 0.5 }}>
+              {formatNumber(analytics?.unique_users || 0)}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Users</Typography>
+          </Card>
+
+          <Card sx={{ p: 2, textAlign: 'center', '&:hover': { elevation: 4 } }}>
+            <Avatar sx={{ bgcolor: 'success.main', mx: 'auto', mb: 1 }}><FlashIcon /></Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 0.5 }}>
+              {analytics && (analytics.cache_hits + analytics.cache_misses) > 0
+                ? Math.round((analytics.cache_hits / (analytics.cache_hits + analytics.cache_misses)) * 100)
+                : 0}%
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Cache Hit</Typography>
+          </Card>
+
+          <Card sx={{ p: 2, textAlign: 'center', '&:hover': { elevation: 4 } }}>
+            <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 1 }}><AccessTimeIcon /></Avatar>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main', mb: 0.5 }}>
+              {analytics?.avg_response_time?.toFixed(0) || 0}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Response(ms)</Typography>
+          </Card>
+        </Box>
+
+        {/* System Metrics */}
+        <Card sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <EqualizerIcon sx={{ mr: 2, color: 'primary.main' }} />
+            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+              System Performance
+            </Typography>
+          </Box>
+
+          {metrics ? (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+              {Object.entries(metrics.metrics).map(([key, value], idx) => (
+                <Paper key={idx} sx={{ p: 2, textAlign: 'center', elevation: 1 }}>
                   {getMetricIcon(key)}
-                  <Typography variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 500 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 1, mb: 0.5 }}>
+                    {formatMetricValue(value, key)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
                     {key.replace(/_/g, ' ')}
                   </Typography>
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {formatMetricValue(value, key)}
-                </Typography>
-              </Card>
-            ))}
-          </Box>
-        ) : (
-          <Box sx={{ textAlign: 'center', py: 6 }}>
-            <BarChartIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-              Metrics data not available
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.disabled', mt: 1 }}>
-              System metrics will appear here when available
-            </Typography>
-          </Box>
-        )}
+                </Paper>
+              ))}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <AssessmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+              <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                System metrics not available
+              </Typography>
+            </Box>
+          )}
+        </Card>
 
-        {metrics && (
-          <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center', display: 'block' }}>
-              Last updated: {metrics.timestamp > 0
-                ? new Date(metrics.timestamp * 1000).toLocaleString()
-                : new Date().toLocaleString()}
+        {/* Feedback */}
+        <Box sx={{ mt: 4 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+              Help Improve Our Service
             </Typography>
-          </Box>
-        )}
-      </Card>
-
-      {/* Feedback Section */}
-      <Box sx={{ mt: 4 }}>
-        <FeedbackForm />
-      </Box>
-    </Container>
+            <FeedbackForm />
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 }

@@ -24,7 +24,11 @@ export default function VoicePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100' }}>
+    <Box sx={{
+      minHeight: '100vh',
+      bgcolor: 'linear-gradient(135deg, #f5f5dc 0%, #ffe4b5 25%, #f0e68c 50%, #ffe4b5 75%, #f5deb3 100%)',
+      backgroundAttachment: 'fixed'
+    }}>
       {/* Header */}
       <Box sx={{
         bgcolor: 'white',

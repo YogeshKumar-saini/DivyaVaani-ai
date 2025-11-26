@@ -49,7 +49,7 @@ export default function ChatPageContent() {
     {
       id: 'welcome',
       type: 'bot',
-      content: 'ॐ नमस्ते!\n\nI am your divine spiritual companion, enlightened by the eternal wisdom of the Bhagavad Gita. As Krishna\'s messenger of divine knowledge, I offer profound guidance on the sacred paths of dharma, karma, yoga, and spiritual awakening.\n\nWhat sacred question dwells in your heart today?',
+      content: 'ॐ नमस्ते!\n\nI am DivyaVaani, your enlightened spiritual guide drawing from the collective wisdom of all spiritual traditions. I offer profound guidance on the sacred paths of dharma, karma, yoga, and spiritual awakening from universal teachings.\n\nWhat sacred wisdom dwells in your heart today?',
       timestamp: new Date(),
     }
   ]);
@@ -191,10 +191,10 @@ export default function ChatPageContent() {
   const showWelcome = messages.length === 1 && !initialQuestionProcessed.current;
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent relative">
+    <div className="flex flex-col min-h-screen bg-linear-to-br from-orange-50 via-yellow-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative">
       {/* Header with enhanced spiritual design */}
-      <header className="flex-shrink-0 border-b border-amber-200 dark:border-amber-800 bg-lotus-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-1 relative lotus-decoration">
+      <header className="shrink-0 border-b border-orange-200 dark:border-gray-700 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg shadow-md">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -208,7 +208,7 @@ export default function ChatPageContent() {
                   DivyaVaani AI
                 </h1>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Sacred Bhagavad Gita Wisdom Assistant 🪷
+                  Universal Spiritual Wisdom Assistant 🪷
                 </p>
               </div>
             </div>
