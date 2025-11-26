@@ -7,7 +7,6 @@ import {
   Square,
   Play,
   Pause,
-  Settings,
   Volume2,
   VolumeX,
   RotateCcw,
@@ -25,7 +24,6 @@ import {
   Chip,
   LinearProgress,
   Alert,
-  Divider,
 } from '@mui/material';
 
 interface Message {
@@ -48,8 +46,6 @@ export function VoiceChat() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

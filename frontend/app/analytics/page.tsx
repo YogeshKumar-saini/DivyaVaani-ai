@@ -10,24 +10,15 @@ import {
   Box,
   Typography,
   Card,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
   Paper,
   Chip,
   Avatar,
-  Divider,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   FlashOn as FlashIcon,
   AccessTime as AccessTimeIcon,
-  Analytics as AnalyticsIcon,
-  Refresh as RefreshIcon,
   Equalizer as EqualizerIcon,
   Assessment as AssessmentIcon,
   Memory as MemoryIcon,
@@ -54,7 +45,6 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [metricsLoading, setMetricsLoading] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -87,13 +77,10 @@ export default function AnalyticsPage() {
 
   const loadMetrics = async () => {
     try {
-      setMetricsLoading(true);
       const data = await analyticsService.getMetrics();
       setMetrics(data);
     } catch (error) {
       console.error('Failed to load metrics:', error);
-    } finally {
-      setMetricsLoading(false);
     }
   };
 

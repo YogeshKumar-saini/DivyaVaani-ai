@@ -105,7 +105,7 @@ export function FeaturesSection() {
             mb: 6,
           }}
         >
-          {FEATURES.map((feature, index) => {
+          {FEATURES.map((feature) => {
             const Icon = iconMap[feature.icon as keyof typeof iconMap] || Globe;
 
             return (
