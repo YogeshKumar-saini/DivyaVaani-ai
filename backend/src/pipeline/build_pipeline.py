@@ -19,10 +19,12 @@ class BuildPipeline:
 
         # Use comprehensive data loader for all files
         self.data_loader = ComprehensiveDataLoader()
-        self.embedding_generator = EmbeddingGenerator(self.settings.embedding_model, self.settings.use_api_embeddings)
-        self.faiss_store = FAISSStore(self.settings.faiss_index_path)
-        self.chroma_store = ChromaStore(self.settings.chroma_persist_dir, "verses")
-        self.bm25_store = BM25Store(str(self.settings.artifact_path / "bm25.pkl"))
+        # Use local model - online APIs not working (Cohere rate limits, HF 410 errors)
+        self.embedding_generator = EmbeddingGenerator("sentence-transformers/all-MiniLM-L6-v2", use_api=False)
+        # Using Pinecone cloud vector store only - no local FAISS/BM25/ChromaDB needed
+        # self.faiss_store = FAISSStore(self.settings.faiss_index_path)
+        # self.chroma_store = ChromaStore(self.settings.chroma_persist_dir, "verses")
+        # self.bm25_store = BM25Store(str(self.settings.artifact_path / "bm25.pkl"))
 
         self.df = None
         self.embeddings = None
@@ -60,33 +62,65 @@ class BuildPipeline:
         # Filter dataframe to match valid embeddings
         self.df = self.df.iloc[valid_indices].reset_index(drop=True)
 
-        # Save embeddings
+        # Save embeddings for reference
         embeddings_path = self.settings.artifact_path / "embeddings.npy"
         np.save(embeddings_path, self.embeddings)
         log.info(f"Embeddings saved to {embeddings_path}")
 
-        # Step 3: Create FAISS index
-        log.info("\n[Step 3/6] Creating FAISS index...")
-        self.faiss_store.create_index(self.embeddings)
-        self.faiss_store.save()
+        # Step 3: Upload to Pinecone (cloud vector store)
+        log.info("\n[Step 3/4] Uploading to Pinecone...")
+        try:
+            from pinecone import Pinecone, ServerlessSpec
+            import os
+            
+            # Initialize Pinecone
+            pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+            
+            index_name = "divyavaani-verses"
+            
+            # Create index if it doesn't exist
+            if index_name not in pc.list_indexes().names():
+                log.info(f"Creating Pinecone index: {index_name}")
+                pc.create_index(
+                    name=index_name,
+                    dimension=self.embeddings.shape[1],
+                    metric='cosine',
+                    spec=ServerlessSpec(cloud='aws', region='us-east-1')
+                )
+                log.info("Waiting for index to be ready...")
+                import time
+                time.sleep(10)  # Wait for index to initialize
+            
+            # Get index
+            index = pc.Index(index_name)
+            
+            # Prepare vectors for upload
+            vectors = []
+            metadatas = self.df[['source_file', 'file_type', 'language', 'title', 'content']].to_dict(orient='records')
+            
+            for i in range(len(self.embeddings)):
+                vectors.append({
+                    'id': str(i),
+                    'values': self.embeddings[i].tolist(),
+                    'metadata': metadatas[i]
+                })
+            
+            # Upload in batches
+            batch_size = 100
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i+batch_size]
+                index.upsert(vectors=batch)
+                if (i + batch_size) % 1000 == 0:
+                    log.info(f"Uploaded {min(i+batch_size, len(vectors))}/{len(vectors)} vectors")
+            
+            log.info(f"Successfully uploaded {len(vectors)} vectors to Pinecone")
+            
+        except Exception as e:
+            log.error(f"Failed to upload to Pinecone: {e}")
+            log.warning("Continuing without Pinecone...")
 
-        # Step 4: Create BM25 index
-        log.info("\n[Step 4/6] Creating BM25 index...")
-        self.bm25_store.create_index(valid_texts)
-        self.bm25_store.save()
-
-        # Step 5: Create ChromaDB collection
-        log.info("\n[Step 5/6] Creating ChromaDB collection...")
-        self.chroma_store.initialize()
-
-        documents = valid_texts
-        metadatas = self.df[['source_file', 'file_type', 'language', 'title']].to_dict(orient='records')
-        ids = [str(i) for i in range(len(documents))]
-
-        self.chroma_store.add_documents(documents, metadatas, ids)
-
-        # Step 6: Save processed dataframe
-        log.info("\n[Step 6/6] Saving processed dataframe...")
+        # Step 4: Save processed dataframe
+        log.info("\n[Step 4/4] Saving processed dataframe...")
         df_path = self.settings.artifact_path / "verses.parquet"
         self.df.to_parquet(df_path, index=False)
         log.info(f"Dataframe saved to {df_path}")

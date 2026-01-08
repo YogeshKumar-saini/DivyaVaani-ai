@@ -33,17 +33,14 @@ class Settings(BaseModel):
     llm_max_tokens: int = Field(default=500, ge=1, le=4096)
 
     # Vector stores
-    chroma_persist_dir: str = Field(default="artifacts/chroma")
-    faiss_index_path: str = Field(default="artifacts/faiss.index")
-
-    # Retrieval
-    bm25_top_k: int = Field(default=30, ge=1, le=100)
-    faiss_top_k: int = Field(default=30, ge=1, le=100)
-    hybrid_top_k: int = Field(default=8, ge=1, le=50)
-
-    # API
     api_host: str = Field(default="0.0.0.0")
     api_port: int = Field(default=5001, ge=1, le=65535)
+
+    # Pinecone Vector Store
+    pinecone_api_key: Optional[str] = Field(default=None)
+    pinecone_index_name: str = Field(default="divyavaani-verses")
+    pinecone_cloud: str = Field(default="aws")
+    pinecone_region: str = Field(default="us-east-1")
 
     # Security
     cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
@@ -131,7 +128,6 @@ class Settings(BaseModel):
         """Create necessary directories."""
         directories = [
             self.artifact_path,
-            Path(self.chroma_persist_dir),
             Path(self.log_dir),
             Path("cache"),
             Path("cache/embeddings")

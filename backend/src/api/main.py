@@ -21,8 +21,6 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from src.config import settings
 from src.embeddings import EmbeddingGenerator
-from src.vectorstore import FAISSStore, BM25Store
-from src.retrieval import HybridRetriever
 from src.rag.multilingual_qa_system import MultilingualQASystem
 from src.utils.logger import log, structured_logger
 from src.monitoring.health import get_health_checker
@@ -180,41 +178,21 @@ async def initialize_system():
     try:
         log.info("Initializing QA system components...")
 
-        # Load dataframe
-        df_path = settings.artifact_path / "verses.parquet"
-        if not df_path.exists():
-            raise FileNotFoundError(f"Data file not found: {df_path}")
-
-        df = pd.read_parquet(df_path)
-        log.info(f"Loaded {len(df)} verses")
-
-        # Load embeddings
-        embeddings_path = settings.artifact_path / "embeddings.npy"
-        if not embeddings_path.exists():
-            raise FileNotFoundError(f"Embeddings file not found: {embeddings_path}")
-
-        embeddings = np.load(embeddings_path)
-        log.info(f"Loaded embeddings with shape {embeddings.shape}")
-
         # Initialize components
-        embedding_generator = EmbeddingGenerator(settings.embedding_model, settings.use_api_embeddings)
-        embedding_generator.load_model()
-
-        faiss_store = FAISSStore(settings.faiss_index_path)
-        faiss_store.load()
-
-        bm25_store = BM25Store(str(settings.artifact_path / "bm25.pkl"))
-        bm25_store.load()
-
-        # Create retriever
-        retriever = HybridRetriever(
-            faiss_store=faiss_store,
-            bm25_store=bm25_store,
-            embedding_generator=embedding_generator,
-            dataframe=df,
-            embeddings=embeddings
+        log.info("Initializing Pinecone retriever...")
+        from src.retrieval import PineconeRetriever
+        
+        retriever = PineconeRetriever(
+            index_name="divyavaani-verses",
+            model_name=settings.embedding_model
         )
-
+        
+        # Load model and connect to Pinecone
+        retriever.load_model()
+        if not retriever.connect():
+            raise RuntimeError("Failed to connect to Pinecone")
+        
+        log.info("Pinecone retriever initialized successfully")
         # Create enhanced multilingual QA system
         system_state.qa_system = MultilingualQASystem(
             retriever=retriever,

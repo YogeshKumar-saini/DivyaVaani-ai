@@ -44,7 +44,7 @@ class HealthCheck:
         results = {}
         
         results['storage'] = self.check_storage()
-        results['collections'] = self.check_collections()
+        results['pinecone'] = self.check_pinecone()
         results['artifacts'] = self.check_artifacts()
         
         return results
@@ -103,60 +103,56 @@ class HealthCheck:
                 message=f"Error checking storage: {str(e)}"
             )
     
-    def check_collections(self) -> HealthCheckResult:
-        """Check collection health.
+    def check_pinecone(self) -> HealthCheckResult:
+        """Check Pinecone index health.
         
         Returns:
-            HealthCheckResult for collections
+            HealthCheckResult for Pinecone
         """
         try:
-            if not self.artifact_dir.exists():
+            from pinecone import Pinecone
+            import os
+            
+            api_key = os.getenv('PINECONE_API_KEY')
+            if not api_key:
                 return HealthCheckResult(
-                    component="collections",
-                    status=HealthStatus.UNKNOWN,
-                    message="Artifact directory not found"
+                    component="pinecone",
+                    status=HealthStatus.UNHEALTHY,
+                    message="Pinecone API key not found in environment"
                 )
             
-            # Count collections
-            collections = [d for d in self.artifact_dir.iterdir() if d.is_dir()]
+            pc = Pinecone(api_key=api_key)
+            index_name = "divyavaani-verses"
             
-            if not collections:
+            # Check if index exists
+            if index_name not in pc.list_indexes().names():
                 return HealthCheckResult(
-                    component="collections",
-                    status=HealthStatus.DEGRADED,
-                    message="No collections found",
-                    details={'count': 0}
+                    component="pinecone",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"Index '{index_name}' not found"
                 )
             
-            # Check for collection manifests
-            valid_collections = 0
-            for coll_dir in collections:
-                manifest = coll_dir / "collection_manifest.json"
-                if manifest.exists():
-                    valid_collections += 1
-            
-            if valid_collections == 0:
-                return HealthCheckResult(
-                    component="collections",
-                    status=HealthStatus.DEGRADED,
-                    message="No valid collections found",
-                    details={'total': len(collections), 'valid': 0}
-                )
+            # Check index stats
+            index = pc.Index(index_name)
+            stats = index.describe_index_stats()
             
             return HealthCheckResult(
-                component="collections",
+                component="pinecone",
                 status=HealthStatus.HEALTHY,
-                message=f"{valid_collections} valid collections",
-                details={'total': len(collections), 'valid': valid_collections}
+                message=f"Pinecone healthy, {stats.total_vector_count} vectors",
+                details={
+                    'total_vectors': stats.total_vector_count,
+                    'dimension': stats.dimension
+                }
             )
             
         except Exception as e:
             return HealthCheckResult(
-                component="collections",
+                component="pinecone",
                 status=HealthStatus.UNKNOWN,
-                message=f"Error checking collections: {str(e)}"
+                message=f"Error checking Pinecone: {str(e)}"
             )
-    
+
     def check_artifacts(self) -> HealthCheckResult:
         """Check artifact health.
 
@@ -171,8 +167,9 @@ class HealthCheck:
                     message="Artifact directory not found"
                 )
 
-            # Check for required artifacts in the root artifacts directory
-            required_artifacts = ['embeddings.npy', 'faiss.index', 'bm25.pkl', 'verses.parquet']
+            # Check for required artifacts - only embeddings and data needed for reference
+            # Pinecone holds the actual vectors
+            required_artifacts = ['embeddings.npy', 'verses.parquet']
 
             artifacts_found = sum(1 for art in required_artifacts if (self.artifact_dir / art).exists())
 

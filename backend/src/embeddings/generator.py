@@ -37,13 +37,14 @@ class EmbeddingGenerator:
 
     def _get_api_key(self) -> Optional[str]:
         """Get API key based on configured model."""
+        import os
         if "openai" in self.model_name.lower() or "text-embedding" in self.model_name.lower():
-            return settings.openai_api_key
+            return os.getenv('OPENAI_API_KEY') or settings.openai_api_key
         elif "cohere" in self.model_name.lower() or "embed-multilingual" in self.model_name.lower():
-            return settings.cohere_api_key
+            return os.getenv('COHERE_API_KEY') or settings.cohere_api_key
         elif "sentence-transformers" in self.model_name.lower() or "huggingface" in self.model_name.lower() or "/" in self.model_name:
             # Assume any other model with a slash is a Hugging Face model if API is enabled
-            return settings.huggingface_api_key
+            return os.getenv('HUGGINGFACE_API_KEY') or settings.huggingface_api_key
         return None
 
     def load_model(self):
@@ -118,8 +119,9 @@ class EmbeddingGenerator:
             return self._openai_embeddings(texts, normalize_embeddings)
         elif "cohere" in self.model_name.lower() or "embed-multilingual" in self.model_name.lower():
             return self._cohere_embeddings(texts, normalize_embeddings)
-        elif self.api_key and (settings.huggingface_api_key == self.api_key):
-             return self._huggingface_embeddings(texts, normalize_embeddings)
+        elif "sentence-transformers" in self.model_name.lower() or "/" in self.model_name:
+            # Use Hugging Face Inference API for sentence-transformers and other HF models
+            return self._huggingface_embeddings(texts, normalize_embeddings)
         else:
             log.warning(f"Unsupported API model: {self.model_name}, falling back to local")
             self.use_api = False
@@ -341,8 +343,8 @@ class EmbeddingGenerator:
         embeddings = []
 
         try:
-            # Hugging Face API URL
-            api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+            # Hugging Face API URL - direct model endpoint
+            api_url = f"https://api-inference.huggingface.co/models/{self.model_name}"
             headers = {"Authorization": f"Bearer {self.api_key}"}
 
             # Process in batches
@@ -354,28 +356,27 @@ class EmbeddingGenerator:
                 response = requests.post(
                     api_url,
                     headers=headers,
-                    json={"inputs": batch_texts, "options": {"wait_for_model": True}},
+                    json={"inputs": batch_texts},
                     timeout=60
                 )
                 response.raise_for_status()
 
                 batch_embeddings = response.json()
                 
-                # Handle potential error response that is not a 4xx/5xx status
-                if isinstance(batch_embeddings, dict) and "error" in batch_embeddings:
-                    raise ValueError(f"Hugging Face API error: {batch_embeddings['error']}")
-                
-                # Ensure we have a list of lists (embeddings)
-                if isinstance(batch_embeddings, list) and len(batch_embeddings) > 0 and isinstance(batch_embeddings[0], list):
-                     embeddings.extend(batch_embeddings)
+                # Handle response format - can be list of embeddings or single embedding
+                if isinstance(batch_embeddings, list):
+                    # If it's a list of lists (multiple texts)
+                    if len(batch_embeddings) > 0 and isinstance(batch_embeddings[0], list):
+                        embeddings.extend(batch_embeddings)
+                    # If it's a single embedding (one text)
+                    elif len(batch_texts) == 1 and isinstance(batch_embeddings[0], (int, float)):
+                        embeddings.append(batch_embeddings)
+                    else:
+                        # Unexpected format
+                        log.warning(f"Unexpected response format from HF API: {type(batch_embeddings)}")
+                        embeddings.extend(batch_embeddings)
                 else:
-                     # Some models might return a single list if batch size is 1, or different format
-                     if len(batch_texts) == 1 and isinstance(batch_embeddings, list) and isinstance(batch_embeddings[0], float):
-                         embeddings.append(batch_embeddings)
-                     else:
-                         log.warning(f"Unexpected response format from HF API: {type(batch_embeddings)}")
-                         # Try to recover or raise error
-                         raise ValueError(f"Unexpected response format from HF API")
+                    raise ValueError(f"Unexpected response format from HF API: {type(batch_embeddings)}")
 
                 # Rate limiting
                 if i + batch_size < len(texts):
