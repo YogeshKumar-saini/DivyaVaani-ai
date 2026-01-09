@@ -1,49 +1,50 @@
-# Multi-stage build for production
-FROM python:3.11-slim as builder
+# Production Dockerfile for Backend
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH /app
 
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
+    g++ \
+    cmake \
+    python3-dev \
+    libffi-dev \
+    libssl-dev \
+    portaudio19-dev \
+    libasound2-dev \
+    ffmpeg \
+    tesseract-ocr \
+    libtesseract-dev \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt .
+# Create a non-root user
+RUN addgroup --system --gid 1001 appuser && \
+    adduser --system --uid 1001 --gid 1001 appuser
 
 # Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
+COPY requirements.txt .
+RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
-# Production stage
-FROM python:3.11-slim
+# Copy the source code and ensure permissions
+COPY --chown=appuser:appuser . .
 
-WORKDIR /app
+# Create necessary directories and set permissions
+RUN mkdir -p cache logs artifacts && \
+    chown -R appuser:appuser cache logs artifacts
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+USER appuser
 
-# Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Copy application code
-COPY src/ ./src/
-COPY scripts/ ./scripts/
-COPY data/ ./data/
-COPY .env.example .env
-
-# Create directories
-RUN mkdir -p artifacts logs
-
-# Expose port
+# Expose the API port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
-
-# Run API server
-CMD ["python", "scripts/run_api.py"]
+# Run the application
+CMD ["python", "-m", "src.api.main"]

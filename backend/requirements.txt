@@ -10,17 +10,17 @@ pydantic-settings==2.1.0
 # NLP & Embeddings
 sentence-transformers==2.2.2
 transformers==4.40.0
-tokenizers==0.15.2
+tokenizers==0.19.1
 
 # Vector stores & search
-faiss-cpu==1.7.4
+faiss-cpu==1.8.0
 chromadb==0.4.18
 rank-bm25==0.2.2
 
 # Language processing
 nltk==3.8.1
 stanza==1.7.0
-indic-transliteration==2.3.0
+indic-transliteration
 
 # Topic modeling
 bertopic==0.16.0
@@ -52,7 +52,7 @@ google-cloud-speech==2.21.0
 google-cloud-texttospeech==2.14.1
 
 # Audio processing
-pyaudio==0.2.13
+# pyaudio==0.2.13  # Commented out due to build issues with Python 3.12
 sounddevice==0.4.6
 soundfile==0.12.1
 

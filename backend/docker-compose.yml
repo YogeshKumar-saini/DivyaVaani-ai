@@ -1,25 +1,33 @@
 version: '3.8'
 
 services:
-  api:
-    build: .
-    container_name: bhagavad-gita-api
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - backend_cache:/app/cache
+      - backend_logs:/app/logs
+      - backend_artifacts:/app/artifacts
     ports:
       - "8000:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DATA_PATH=data/bhagavad_gita.csv
-      - ARTIFACT_DIR=artifacts
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-    volumes:
-      - ./artifacts:/app/artifacts
-      - ./logs:/app/logs
-      - ./data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      - redis
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  backend_cache:
+  backend_logs:
+  backend_artifacts:

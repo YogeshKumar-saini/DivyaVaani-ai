@@ -124,11 +124,58 @@ Scalable Services
 git clone https://github.com/YogeshKumar-saini/DivyaVaani-ai.git
 cd DivyaVaani-ai
 
-# Start everything with Docker
-docker-compose up -d
-
-# Or run locally (see detailed setup below)
+# Quick setup and run
+make setup
+make run
 ```
+
+### Using Docker
+You can start the entire system (backend, frontend, and redis) using Docker Compose from the root directory:
+
+```bash
+# Start all services
+docker compose up -d
+
+# Build services
+docker compose build
+```
+
+The individual services are:
+- **Backend API**: http://localhost:8000
+- **Frontend App**: http://localhost:3000
+- **Redis**: localhost:6379
+
+> [!NOTE]
+> Ensure you have your `.env` file set up in the `backend` directory before starting the services.
+
+### Local Development
+For local development without Docker:
+
+```bash
+# Install dependencies
+make install
+
+# Configure environment files
+cp backend/.env.example backend/.env
+echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000" > frontend/.env.local
+
+# Run development servers
+make run
+```
+
+### CI/CD Pipeline
+The project includes automated CI/CD with GitHub Actions:
+
+- **Continuous Integration**: Tests run on every push and PR
+- **Continuous Deployment**: Automatic deployment to production on main branch
+- **Docker Integration**: Automated container builds and pushes
+
+**Required Secrets for CD:**
+- `DOCKER_USERNAME`: Docker Hub username
+- `DOCKER_PASSWORD`: Docker Hub password
+- `SERVER_HOST`: Production server hostname
+- `SERVER_USER`: SSH username for deployment
+- `SERVER_SSH_KEY`: Private SSH key for deployment
 
 Visit `http://localhost:3000` for the web interface.
 
