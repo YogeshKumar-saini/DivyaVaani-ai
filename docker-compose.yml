@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: divyavaani-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATA_PATH=data/bhagavad_gita.csv
+      - ARTIFACT_DIR=artifacts
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./backend/artifacts:/app/artifacts
+      - ./backend/logs:/app/logs
+      - ./backend/data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+    container_name: divyavaani-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  default:
+    name: divyavaani-network
