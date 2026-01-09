@@ -3,146 +3,50 @@
 import { useState } from 'react';
 import { VoiceChat } from '@/components/voice/VoiceChat';
 import { VoiceSidebar } from '@/components/voice/VoiceSidebar';
-import { HealthIndicator } from '@/components/shared/HealthIndicator';
-import { Mic, Menu } from 'lucide-react';
-import { Button, Box, Container, Paper, Typography, useTheme, Dialog, Slide, useMediaQuery } from '@mui/material';
-import { TransitionProps } from '@mui/material/transitions';
-import React from 'react';
-
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+import { Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { AuroraBackground } from '@/components/ui/AuroraBackground';
+import { GrainOverlay } from '@/components/ui/GrainOverlay';
 
 export default function VoicePage() {
+  // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      bgcolor: 'linear-gradient(135deg, #f5f5dc 0%, #ffe4b5 25%, #f0e68c 50%, #ffe4b5 75%, #f5deb3 100%)',
-      backgroundAttachment: 'fixed'
-    }}>
-      {/* Header */}
-      <Box sx={{
-        bgcolor: 'white',
-        borderBottom: 1,
-        borderColor: 'divider',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
-        <Container maxWidth="lg">
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            py: 2
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{
-                width: 40,
-                height: 40,
-                bgcolor: 'primary.main',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Mic style={{ color: 'white' }} />
-              </Box>
-              <Box>
-                <Typography variant="h5" fontWeight="bold">
-                  Voice Chat
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  AI Voice Conversations
-                </Typography>
-              </Box>
-            </Box>
+    <div className="fixed inset-0 z-0 flex flex-col bg-background text-foreground overflow-hidden">
+      <GrainOverlay />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <HealthIndicator variant="badge" showText={false} />
-              <Button
-                variant="contained"
-                startIcon={<Menu />}
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                sx={{
-                  bgcolor: 'primary.main',
-                  '&:hover': { bgcolor: 'primary.dark' }
-                }}
-              >
-                Settings
-              </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
+      {/* Settings Modal */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="right" className="w-[400px] bg-black/90 border-l border-white/10 backdrop-blur-xl z-[100]">
+          <VoiceSidebar onClose={() => setSidebarOpen(false)} />
+        </SheetContent>
+      </Sheet>
 
-      {/* Main Content */}
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{
-            display: { xs: 'block', md: 'flex' },
-            minHeight: 500,
-            position: 'relative'
-          }}>
-            {/* Voice Chat */}
-            <Box sx={{
-              flex: 1,
-              p: 3,
-              width: '100%'
-            }}>
+      <AuroraBackground className="flex-1 w-full min-h-0 h-full relative" showRadialGradient={false}>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-h-0 relative pt-20">
+          {/* Settings button - positioned in top right */}
+          <div className="absolute top-4 right-4 z-50">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 rounded-full h-12 w-12"
+            >
+              <Settings className="h-6 w-6 text-white" />
+            </Button>
+          </div>
+
+          <div className="flex-1 flex flex-col h-full relative overflow-hidden">
+            {/* Voice Chat Area */}
+            <div className="flex-1 w-full h-full relative">
               <VoiceChat />
-            </Box>
-
-            {/* Desktop Sidebar - Split Layout */}
-            {!isMobile && sidebarOpen && (
-              <Box sx={{
-                width: 320,
-                borderLeft: 1,
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-                flexShrink: 0
-              }}>
-                <VoiceSidebar onClose={() => setSidebarOpen(false)} />
-              </Box>
-            )}
-          </Box>
-        </Paper>
-      </Container>
-
-      {/* Mobile Sidebar - Modal Overlay */}
-      <Dialog
-        fullScreen={isMobile}
-        open={sidebarOpen && isMobile}
-        onClose={() => setSidebarOpen(false)}
-        TransitionComponent={Transition}
-        sx={{
-          display: { xs: 'block', md: 'none' }
-        }}
-        PaperProps={{
-          sx: {
-            bgcolor: 'background.paper',
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            maxHeight: '70vh',
-            margin: 0,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-          }
-        }}
-      >
-        <VoiceSidebar onClose={() => setSidebarOpen(false)} />
-      </Dialog>
-    </Box>
+            </div>
+          </div>
+        </div>
+      </AuroraBackground>
+    </div>
   );
 }

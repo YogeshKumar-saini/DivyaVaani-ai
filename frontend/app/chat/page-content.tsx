@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { textService } from "@/lib/api/text-service";
-import { handleAPIError } from "@/lib/api/client";
-import { ChatMessages } from "@/components/chat/ChatMessage";
-import { ChatInput } from "@/components/chat/ChatInput";
-import { LoadingState, WelcomeScreen } from "@/components/chat/LoadingStates";
 import { LanguageDetector } from "@/components/LanguageSelector";
+import { ChatInput } from "@/components/chat/ChatInput";
+import { ChatMessages } from "@/components/chat/ChatMessage";
+import { LoadingState, WelcomeScreen } from "@/components/chat/LoadingStates";
+import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+import { AuroraBackground } from "@/components/ui/AuroraBackground";
 
 interface Context {
   idx: number;
@@ -34,88 +36,174 @@ interface Message {
   processing_time?: number;
 }
 
-interface FeedbackState {
-  [messageId: string]: 'excellent' | 'good' | 'needs_improvement' | undefined;
-}
-
 export default function ChatPageContent() {
-  const searchParams = useSearchParams();
-  const initialQuestion = searchParams?.get('q');
-
-  const detectedLanguage = 'en';
-
-  // State management
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      type: 'bot',
-      content: 'ॐ नमस्ते!\n\nI am DivyaVaani, your enlightened spiritual guide drawing from the collective wisdom of all spiritual traditions. I offer profound guidance on the sacred paths of dharma, karma, yoga, and spiritual awakening from universal teachings.\n\nWhat sacred wisdom dwells in your heart today?',
-      timestamp: new Date(),
-    }
-  ]);
-  
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [feedbackState, setFeedbackState] = useState<FeedbackState>({});
-  
-  // Refs
+  const [detectedLanguage, setDetectedLanguage] = useState("en");
+  const [showInfo, setShowInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const userId = useRef(`user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-  const initialQuestionProcessed = useRef(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, isLoading]);
 
-  // Handle initial question from URL
-  useEffect(() => {
-    if (initialQuestion && !isLoading && messages.length === 1 && !initialQuestionProcessed.current) {
-      const question = initialQuestion.trim();
-      if (question) {
-        initialQuestionProcessed.current = true;
-        setInput('');
-        void handleInitialQuestion(question);
-      }
-    }
-  }, [initialQuestion, isLoading, messages.length]);
+  // Add welcome message on initial load
+  // Add welcome message on initial load - REMOVED to avoid duplication with WelcomeScreen
+  // useEffect(() => {
+  //   if (messages.length === 0) {
+  //     const welcomeMessage: Message = {
+  //       id: 'welcome',
+  //       type: 'bot',
+  //       content: "🕉️ Welcome to DivyaVaani AI - Your spiritual companion powered by Bhagavad Gita wisdom. Ask me about dharma, karma, yoga, or any spiritual question.",
+  //       timestamp: new Date()
+  //     };
+  //     setMessages([welcomeMessage]);
+  //   }
+  // }, []);
 
-  const handleInitialQuestion = async (question: string) => {
-    setIsLoading(true);
+  const handleExampleQuestion = (question: string) => {
+    setInput(question);
+    setInitialLoad(false);
+
+    // Auto-submit the example question
+    setTimeout(() => {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: question,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setInput("");
+      setIsLoading(true);
+
+      textService.askQuestion(question)
+        .then(response => {
+          const botMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'bot',
+            content: response.answer || "I'm processing your request...",
+            timestamp: new Date(),
+            sources: response.sources,
+            contexts: response.contexts,
+            language: response.language,
+            confidence_score: response.confidence || response.confidence_score,
+            processing_time: response.processing_time
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+          if (response.language) {
+            setDetectedLanguage(response.language);
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          let errorContent = "I apologize, but I encountered an error. ";
+
+          // Type guard to check if error is an Error object
+          const isErrorWithMessage = (err: unknown): err is { message?: string } => {
+            return typeof err === 'object' && err !== null && 'message' in err;
+          };
+
+          const isErrorWithStatusCode = (err: unknown): err is { statusCode: number } => {
+            return typeof err === 'object' && err !== null && 'statusCode' in err;
+          };
+
+          // Provide more helpful error messages
+          if (isErrorWithMessage(error) && (error.message?.includes('fetch') || error.message?.includes('network'))) {
+            errorContent += "Please check if the backend server is running and try again.";
+          } else if (isErrorWithStatusCode(error) && error.statusCode === 503) {
+            errorContent += "The system is still initializing. Please wait a moment and try again.";
+          } else if (isErrorWithStatusCode(error) && error.statusCode === 429) {
+            errorContent += "Too many requests. Please wait a moment before trying again.";
+          } else {
+            errorContent += "Please try again or rephrase your question.";
+          }
+
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'bot',
+            content: errorContent,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }, 100);
+  };
+
+  const askQuestion = async () => {
+    if (!input.trim()) return;
 
     const userMessage: Message = {
-      id: `user_${Date.now()}`,
+      id: Date.now().toString(),
       type: 'user',
-      content: question,
-      timestamp: new Date(),
+      content: input,
+      timestamp: new Date()
     };
+
     setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setInitialLoad(false);
+    setIsLoading(true);
 
     try {
-      const response = await textService.askQuestion(question, userId.current);
+      const response = await textService.askQuestion(input);
 
       const botMessage: Message = {
-        id: `bot_${Date.now()}`,
+        id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: response.answer,
+        content: response.answer || "I'm processing your request...",
         timestamp: new Date(),
         sources: response.sources,
         contexts: response.contexts,
         language: response.language,
-        confidence_score: response.confidence_score,
-        processing_time: response.processing_time,
+        confidence_score: response.confidence || response.confidence_score,
+        processing_time: response.processing_time
       };
+
       setMessages(prev => [...prev, botMessage]);
-    } catch (error: unknown) {
+      if (response.language) {
+        setDetectedLanguage(response.language);
+      }
+    } catch (error) {
+      console.error(error);
+      let errorContent = "I apologize, but I encountered an error. ";
+
+      // Type guard to check if error is an Error object
+      const isErrorWithMessage = (err: unknown): err is { message?: string } => {
+        return typeof err === 'object' && err !== null && 'message' in err;
+      };
+
+      const isErrorWithStatusCode = (err: unknown): err is { statusCode: number } => {
+        return typeof err === 'object' && err !== null && 'statusCode' in err;
+      };
+
+      // Provide more helpful error messages
+      if (isErrorWithMessage(error) && (error.message?.includes('fetch') || error.message?.includes('network'))) {
+        errorContent += "Please check if the backend server is running and try again.";
+      } else if (isErrorWithStatusCode(error) && error.statusCode === 503) {
+        errorContent += "The system is still initializing. Please wait a moment and try again.";
+      } else if (isErrorWithStatusCode(error) && error.statusCode === 429) {
+        errorContent += "Too many requests. Please wait a moment before trying again.";
+      } else {
+        errorContent += "Please try again or rephrase your question.";
+      }
+
       const errorMessage: Message = {
-        id: `error_${Date.now()}`,
+        id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: `❌ **Error:** ${handleAPIError(error)}`,
-        timestamp: new Date(),
+        content: errorContent,
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -123,166 +211,103 @@ export default function ChatPageContent() {
     }
   };
 
-  // Submit feedback for a message
-  const handleFeedback = useCallback(async (messageId: string, rating: 'excellent' | 'good' | 'needs_improvement') => {
-    // Store feedback state (can be used for UI feedback)
-    const currentFeedbackState = feedbackState;
-    setFeedbackState(prev => ({ ...prev, [messageId]: rating }));
-
-    // TODO: Implement actual feedback submission to backend
-    console.log('Feedback submitted:', { messageId, rating, currentState: currentFeedbackState });
-
-    // Auto-reset feedback state after delay
-    setTimeout(() => {
-      setFeedbackState(prev => ({ ...prev, [messageId]: undefined }));
-    }, 3000);
-  }, [feedbackState]);
-
-  // Handle example question clicks
-  const handleExampleQuestion = useCallback((question: string) => {
-    setInput(question);
-    // Optional: auto-submit or wait for user to press send
-  }, []);
-
-  // Main question submission
-  const askQuestion = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
-
-    const question = input.trim();
-    setInput('');
-    setIsLoading(true);
-
-    const userMessage: Message = {
-      id: `user_${Date.now()}`,
-      type: 'user',
-      content: question,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, userMessage]);
-
-    try {
-      const response = await textService.askQuestion(question, userId.current);
-
-      const botMessage: Message = {
-        id: `bot_${Date.now()}`,
-        type: 'bot',
-        content: response.answer,
-        timestamp: new Date(),
-        sources: response.sources,
-        contexts: response.contexts,
-        language: response.language,
-        confidence_score: response.confidence_score,
-        processing_time: response.processing_time,
-      };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error: unknown) {
-      const errorMessage: Message = {
-        id: `error_${Date.now()}`,
-        type: 'bot',
-        content: `❌ **Error:** ${handleAPIError(error)}`,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [input, isLoading]);
-
-  const showWelcome = messages.length === 1 && !initialQuestionProcessed.current;
+  const handleFeedback = async (messageId: string, rating: 'excellent' | 'good' | 'needs_improvement') => {
+    console.log("Feedback:", messageId, rating);
+    // Implement feedback logic here
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-linear-to-br from-orange-50 via-yellow-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative">
-      {/* Header with enhanced spiritual design */}
-      <header className="shrink-0 border-b border-orange-200 dark:border-gray-700 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg shadow-md">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-saffron animate-pulse ring-2 ring-amber-300/50">
-                  <div className="text-white text-lg">ॐ</div>
+    <AuroraBackground className="h-screen w-full !block" showRadialGradient={true}>
+      <div className="relative z-10 flex flex-col h-full w-full pt-24">
+
+        {/* Floating Info Button - Top Right */}
+        <div className="absolute top-4 right-4 z-50">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowInfo(!showInfo)}
+              className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 rounded-full h-12 w-12"
+            >
+              <Info className="h-5 w-5 text-white" />
+            </Button>
+
+            {/* Info Popup */}
+            {showInfo && (
+              <div className="absolute top-14 right-0 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl min-w-[250px]">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs text-white/60 uppercase tracking-wider mb-1">Language</div>
+                    <LanguageDetector
+                      currentDetectedLanguage={detectedLanguage}
+                      isDetecting={false}
+                      confidence={1.0}
+                      disabled={true}
+                    />
+                  </div>
+                  <div className="h-px bg-white/10" />
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                    <span className="text-sm text-white font-medium">Online</span>
+                  </div>
                 </div>
-                <div className="absolute inset-0 rounded-full bg-gradient-saffron animate-ping opacity-20"></div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-amber-900 dark:text-amber-100 text-gradient-spiritual">
-                  DivyaVaani AI
-                </h1>
-                <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Universal Spiritual Wisdom Assistant 🪷
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Language Detector */}
-              <LanguageDetector
-                currentDetectedLanguage={detectedLanguage}
-                isDetecting={false}
-                confidence={1.0}
-                disabled={true}
-              />
-
-              {/* Online Status */}
-              <div className="flex items-center gap-2 px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full">
-                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium">Online</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden relative">
-        {/* Messages Container */}
-        <div className="absolute inset-0 pt-0 pb-28 sm:pb-32 overflow-y-auto overflow-x-hidden bg-transparent">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col min-h-screen">
-              {/* Welcome Screen */}
-              {showWelcome && (
-                <WelcomeScreen onExampleClick={handleExampleQuestion} />
-              )}
-
-              {/* Chat Messages */}
-              <div className="pb-8">
-                {messages.length > 1 && (
-                  <ChatMessages
-                    messages={messages.slice(1)} // Skip welcome message
-                    onFeedback={handleFeedback}
-                    feedbackSubmitted={false}
-                  />
-                )}
-
-                {/* Loading State */}
-                {isLoading && (
-                  <div className="py-4">
-                    <LoadingState isTyping={true} />
+        {/* Main Content Area */}
+        <main className="flex-1 relative z-10">
+          {/* Messages Container */}
+          <div className="absolute inset-0 pt-0 pb-32 sm:pb-40 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 w-full">
+              <div className="flex flex-col min-h-full w-full">
+                {/* Welcome Screen - show on initial load */}
+                {initialLoad && (
+                  <div className="flex-1 flex items-center justify-center">
+                    <WelcomeScreen onExampleClick={handleExampleQuestion} />
                   </div>
                 )}
 
-                <div ref={messagesEndRef} />
-                {/* Extra padding for scrolling */}
-                <div className="h-8" />
+                {/* Chat Messages - always show if there are messages */}
+                {messages.length > 0 && (
+                  <div className="pb-8 space-y-6 w-full">
+                    <ChatMessages
+                      messages={messages}
+                      onFeedback={handleFeedback}
+                      feedbackSubmitted={false}
+                    />
+
+                    {/* Loading State */}
+                    {isLoading && (
+                      <div className="py-4">
+                        <LoadingState isTyping={true} />
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* Fixed Input Section at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 ">
-        <div className="max-w-4xl mx-auto p-2 sm:p-4">
-          <ChatInput
-            input={input}
-            setInput={setInput}
-            isLoading={isLoading}
-            onSubmit={askQuestion}
-            placeholder="Ask about dharma, karma, yoga..."
-            maxLength={2000}
-            className="shadow-lg border-amber-200 focus-within:border-saffron"
-          />
+        {/* Fixed Input Section at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 z-20 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 pointer-events-auto">
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              isLoading={isLoading}
+              onSubmit={askQuestion}
+              placeholder="Ask about dharma, karma, yoga..."
+              maxLength={2000}
+              className="shadow-2xl shadow-black/20"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </AuroraBackground>
   );
 }

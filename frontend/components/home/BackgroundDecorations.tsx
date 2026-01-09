@@ -1,99 +1,36 @@
-import { Box } from '@mui/material';
-
 export function BackgroundDecorations() {
   return (
-    <Box
-      sx={{
-        position: 'absolute',
-        inset: 0,
-        pointerEvents: 'none',
-        overflow: 'hidden',
-        opacity: 0.1,
-      }}
-    >
+    <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
       {/* Subtle Sacred Symbols */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '15%',
-          left: '8%',
-          fontSize: '4rem',
-          color: 'primary.main',
-          animation: 'gentleFloat 8s ease-in-out infinite',
-          '@keyframes gentleFloat': {
-            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-            '50%': { transform: 'translateY(-10px) rotate(5deg)' },
-          },
-        }}
-      >
+      <div className="absolute top-[15%] left-[8%] text-6xl text-primary animate-[gentleFloat_8s_ease-in-out_infinite]">
         ॐ
-      </Box>
+      </div>
 
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '30%',
-          right: '12%',
-          fontSize: '2.5rem',
-          color: 'secondary.main',
-          animation: 'gentleFloat 10s ease-in-out infinite reverse',
-        }}
-      >
+      <div className="absolute top-[30%] right-[12%] text-4xl text-secondary animate-[gentleFloat_10s_ease-in-out_infinite_reverse]">
         🪷
-      </Box>
+      </div>
 
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: '25%',
-          left: '15%',
-          fontSize: '3.5rem',
-          color: 'warning.main',
-          animation: 'gentleFloat 12s ease-in-out infinite',
-        }}
-      >
+      <div className="absolute bottom-[25%] left-[15%] text-6xl text-yellow-500 animate-[gentleFloat_12s_ease-in-out_infinite]">
         ❖
-      </Box>
+      </div>
 
       {/* Minimal Sacred Geometry */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '40%',
-          left: '25%',
-          width: 8,
-          height: 8,
-          bgcolor: 'primary.main',
-          borderRadius: '50%',
-          animation: 'slowPulse 6s ease-in-out infinite',
-        }}
-      />
+      <div className="absolute top-[40%] left-[25%] h-2 w-2 rounded-full bg-primary animate-[slowPulse_6s_ease-in-out_infinite]" />
 
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: '35%',
-          right: '30%',
-          width: 6,
-          height: 6,
-          bgcolor: 'secondary.main',
-          borderRadius: '50%',
-          animation: 'slowPulse 8s ease-in-out infinite reverse',
-        }}
-      />
+      <div className="absolute bottom-[35%] right-[30%] h-1.5 w-1.5 rounded-full bg-secondary animate-[slowPulse_8s_ease-in-out_infinite_reverse]" />
 
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '60%',
-          left: '40%',
-          width: 4,
-          height: 4,
-          bgcolor: 'warning.main',
-          borderRadius: '50%',
-          animation: 'slowPulse 10s ease-in-out infinite',
-        }}
-      />
-    </Box>
+      <div className="absolute top-[60%] left-[40%] h-1 w-1 rounded-full bg-yellow-500 animate-[slowPulse_10s_ease-in-out_infinite]" />
+
+      <style jsx>{`
+        @keyframes gentleFloat {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        @keyframes slowPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.5); opacity: 0.7; }
+        }
+      `}</style>
+    </div>
   );
 }

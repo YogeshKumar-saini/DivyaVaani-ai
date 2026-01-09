@@ -109,7 +109,7 @@ export function ChatMessage({ message, onFeedback, feedbackSubmitted = false }: 
       </div>
 
       {/* Optional sources block (kept commented - but aligned and styled) */}
-      {/*
+      
       {isBot && message.sources && message.sources.length > 0 && (
         <div className="mt-2 px-4 lg:px-8">
           <details className="group/details">
@@ -133,7 +133,7 @@ export function ChatMessage({ message, onFeedback, feedbackSubmitted = false }: 
           </details>
         </div>
       )}
-      */}
+     
     </div>
   );
 }

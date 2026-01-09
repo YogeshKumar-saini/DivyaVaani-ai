@@ -44,6 +44,10 @@ class ComprehensiveDataLoader:
         log.info(f"Total records loaded: {len(df)}")
         return df
 
+    def load_file(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Load content from a specific file."""
+        return self._load_file(file_path)
+
     def _load_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Dispatch load based on file extension."""
         suffix = file_path.suffix.lower()
@@ -51,6 +55,25 @@ class ComprehensiveDataLoader:
             return self._load_pdf(file_path)
         elif suffix in ['.csv', '.xls', '.xlsx']:
             return self._load_tabular(file_path)
+        elif suffix == '.txt':
+            return self._load_text(file_path)
+        return []
+
+    def _load_text(self, file_path: Path) -> List[Dict[str, Any]]:
+        """Load content from text file."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                if content:
+                    return [{
+                        'content': content,
+                        'source_file': file_path.name,
+                        'file_type': 'txt',
+                        'language': self._detect_language(content),
+                        'title': file_path.stem
+                    }]
+        except Exception as e:
+            log.error(f"Error reading text file {file_path}: {e}")
         return []
 
     def _load_pdf(self, file_path: Path) -> List[Dict[str, Any]]:

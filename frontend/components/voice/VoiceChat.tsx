@@ -3,28 +3,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Mic,
-  MicOff,
   Square,
   Play,
   Pause,
   Volume2,
   VolumeX,
   RotateCcw,
-  Send,
-  Loader2,
+  Sparkles,
+  Waves,
+  Cpu
 } from 'lucide-react';
-import {
-  Box,
-  Card,
-  Typography,
-  Button,
-  IconButton,
-  Slider,
-  Avatar,
-  Chip,
-  LinearProgress,
-  Alert,
-} from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
+import { voiceService } from '@/lib/api/voice-service';
+import { handleAPIError } from '@/lib/api/client';
 
 interface Message {
   id: string;
@@ -36,6 +31,42 @@ interface Message {
   duration?: number;
 }
 
+const AudioVisualizer = ({ isRecording, isProcessing }: { isRecording: boolean; isProcessing: boolean }) => {
+  // Create 20 bars for the visualizer
+  const bars = Array.from({ length: 20 });
+
+  return (
+    <div className="flex items-center justify-center gap-1 h-16 sm:h-24">
+      {bars.map((_, i) => (
+        <motion.div
+          key={i}
+          className={cn(
+            "w-1.5 sm:w-2 rounded-full",
+            isRecording ? "bg-gradient-to-t from-orange-500 to-red-500" :
+              isProcessing ? "bg-gradient-to-t from-blue-500 to-purple-500" :
+                "bg-white/20"
+          )}
+          animate={{
+            height: isRecording
+              ? [10, Math.random() * 60 + 20, 10]
+              : isProcessing
+                ? [10, 30, 10]
+                : 8,
+            opacity: isRecording || isProcessing ? 1 : 0.3
+          }}
+          transition={{
+            duration: isRecording ? 0.2 : 0.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: i * 0.05,
+            ease: "easeInOut"
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 export function VoiceChat() {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -44,87 +75,175 @@ export function VoiceChat() {
   const [isMuted, setIsMuted] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Simulated voice recording for demo
-  const startRecording = () => {
-    setIsRecording(true);
-    setError(null);
-    setRecordingTime(0);
+  // Real voice recording implementation
+  const startRecording = async () => {
+    try {
+      setIsRecording(true);
+      setRecordingTime(0);
+      setCurrentMessage(null); // Clear previous message on new record
 
-    // Start countdown timer
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingTime(prev => {
-        if (prev >= 300) { // Max 5 minutes
-          stopRecording();
-          return prev;
-        }
-        return prev + 1;
+      // Clear previous audio chunks
+      audioChunksRef.current = [];
+
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Create media recorder
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm',
+        audioBitsPerSecond: 128000
       });
-    }, 1000);
 
-    // Simulate recording started
-    setTimeout(() => {
-      if (isRecording) {
-        setIsProcessing(true);
-      }
-    }, 2000);
+      // Set up event handlers
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        // Clean up stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      // Start recording
+      mediaRecorderRef.current.start(100); // Collect data every 100ms
+
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 300) { // 5 minute max
+            stopRecording();
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setIsRecording(false);
+      alert('Could not access microphone. Please check permissions.');
+    }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
+    if (!mediaRecorderRef.current) return;
+
     setIsRecording(false);
-    setRecordingTime(0);
 
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
 
-    // Simulate processing
-    setTimeout(() => {
+    setIsProcessing(true);
+
+    try {
+      // Stop recording
+      mediaRecorderRef.current.stop();
+
+      // Wait for the stop event to complete
+      await new Promise(resolve => {
+        mediaRecorderRef.current!.onstop = () => {
+          mediaRecorderRef.current!.onstop = null;
+          resolve(null);
+        };
+      });
+
+      // Create audio blob from chunks
+      const audioBlob = new Blob(audioChunksRef.current, {
+        type: 'audio/webm'
+      });
+
+      // Process the voice query
+      await processVoiceQuery(audioBlob);
+
+    } catch (error) {
+      console.error('Error processing voice query:', error);
       setIsProcessing(false);
-      // Mock processed message
-      const mockMessage: Message = {
+      alert('Error processing your voice query. Please try again.');
+    }
+  };
+
+  const processVoiceQuery = async (audioBlob: Blob) => {
+    try {
+      // Call the backend voice service
+      const response = await voiceService.processVoiceQuery(audioBlob, {
+        inputLanguage: 'auto',
+        outputLanguage: 'auto',
+        voice: 'default'
+      });
+
+      // Create audio URL for playback
+      const audioUrl = URL.createObjectURL(response.audio_data);
+
+      // Create message with response
+      const newMessage: Message = {
         id: Date.now().toString(),
         type: 'bot',
-        content: 'दिव्य मार्ग指引',
+        content: response.response_text,
         timestamp: new Date(),
-        audioUrl: 'mock-audio.mp3',
-        transcription: 'Show me the path to enlightenment',
-        duration: 3.2,
+        audioUrl: audioUrl,
+        transcription: response.transcription.text,
+        duration: Math.ceil(response.audio_data.size / (128000 / 8)) // Estimate duration
       };
-      setCurrentMessage(mockMessage);
-    }, 2000);
+
+      setCurrentMessage(newMessage);
+      setIsProcessing(false);
+
+    } catch (error) {
+      console.error('Voice query failed:', error);
+      setIsProcessing(false);
+      const errorMessage = handleAPIError(error);
+      alert(`Voice query failed: ${errorMessage}`);
+    }
   };
 
   const togglePlayback = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
+    if (!currentMessage?.audioUrl) return;
+
+    if (isPlaying) {
+      // Stop playback
+      if (audioRef.current) {
         audioRef.current.pause();
-      } else {
-        audioRef.current.play();
+        audioRef.current = null;
       }
-      setIsPlaying(!isPlaying);
+      setIsPlaying(false);
+    } else {
+      // Start playback
+      const audioElement = new Audio(currentMessage.audioUrl);
+      audioElement.volume = isMuted ? 0 : volume / 100;
+      audioElement.play();
+
+      audioElement.onended = () => {
+        setIsPlaying(false);
+        audioRef.current = null;
+      };
+
+      audioElement.onerror = () => {
+        console.error('Audio playback error');
+        setIsPlaying(false);
+        audioRef.current = null;
+      };
+
+      audioRef.current = audioElement;
+      setIsPlaying(true);
     }
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+  // Update volume when changed
+  useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? volume / 100 : 0;
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
     }
-  };
-
-  const handleVolumeChange = (event: Event, newValue: number | number[]) => {
-    const volumeValue = newValue as number;
-    setVolume(volumeValue);
-    if (audioRef.current && !isMuted) {
-      audioRef.current.volume = volumeValue / 100;
-    }
-  };
+  }, [volume, isMuted]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -141,248 +260,188 @@ export function VoiceChat() {
   }, []);
 
   return (
-    <Box sx={{ maxWidth: '100%', height: '100%' }}>
-      {/* Status Indicator */}
-      <Box sx={{ mb: 3, textAlign: 'center' }}>
-        <Chip
-          icon={
-            isRecording ? <Mic color="white" /> :
-            isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> :
-            <MicOff />
-          }
-          label={
-            isRecording ? `Recording... ${formatTime(recordingTime)}` :
-            isProcessing ? 'Processing...' :
-            currentMessage ? 'Ready to respond' : 'Tap to start voice query'
-          }
-          sx={{
-            bgcolor: isRecording ? 'error.main' :
-                   isProcessing ? 'warning.main' : 'primary.main',
-            color: 'white',
-            '& .MuiChip-icon': {
-              animate: isProcessing ? 'spin' : 'none',
-            },
-            animation: isProcessing ? 'pulse 2s infinite' : 'none',
-          }}
-        />
-      </Box>
+    <div className="flex flex-col h-full w-full relative overflow-hidden">
 
-      {/* Main Recording Interface */}
-      <Card sx={{
-        p: 4,
-        textAlign: 'center',
-        borderRadius: 3,
-        mb: 3,
-        background: `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(254, 211, 170, 0.8) 100%)`,
-      }}>
-        {/* Large Avatar/Icon */}
-        <Box sx={{ position: 'relative', display: 'inline-block', mb: 3 }}>
-          <Avatar
-            sx={{
-              width: 120,
-              height: 120,
-              bgcolor: isRecording ? 'error.main' : 'primary.main',
-              border: 4,
-              borderColor: 'white',
-              boxShadow: 3,
-              animation: isRecording
-                ? 'pulse-red 1.5s infinite'
-                : isProcessing
-                ? 'spin 2s linear infinite'
-                : 'none',
-            }}
+      {/* Central Visualizer & Interaction Area */}
+      <div className="flex-1 flex flex-col items-center justify-center relative p-8">
+
+        {/* Holographic Circle Background Effect */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[100px] animate-pulse-slow" />
+          <div className="w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px] animate-pulse-slow delay-1000" />
+        </div>
+
+        {/* Dynamic Status Text */}
+        <AnimatePresence mode='wait'>
+          <motion.div
+            key={isRecording ? 'rec' : isProcessing ? 'proc' : currentMessage ? 'res' : 'idle'}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center mb-12 z-10"
           >
             {isRecording ? (
-              <Mic className="text-white" style={{ fontSize: 48 }} />
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-red-400 font-medium tracking-widest text-sm uppercase">Listening</span>
+                <span className="text-4xl md:text-5xl font-light text-white font-mono">{formatTime(recordingTime)}</span>
+                <span className="text-white/40 text-sm">Tap stop when finished</span>
+              </div>
             ) : isProcessing ? (
-              <Loader2 className="text-white animate-spin" style={{ fontSize: 48 }} />
+              <div className="flex flex-col items-center gap-2">
+                <Sparkles className="h-6 w-6 text-blue-400 animate-spin" />
+                <span className="text-2xl font-light text-blue-200">Consulting the ancient wisdom...</span>
+              </div>
+            ) : currentMessage ? (
+              <div className="flex flex-col items-center gap-4 max-w-2xl px-4">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
+                >
+                  <p className="text-lg md:text-xl text-white/90 leading-relaxed font-light">
+                    &ldquo;{currentMessage.content}&rdquo;
+                  </p>
+                </motion.div>
+                <div className="flex items-center gap-2 text-white/40 text-xs uppercase tracking-wider">
+                  <Waves className="h-3 w-3" /> AI Response Generated
+                </div>
+              </div>
             ) : (
-              <Mic className="text-white" style={{ fontSize: 48 }} />
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+                  DivyaVaani Voice
+                </h2>
+                <p className="text-lg text-white/60">Tap the mic to begin your spiritual query</p>
+              </div>
             )}
-          </Avatar>
+          </motion.div>
+        </AnimatePresence>
 
-          {isRecording && (
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: -4,
-                borderRadius: '50%',
-                border: '2px solid',
-                borderColor: 'error.main',
-                animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
-                opacity: 0.3,
-              }}
-            />
+        {/* Audio Visualizer */}
+        <div className="mb-12 h-24 relative z-10 w-full max-w-lg mx-auto">
+          <AudioVisualizer isRecording={isRecording} isProcessing={isProcessing} />
+        </div>
+
+        {/* Main Mic Button */}
+        <div className="relative z-20">
+          {/* Pulsing rings */}
+          {(isRecording || isProcessing) && (
+            <>
+              <motion.div
+                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className={cn(
+                  "absolute inset-0 rounded-full blur-xl",
+                  isRecording ? "bg-red-500/40" : "bg-blue-500/40"
+                )}
+              />
+              <motion.div
+                animate={{ scale: [1, 2, 1], opacity: [0.1, 0, 0.1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                className={cn(
+                  "absolute inset-0 rounded-full blur-2xl",
+                  isRecording ? "bg-orange-500/30" : "bg-purple-500/30"
+                )}
+              />
+            </>
           )}
-        </Box>
 
-        {/* Recording Status */}
-        {isRecording && (
-          <Box sx={{ mb: 3 }}>
-            <LinearProgress
-              variant="determinate"
-              value={(recordingTime / 300) * 100}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: 'grey.300',
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: 'error.main',
-                  borderRadius: 3,
-                }
-              }}
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Keep speaking... maximum 5 minutes
-            </Typography>
-          </Box>
-        )}
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isProcessing}
+            className={cn(
+              "relative flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full transition-all duration-300 shadow-2xl group",
+              isRecording
+                ? "bg-gradient-to-br from-red-500 to-orange-600 shadow-red-500/40 scale-110"
+                : isProcessing
+                  ? "bg-gradient-to-br from-blue-500 to-purple-600 shadow-blue-500/40 cursor-wait"
+                  : "bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 border border-white/20 hover:scale-105"
+            )}
+          >
+            {isRecording ? (
+              <Square className="w-10 h-10 text-white fill-white animate-pulse" />
+            ) : isProcessing ? (
+              <Cpu className="w-12 h-12 text-white animate-pulse" />
+            ) : (
+              <Mic className="w-12 h-12 text-white/80 group-hover:text-white transition-colors" />
+            )}
+          </button>
+        </div>
 
-        {/* Main Action Button */}
-        <Button
-          variant="contained"
-          color={isRecording ? 'error' : 'primary'}
-          size="large"
-          startIcon={isRecording ? <Square /> : <Mic />}
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={isProcessing}
-          sx={{
-            minWidth: 200,
-            py: 2,
-            fontSize: '1.1rem',
-            borderRadius: 3,
-            boxShadow: isRecording ? '0 0 20px rgba(244, 67, 54, 0.3)' : '0 4px 14px rgba(0, 0, 0, 0.1)',
-            '&:hover': {
-              boxShadow: isRecording
-                ? '0 0 30px rgba(244, 67, 54, 0.5)'
-                : '0 6px 20px rgba(0, 0, 0, 0.15)',
-            }
-          }}
-        >
-          {isRecording ? 'Stop Recording' : isProcessing ? 'Processing...' : 'Start Voice Query'}
-        </Button>
+      </div>
 
-        {/* Error Display */}
-        {error && (
-          <Alert severity="error" sx={{ mt: 3 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-      </Card>
+      {/* Bottom Controls Bar (Glassmorphic) */}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="w-full bg-black/40 backdrop-blur-xl border-t border-white/10 p-4 sm:p-6 z-30"
+      >
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8">
 
-      {/* Current Message Display */}
-      {currentMessage && (
-        <Card sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
+          {/* Playback Controls */}
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/60 hover:text-white hover:bg-white/10 rounded-full"
+              disabled={!currentMessage}
+              onClick={() => {
+                setCurrentMessage(null);
+                setIsPlaying(false);
               }}
             >
-              ॐ
-            </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                {currentMessage.content}
-              </Typography>
+              <RotateCcw className="h-5 w-5" />
+            </Button>
 
-              {currentMessage.transcription && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    borderLeft: 3,
-                    borderColor: 'primary.light',
-                    pl: 2,
-                    mb: 2,
-                    fontStyle: 'italic'
-                  }}
-                >
-                  &ldquo;{currentMessage.transcription}&rdquo;
-                </Typography>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-12 w-12 rounded-full border border-white/20 text-white hover:bg-white/10 hover:scale-105 transition-all",
+                isPlaying && "bg-white/20 text-white border-white/40"
               )}
+              disabled={!currentMessage}
+              onClick={togglePlayback}
+            >
+              {isPlaying ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 fill-current ml-1" />}
+            </Button>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-                <IconButton
-                  size="small"
-                  onClick={togglePlayback}
-                  sx={{ color: 'primary.main' }}
-                >
-                  {isPlaying ? <Pause /> : <Play />}
-                </IconButton>
+            <div className="flex flex-col items-start min-w-[100px]">
+              <span className="text-xs text-white/40 font-mono">
+                {currentMessage?.duration && isPlaying ? formatTime(currentMessage.duration) : "--:--"}
+              </span>
+              <span className="text-xs font-medium text-white/80">
+                {isPlaying ? "Playing Answer" : "Playback Ready"}
+              </span>
+            </div>
+          </div>
 
-                <Typography variant="caption" color="text.secondary">
-                  {currentMessage.duration ? `${formatTime(Math.floor(currentMessage.duration))}` : 'Audio ready'}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Card>
-      )}
-
-      {/* Audio Controls */}
-      {(isPlaying || currentMessage) && (
-        <Card sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Audio Controls
-          </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <IconButton onClick={toggleMute}>
-              {isMuted ? <VolumeX /> : <Volume2 />}
-            </IconButton>
-
-            <Slider
-              value={volume}
-              onChange={handleVolumeChange}
-              sx={{ flexGrow: 1 }}
-              disabled={isMuted}
-            />
-
-            <Typography variant="body2" color="text.secondary">
-              {volume}%
-            </Typography>
-          </Box>
-
-          <Button
-            variant="outlined"
-            startIcon={<RotateCcw />}
-            onClick={() => {
-              setCurrentMessage(null);
-              setIsPlaying(false);
-            }}
-            size="small"
-          >
-            Clear Response
-          </Button>
-        </Card>
-      )}
-
-      {/* Features Info */}
-      <Card sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Voice Features
-        </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Mic className="text-blue-600" style={{ fontSize: 16 }} />
-            <Typography variant="body2">Natural voice recognition</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Play className="text-green-600" style={{ fontSize: 16 }} />
-            <Typography variant="body2">AI-generated responses</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Volume2 className="text-indigo-600" style={{ fontSize: 16 }} />
-            <Typography variant="body2">High-quality audio</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Send className="text-amber-600" style={{ fontSize: 16 }} />
-            <Typography variant="body2">Instant voice responses</Typography>
-          </Box>
-        </Box>
-      </Card>
-    </Box>
+          {/* Volume Control */}
+          <div className="flex items-center gap-3 w-full sm:w-64">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/60 hover:text-white hover:bg-white/10 rounded-full shrink-0"
+              onClick={() => setIsMuted(!isMuted)}
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+            <div className="flex-1">
+              <Slider
+                value={[isMuted ? 0 : volume]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={(val) => {
+                  setVolume(val[0]);
+                  if (val[0] > 0) setIsMuted(false);
+                }}
+                className="cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }

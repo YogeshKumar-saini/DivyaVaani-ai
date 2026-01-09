@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { SAMPLE_QUESTIONS, ROUTES } from '@/lib/utils/constants';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface SampleQuestionsProps {
   onQuestionClick?: (question: string) => void;
@@ -15,7 +16,6 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
     if (onQuestionClick) {
       onQuestionClick(question);
     } else {
-      // Navigate to chat with question as query param
       router.push(`${ROUTES.CHAT}?q=${encodeURIComponent(question)}`);
     }
   };
@@ -28,105 +28,99 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
   };
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* ETHEREAL BACKGROUND */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/40 via-orange-50/30 to-red-50/20"></div>
+    <section className="relative py-32 overflow-hidden">
 
-      {/* FLUID ANIMATIONS */}
-      <div className="absolute inset-0">
-        <div className="absolute top-12 right-12 w-72 h-72 rounded-full bg-gradient-to-br from-yellow-200/12 to-orange-200/12 blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-16 left-12 w-80 h-80 rounded-full bg-gradient-to-br from-orange-200/8 to-red-200/8 blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-      </div>
+      {/* Background Ambience */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
-        <div className="text-center mb-20">
-          {/* INCREDIBLE TITLE */}
-          <h2 className="text-5xl md:text-7xl font-bold mb-8">
-            <span className="bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-              Explore Sample Questions
-            </span>
-          </h2>
+        <div className="text-center mb-20 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center justify-center space-x-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 backdrop-blur-sm"
+          >
+            <Sparkles className="w-4 h-4 text-orange-300" />
+            <span className="text-sm font-medium text-orange-100/80 uppercase tracking-widest">Start Your Journey</span>
+          </motion.div>
 
-          <div className="relative inline-block">
-            <p className="text-2xl text-gray-700 max-w-4xl mx-auto leading-relaxed font-medium">
-              Discover profound wisdom through thoughtfully crafted inquiries. Find inspiration or ask your own unique question.
-            </p>
-            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-48 h-2.5 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-400 rounded-full opacity-70"></div>
-          </div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-5xl font-bold text-white"
+          >
+            Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600">Sample Questions</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed font-light"
+          >
+            Discover profound wisdom through thoughtfully crafted inquiries. Find inspiration or ask your own unique question.
+          </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {SAMPLE_QUESTIONS.map((item, idx) => (
-            <button
+            <motion.button
               key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleQuestionClick(item.question)}
-              className="group relative text-left bg-gradient-to-br from-white/95 via-gray-50/70 to-orange-50/40 backdrop-blur-2xl rounded-2xl p-8 border-2 border-white/60 shadow-xl hover:shadow-3xl transition-all duration-500 hover:scale-110 hover:-translate-y-3 animate-fade-in"
-              style={{ animationDelay: `${idx * 0.1}s` }}
+              className="group relative text-left bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:border-orange-500/30 transition-all duration-300 h-full flex flex-col"
             >
-              {/* SUBTLE GLOW EFFECT */}
-              {/* <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/5 via-orange-200/5 to-red-200/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div> */}
-
-              <div className="flex items-start space-x-4 mb-6 relative z-10">
-                {/* MAGICAL ICON CONTAINER */}
-                <div className="relative">
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${categoryColors[item.category as keyof typeof categoryColors]} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-125 transition-all duration-500 border-2 border-white/50`}>
-                    <MessageSquare className="h-6 w-6 text-white drop-shadow-md" />
-                  </div>
-                  {/* ORBITING PARTICLES */}
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-70"></div>
-                  <div className="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse opacity-80" style={{ animationDelay: '0.7s' }}></div>
+              <div className="flex items-start space-x-4 mb-4">
+                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${categoryColors[item.category as keyof typeof categoryColors]} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 shrink-0`}>
+                  <MessageSquare className="h-5 w-5 text-white" />
                 </div>
-
-                <div className="flex-1">
-                  <span className="text-sm font-bold text-gray-600 uppercase tracking-wider group-hover:text-orange-600 transition-colors duration-300">
+                <div className="flex-1 pt-1">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest group-hover:text-orange-300 transition-colors">
                     {item.category}
                   </span>
                 </div>
               </div>
 
-              <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 group-hover:font-medium transition-all duration-300 relative z-10">
+              <p className="text-gray-200 font-medium leading-relaxed group-hover:text-white transition-colors flex-grow">
                 {item.question}
               </p>
 
-              {/* BOTTOM DECORATION */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </button>
+              {/* Card Shine */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            </motion.button>
           ))}
         </div>
 
-        {/* MAGICAL CTA */}
-        <div className="text-center mt-20">
-          <div className="relative inline-block">
-            {/* GLOWING BACKDROP */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-red-400/20 to-yellow-400/20 blur-xl rounded-3xl transform scale-110"></div>
-
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-20"
+        >
+          <div className="inline-block relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300 rounded-full" />
             <button
               onClick={() => router.push(ROUTES.CHAT)}
-              className="relative px-16 py-6 bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 text-white font-bold text-xl rounded-3xl shadow-2xl hover:shadow-3xl hover:scale-110 hover:translate-y-2 transition-all duration-500 group"
+              className="relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-full shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20"
             >
-              <span className="flex items-center gap-4">
-                📖 Ask Your Own Question
-                <svg className="w-8 h-8 group-hover:translate-x-3 transition-transform duration-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-              {/* RIPPLE EFFECT */}
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-red-400/20 rounded-3xl animate-pulse opacity-60"></div>
+              Ask Your Own Question
             </button>
-
-            {/* FALLING STARS EFFECT */}
-            <div className="absolute -top-4 -left-4 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
-            <div className="absolute -bottom-3 -right-4 w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute top-1/2 -left-8 w-1 h-1 bg-red-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
           </div>
-
-          {/* ENCHANTING SUBTEXT */}
-          <div className="mt-8 p-6 bg-gradient-to-br from-orange-50/80 via-yellow-50/80 to-orange-50/80 backdrop-blur-lg rounded-2xl border border-white/50 shadow-xl max-w-2xl mx-auto">
-            <div className="text-lg text-gray-700 font-medium">
-              🌟 Your spiritual journey is just one question away. Every inquiry opens doorways to ancient wisdom.
-            </div>
-          </div>
-        </div>
+          <p className="mt-6 text-gray-400 text-sm font-medium">
+            Your spiritual journey is just one question away.
+          </p>
+        </motion.div>
       </div>
     </section>
   );

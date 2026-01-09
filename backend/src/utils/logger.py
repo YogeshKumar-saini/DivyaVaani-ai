@@ -113,7 +113,7 @@ def _structured_format(record):
 class StructuredLogger:
     """Enhanced logger with structured logging capabilities."""
 
-    def log_request(self, method: str, path: str, status_code: int, duration: float, user_id: str = None):
+    def log_request(self, method: str, path: str, status_code: int, duration: float, user_id: str = None, metadata: Dict[str, Any] = None):
         """Log HTTP request with structured data."""
         logger.bind(
             request={
@@ -121,7 +121,8 @@ class StructuredLogger:
                 "path": path,
                 "status_code": status_code,
                 "duration": duration,
-                "user_id": user_id
+                "user_id": user_id,
+                **(metadata or {})
             }
         ).info("HTTP Request")
 

@@ -112,6 +112,13 @@ app.include_router(voice_query_router, prefix="/voice", tags=["voice"])
 app.include_router(stt_router, prefix="/voice/stt", tags=["speech-to-text"])
 app.include_router(tts_router, prefix="/voice/tts", tags=["text-to-speech"])
 
+from src.api.routes.documents import router as documents_router
+app.include_router(documents_router, prefix="", tags=["documents"])
+
+# Include conversation router
+from src.api.routes.conversation import router as conversation_router
+app.include_router(conversation_router, prefix="/conversation", tags=["conversation"])
+
 # Request/Response middleware for logging and metrics
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

@@ -93,14 +93,14 @@ class TextToSpeechProcessor:
             logger.error(f"Failed to initialize {self.provider} client: {e}")
             self.client = None
 
-    def synthesize_speech(
+    async def synthesize_speech(
         self,
         text: str,
         language: str = "en",
         voice: str = "default",
         speed: float = 1.0
     ) -> Dict[str, Any]:
-        """Convert text to speech.
+        """Convert text to speech (Async).
 
         Args:
             text: Text to convert to speech
@@ -114,54 +114,46 @@ class TextToSpeechProcessor:
         try:
             if self.client is None:
                 # Return mock audio data for development
-                mock_audio = b"mock_audio_data_would_be_here"
-                return {
-                    "audio_data": mock_audio,
-                    "format": "mp3",
-                    "sample_rate": 22050,
-                    "language": language,
-                    "voice": voice,
-                    "speed": speed,
-                    "duration": len(text.split()) * 0.3,  # Rough estimate
-                    "provider": "mock"
-                }
+                return self._get_mock_audio(text, language, voice, speed)
 
             if self.provider == "openai":
-                # OpenAI TTS implementation
+                # OpenAI TTS implementation (Async wrapper or todo)
                 return self._synthesize_openai_speech(text, language, voice, speed)
             elif self.client == "cartesia":
                 # Cartesia TTS implementation
-                return self._synthesize_cartesia_speech(text, language, voice, speed)
+                return await self._synthesize_cartesia_speech(text, language, voice, speed)
             else:
                 # Google TTS implementation
                 return self._synthesize_google_speech(text, language, voice, speed)
 
         except Exception as e:
             logger.error(f"Text-to-speech error: {e}")
-            # Fallback to mock on error
-            mock_audio = b"mock_audio_data_would_be_here"
-            return {
-                "audio_data": mock_audio,
-                "format": "mp3",
-                "sample_rate": 22050,
-                "language": language,
-                "voice": voice,
-                "speed": speed,
-                "duration": len(text.split()) * 0.3,
-                "provider": "mock",
-                "error": str(e)
-            }
+            return self._get_mock_audio(text, language, voice, speed, str(e))
 
-    def _synthesize_cartesia_speech(
+    def _get_mock_audio(self, text, language, voice, speed, error=None):
+        mock_audio = b"mock_audio_data_would_be_here"
+        return {
+            "audio_data": mock_audio,
+            "format": "mp3",
+            "sample_rate": 22050,
+            "language": language,
+            "voice": voice,
+            "speed": speed,
+            "duration": len(text.split()) * 0.3,
+            "provider": "mock",
+            "error": error
+        }
+
+    async def _synthesize_cartesia_speech(
         self,
         text: str,
         language: str = "en",
         voice: str = "default",
         speed: float = 1.0
     ) -> Dict[str, Any]:
-        """Synthesize speech using Cartesia API."""
+        """Synthesize speech using Cartesia API via Async HTTP."""
         try:
-            import requests
+            import httpx
 
             # Map voice settings for Cartesia
             voice_id = self._map_cartesia_voice(language, voice)
@@ -190,9 +182,16 @@ class TextToSpeechProcessor:
                 "language": self._map_cartesia_language(language)
             }
 
-            # Make API request
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
+            # Make Async API request
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+            
+            if response.status_code != 200:
+                # Fallback on auth error
+                if response.status_code == 401:
+                    logger.warning("Cartesia Unauthorized. Falling back to mock.")
+                    return self._get_mock_audio(text, language, voice, speed, "Cartesia Auth Failed")
+                response.raise_for_status()
 
             audio_data = response.content
 

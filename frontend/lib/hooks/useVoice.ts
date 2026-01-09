@@ -11,7 +11,7 @@ export function useVoice() {
   const [transcription, setTranscription] = useState<string>('');
   const [responseText, setResponseText] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -37,7 +37,6 @@ export function useVoice() {
         }
       }
 
-      console.log('useVoice: Selected mimeType for recording:', selectedMimeType);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: selectedMimeType
@@ -55,7 +54,6 @@ export function useVoice() {
       mediaRecorder.onstop = async () => {
         // Create blob with the correct MIME type
         const audioBlob = new Blob(audioChunksRef.current, { type: selectedMimeType || 'audio/wav' });
-        console.log('useVoice: Created audio blob, size:', audioBlob.size, 'type:', audioBlob.type);
         await processVoiceQuery(audioBlob, selectedMimeType);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -70,26 +68,23 @@ export function useVoice() {
   };
 
   const stopRecording = () => {
-    console.log('useVoice: stopRecording called, mediaRecorder exists:', !!mediaRecorderRef.current, 'isRecording:', isRecording);
     if (mediaRecorderRef.current && isRecording) {
-      console.log('useVoice: Stopping MediaRecorder...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     } else {
-      console.log('useVoice: Cannot stop - MediaRecorder not available or not recording');
     }
   };
 
   const processVoiceQuery = async (audioBlob: Blob, mimeType?: string) => {
     setIsProcessing(true);
     setError(null);
-    
+
     try {
       const result = await voiceService.processVoiceQuery(audioBlob, {
         inputLanguage: 'auto',
         outputLanguage: 'auto',
       }, mimeType);
-      
+
       setAudioResponse(URL.createObjectURL(result.audio_data));
       setTranscription(result.transcription.text);
       setResponseText(result.response_text);

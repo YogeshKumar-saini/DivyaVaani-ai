@@ -94,7 +94,6 @@ export function useConversationalVoice(userId: string = 'default') {
         }
       }
 
-      console.log('useConversationalVoice: Selected mimeType for recording:', selectedMimeType);
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: selectedMimeType
@@ -124,7 +123,6 @@ export function useConversationalVoice(userId: string = 'default') {
       mediaRecorder.onstop = async () => {
         // Create blob with the correct MIME type
         const audioBlob = new Blob(audioChunksRef.current, { type: selectedMimeType || 'audio/wav' });
-        console.log('useConversationalVoice: Created audio blob, size:', audioBlob.size, 'type:', audioBlob.type);
         await processVoiceQuery(audioBlob, selectedMimeType);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -139,13 +137,10 @@ export function useConversationalVoice(userId: string = 'default') {
   }, [processVoiceQuery]);
 
   const stopRecording = useCallback(() => {
-    console.log('useConversationalVoice: stopRecording called, mediaRecorder exists:', !!mediaRecorderRef.current, 'isRecording:', isRecording);
     if (mediaRecorderRef.current && isRecording) {
-      console.log('useConversationalVoice: Stopping MediaRecorder...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     } else {
-      console.log('useConversationalVoice: Cannot stop - MediaRecorder not available or not recording');
     }
   }, [isRecording]);
 

@@ -3,7 +3,7 @@
  * Handles all HTTP requests with error handling, retry logic, and type safety
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
 
 export enum ErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',
@@ -34,7 +34,7 @@ export class APIError extends Error {
     super(message);
     this.name = 'APIError';
     this.details = details;
-    
+
     // Determine error type based on status code
     if (statusCode === 0) {
       this.type = ErrorType.NETWORK_ERROR;
@@ -178,7 +178,7 @@ class APIClient {
         if (!response.ok) {
           let errorMessage = `Request failed with status ${response.status}`;
           let errorDetails = null;
-          
+
           try {
             const errorData = await response.json();
             errorMessage = errorData.detail || errorData.message || errorMessage;
@@ -187,23 +187,23 @@ class APIClient {
             // If error response is not JSON, use status text
             errorMessage = response.statusText || errorMessage;
           }
-          
+
           throw new APIError(errorMessage, response.status, undefined, errorDetails);
         }
 
         return response.json();
       } catch (error) {
         clearTimeout(timeoutId);
-        
+
         if (error instanceof APIError) {
           throw error;
         }
-        
+
         // Handle abort/timeout
         if (error instanceof Error && error.name === 'AbortError') {
           throw new APIError('Request timeout', 408);
         }
-        
+
         // Network or other errors
         throw new APIError(
           error instanceof Error ? error.message : 'Network error occurred',

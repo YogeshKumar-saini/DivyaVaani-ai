@@ -3,7 +3,7 @@
  * Handles file uploads with progress tracking and validation
  */
 
-import { APIError } from './client';
+import { APIError, API_BASE_URL } from './client';
 
 export interface FileUploadRequest {
   file: File;
@@ -152,8 +152,8 @@ class FileService {
       });
 
       // Send request
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
-      xhr.open('POST', `${apiBaseUrl}/upload`);
+      // Send request
+      xhr.open('POST', `${API_BASE_URL}/upload`);
       xhr.send(formData);
     });
   }

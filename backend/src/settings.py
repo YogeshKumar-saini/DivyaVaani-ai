@@ -16,6 +16,7 @@ class Settings(BaseModel):
     groq_api_key: Optional[str] = Field(default=None)
     gemini_api_key: Optional[str] = Field(default=None)
     openai_api_key: Optional[str] = Field(default=None)
+    deepgram_api_key: Optional[str] = Field(default=None)
     cohere_api_key: Optional[str] = Field(default=None)
     huggingface_api_key: Optional[str] = Field(default=None)
 

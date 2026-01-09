@@ -71,7 +71,7 @@ export function FeedbackForm({ onSubmit, compact = false }: FeedbackFormProps) {
 
   if (compact) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className=" rounded-lg border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
@@ -159,7 +159,7 @@ export function FeedbackForm({ onSubmit, compact = false }: FeedbackFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-professional border border-blue-200/50 card-professional">
+    <div className=" rounded-2xl p-4 sm:p-6 shadow-professional border border-blue-200/50 card-professional">
       <div className="flex items-center space-x-3 mb-6">
         <MessageSquare className="h-6 w-6 text-blue-600" />
         <h3 className="text-lg sm:text-xl font-bold text-gray-900">Share Your Feedback</h3>

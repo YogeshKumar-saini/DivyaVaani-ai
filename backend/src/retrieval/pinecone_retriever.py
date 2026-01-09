@@ -141,8 +141,56 @@ class PineconeRetriever:
             log.error(f"Retrieval failed: {e}")
             structured_logger.log_error(e, {"operation": "pinecone_retrieval", "query": query[:100]})
             raise
+            raise
     
-    def health_check(self) -> Dict[str, Any]:
+    def upsert_documents(self, documents: List[Dict[str, Any]], embeddings: np.ndarray) -> int:
+        """Upsert documents with embeddings to Pinecone.
+        
+        Args:
+            documents: List of document dictionaries (metadata)
+            embeddings: Numpy array of embeddings
+            
+        Returns:
+            Number of vectors upserted
+        """
+        try:
+            if self.index is None:
+                if not self.connect():
+                    raise RuntimeError("Failed to connect to Pinecone")
+            
+            # Prepare vectors
+            vectors = []
+            for i, doc in enumerate(documents):
+                # Use a stable ID if available, otherwise generate one
+                vector_id = doc.get('id', f"{int(time.time())}_{i}")
+                
+                # Filter metadata to simple types for Pinecone
+                metadata = {
+                    k: v for k, v in doc.items() 
+                    if isinstance(v, (str, int, float, bool)) and k != 'id'
+                }
+                
+                vectors.append({
+                    'id': str(vector_id),
+                    'values': embeddings[i].tolist(),
+                    'metadata': metadata
+                })
+            
+            # Upsert in batches
+            count = 0
+            batch_size = 100
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i+batch_size]
+                self.index.upsert(vectors=batch)
+                count += len(batch)
+                log.info(f"Upserted batch {i//batch_size + 1} ({len(batch)} vectors)")
+                
+            log.info(f"Successfully upserted {count} vectors to Pinecone")
+            return count
+            
+        except Exception as e:
+            log.error(f"Upsert failed: {e}")
+            raise
         """Check Pinecone connection health.
         
         Returns:

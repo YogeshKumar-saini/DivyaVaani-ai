@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Close, Mic, VolumeUp, Language, GraphicEq } from '@mui/icons-material';
-import { Box, IconButton, Typography, Select, MenuItem, FormControl, Switch, FormControlLabel, Slider, Button, Divider } from '@mui/material';
+import { X, Mic, Volume2, Languages, Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface VoiceSidebarProps {
   onClose: () => void;
@@ -15,117 +19,106 @@ export function VoiceSidebar({ onClose }: VoiceSidebarProps) {
   const [noiseReduction, setNoiseReduction] = useState(true);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="flex h-full flex-col bg-background">
       {/* Header */}
-      <Box sx={{
-        p: 2,
-        borderBottom: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <GraphicEq />
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center gap-2 font-semibold">
+          <Activity className="h-5 w-5" />
           Voice Settings
-        </Typography>
-        <IconButton onClick={onClose} size="small">
-          <Close />
-        </IconButton>
-      </Box>
+        </div>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Settings Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      <div className="flex-1 overflow-auto p-4 space-y-6">
         {/* Language Selection */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Language fontSize="small" />
-            Language
-          </Typography>
-          <FormControl fullWidth size="small">
-            <Select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-            >
-              <MenuItem value="auto">Auto-detect</MenuItem>
-              <MenuItem value="en">🇺🇸 English</MenuItem>
-              <MenuItem value="hi">🇮🇳 हिन्दी (Hindi)</MenuItem>
-              <MenuItem value="sa">🕉️ संस्कृत (Sanskrit)</MenuItem>
-              <MenuItem value="bn">🇮🇳 বাংলা (Bengali)</MenuItem>
-              <MenuItem value="te">🇮🇳 తెలుగు (Telugu)</MenuItem>
-              <MenuItem value="ta">🇮🇳 தமிழ் (Tamil)</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Languages className="h-4 w-4" /> Language
+          </Label>
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Languages</SelectLabel>
+                <SelectItem value="auto">Auto-detect</SelectItem>
+                <SelectItem value="en">🇺🇸 English</SelectItem>
+                <SelectItem value="hi">🇮🇳 हिन्दी (Hindi)</SelectItem>
+                <SelectItem value="sa">🕉️ संस्कृत (Sanskrit)</SelectItem>
+                <SelectItem value="bn">🇮🇳 বাংলা (Bengali)</SelectItem>
+                <SelectItem value="te">🇮🇳 తెలుగు (Telugu)</SelectItem>
+                <SelectItem value="ta">🇮🇳 தமிழ் (Tamil)</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Divider sx={{ my: 2 }} />
+        <div className="h-px bg-border" />
 
         {/* Voice Volume */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <VolumeUp fontSize="small" />
-            Voice Volume: {voiceVolume}%
-          </Typography>
+        <div className="space-y-4">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Volume2 className="h-4 w-4" /> Voice Volume: {voiceVolume}%
+          </Label>
           <Slider
-            value={voiceVolume}
-            onChange={(_, value) => setVoiceVolume(value as number)}
+            value={[voiceVolume]}
+            onValueChange={(val) => setVoiceVolume(val[0])}
             min={10}
             max={100}
-            size="small"
+            step={1}
           />
-        </Box>
+        </div>
 
-        <Divider sx={{ my: 2 }} />
+        <div className="h-px bg-border" />
 
         {/* Microphone Settings */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Mic fontSize="small" />
-            Microphone
-          </Typography>
+        <div className="space-y-4">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Mic className="h-4 w-4" /> Microphone
+          </Label>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Sensitivity: {micSensitivity}%
-              </Typography>
-              <Slider
-                value={micSensitivity}
-                onChange={(_, value) => setMicSensitivity(value as number)}
-                min={20}
-                max={100}
-                size="small"
-              />
-            </Box>
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={noiseReduction}
-                  onChange={(e) => setNoiseReduction(e.target.checked)}
-                  size="small"
-                />
-              }
-              label={<Typography variant="body2">Noise Reduction</Typography>}
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground">
+              Sensitivity: {micSensitivity}%
+            </div>
+            <Slider
+              value={[micSensitivity]}
+              onValueChange={(val) => setMicSensitivity(val[0])}
+              min={20}
+              max={100}
+              step={1}
             />
-          </Box>
-        </Box>
+          </div>
 
-        <Divider sx={{ my: 2 }} />
+          <div className="flex items-center justify-between pt-2">
+            <Label htmlFor="noise-reduction" className="text-sm font-normal">
+              Noise Reduction
+            </Label>
+            <Switch
+              id="noise-reduction"
+              checked={noiseReduction}
+              onCheckedChange={setNoiseReduction}
+            />
+          </div>
+        </div>
+
+        <div className="h-px bg-border" />
 
         {/* Voice Test */}
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>
-            Voice Test
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Voice Test</Label>
+          <p className="text-xs text-muted-foreground">
             Test your current voice settings
-          </Typography>
-          <Button variant="outlined" size="small" fullWidth>
+          </p>
+          <Button variant="outline" size="sm" className="w-full">
             Play Sample Audio
           </Button>
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }

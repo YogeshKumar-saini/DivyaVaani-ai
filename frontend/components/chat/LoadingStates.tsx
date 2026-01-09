@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, Loader2, Brain, Heart } from 'lucide-react';
+import { Loader2, Brain, Heart } from 'lucide-react';
+import Image from 'next/image';
 
 interface LoadingStateProps {
   isTyping?: boolean;
@@ -7,10 +8,10 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ 
-  isTyping = false, 
-  message = "Contemplating your question...", 
-  className = '' 
+export function LoadingState({
+  isTyping = false,
+  message = "Contemplating your question...",
+  className = ''
 }: LoadingStateProps) {
   const messages = [
     "Contemplating your question...",
@@ -30,7 +31,7 @@ export function LoadingState({
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 shadow-lg ring-2 ring-white dark:ring-gray-800">
           <Brain className="h-4 w-4 text-white animate-pulse" />
         </div>
-        
+
         {/* Pulsing background effect */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 animate-ping opacity-20"></div>
       </div>
@@ -108,7 +109,14 @@ export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenP
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 blur-3xl rounded-full"></div>
           <div className="relative flex justify-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 shadow-2xl animate-pulse">
-              <Sparkles className="h-10 w-10 text-white" />
+              {/* <Sparkles className="h-10 w-10 text-white" /> */}
+              <Image
+                src="/images/logo.png"
+                alt="DivyaVaani Logo"
+                width={80}
+                height={80}
+                className="h-full w-full object-cover rounded-full p-1"
+              />
             </div>
           </div>
         </div>
@@ -119,7 +127,7 @@ export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenP
             Welcome to DivyaVaani AI
           </h1>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg mx-auto">
-            Your spiritual companion enlightened by the eternal wisdom of the Bhagavad Gita. 
+            Your spiritual companion enlightened by the eternal wisdom of the Bhagavad Gita.
             Ask deep questions about dharma, karma, moksha, and the path to self-realization.
           </p>
         </div>

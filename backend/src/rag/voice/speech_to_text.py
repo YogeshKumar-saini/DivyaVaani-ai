@@ -64,6 +64,10 @@ class SpeechToTextProcessor:
                 except Exception as e:
                     logger.error(f"Failed to initialize OpenAI Whisper client: {e}")
                     self.client = None
+            elif self.provider == "deepgram":
+                 # Deepgram - For development, force mock implementation
+                logger.info("Deepgram STT configured for development (using mock)")
+                self.client = None  # Force mock implementation
             else:
                 logger.warning(f"Unknown provider {self.provider}, using mock implementation")
                 self.client = None
@@ -71,12 +75,13 @@ class SpeechToTextProcessor:
             logger.error(f"Failed to initialize {self.provider} client: {e}")
             self.client = None
 
-    def transcribe_audio(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
+    async def transcribe_audio(self, audio_data: bytes, language: str = "auto", mimetype: str = "audio/wav") -> Dict[str, Any]:
         """Transcribe audio data to text.
 
         Args:
             audio_data: Raw audio bytes
             language: Language code or 'auto'
+            mimetype: Audio MIME type (required for Deepgram)
 
         Returns:
             Dict with transcription results
@@ -93,10 +98,12 @@ class SpeechToTextProcessor:
                 }
 
             if self.provider == "whisper":
-                return self._transcribe_whisper(audio_data, language)
+                return await self._transcribe_whisper(audio_data, language)
+            elif self.provider == "deepgram":
+                return await self._transcribe_deepgram(audio_data, language, mimetype)
             else:
                 # Google Speech-to-Text implementation
-                return self._transcribe_google(audio_data, language)
+                return await self._transcribe_google(audio_data, language)
 
         except Exception as e:
             logger.error(f"Speech-to-text error: {e}")
@@ -110,7 +117,66 @@ class SpeechToTextProcessor:
                 "error": str(e)
             }
 
-    def _transcribe_whisper(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
+    async def _transcribe_deepgram(self, audio_data: bytes, language: str = "auto", mimetype: str = "audio/wav") -> Dict[str, Any]:
+        """Transcribe audio using Deepgram API via HTTP requests."""
+        try:
+            import requests
+
+            url = "https://api.deepgram.com/v1/listen"
+            
+            # Map language to Deepgram format (e.g., 'en' -> 'en-US')
+            # Deepgram often auto-detects but explicit is better for known inputs
+            # Default mapping to 'en-US' if unknown, or allow 'auto' if supported (Deepgram calls it 'detect_language=true')
+            
+            params = {
+                "smart_format": "true",
+                "punctuate": "true",
+            }
+            
+            if language == "auto":
+                params["detect_language"] = "true"
+            else:
+                # Basic mapping
+                lang_map = {
+                    "en": "en-US", "hi": "hi", "sa": "en", # Sanskrit not directly listed, maybe Hindi or generic
+                    "en-US": "en-US", "hi-IN": "hi"
+                }
+                params["language"] = lang_map.get(language, "en-US")
+
+            headers = {
+                "Authorization": f"Token {self.api_key}",
+                "Content-Type": "audio/wav" # Defaulting to wav or generic bytes
+            }
+            
+            # If valid audio bytes are passed, requests handles them as body
+            response = requests.post(url, headers=headers, params=params, data=audio_data, timeout=10)
+            
+            if response.status_code != 200:
+                raise Exception(f"Deepgram API error: {response.status_code} - {response.text}")
+            
+            result = response.json()
+            
+            # Parse response
+            # Expected format: results -> channels -> [0] -> alternatives -> [0] -> transcript
+            transcript = result.get('results', {}).get('channels', [{}])[0].get('alternatives', [{}])[0].get('transcript', '')
+            confidence = result.get('results', {}).get('channels', [{}])[0].get('alternatives', [{}])[0].get('confidence', 0.0)
+            
+            meta_lang = result.get('results', {}).get('channels', [{}])[0].get('detected_language', language)
+
+            return {
+                "text": transcript,
+                "confidence": confidence,
+                "language": meta_lang,
+                "duration": result.get('metadata', {}).get('duration', 0.0),
+                "provider": "deepgram",
+                "is_final": True
+            }
+
+        except Exception as e:
+            logger.error(f"Deepgram transcription error: {e}")
+            raise
+
+    async def _transcribe_whisper(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
         """Transcribe audio using OpenAI Whisper."""
         try:
             import tempfile
@@ -155,7 +221,7 @@ class SpeechToTextProcessor:
             logger.error(f"Whisper transcription error: {e}")
             raise
 
-    def _transcribe_google(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
+    async def _transcribe_google(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
         """Transcribe audio using Google Speech-to-Text."""
         try:
             from google.cloud import speech_v1p1beta1 as speech
@@ -297,3 +363,4 @@ class SpeechToTextProcessor:
         return [
             "flac", "wav", "mp3", "m4a", "ogg", "webm", "amr", "awb"
         ]
+        """Get list of supported audio formats."""

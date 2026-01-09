@@ -35,7 +35,8 @@ async def speech_to_text(
         result = await voice_service.speech_to_text(
             audio_data=audio_data,
             language=language,
-            user_id=user_id
+            user_id=user_id,
+            mimetype=audio_file.content_type or "audio/wav"
         )
 
         return {

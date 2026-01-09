@@ -1,15 +1,11 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
-import { Globe, Mic, BookOpen, Zap, LucideIcon } from 'lucide-react';
+import { Globe, Mic, BookOpen, Zap, LucideIcon, Sparkles } from 'lucide-react';
 import { FEATURES, ROUTES } from '@/lib/utils/constants';
-import {
-  Container,
-  Box,
-  Typography,
-  Button,
-  Paper,
-  IconButton,
-  useTheme,
-} from '@mui/material';
+import { Button } from '@/components/ui/button';
+import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
+import { MouseEvent } from 'react';
 
 const iconMap: Record<string, LucideIcon> = {
   Globe,
@@ -18,218 +14,127 @@ const iconMap: Record<string, LucideIcon> = {
   Zap,
 };
 
+const FeatureCard = ({ feature, index }: { feature: typeof FEATURES[number]; index: number }) => {
+  const Icon = iconMap[feature.icon as keyof typeof iconMap] || Globe;
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      onMouseMove={handleMouseMove}
+      className="group relative flex flex-col items-center rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-md transition-all duration-500 hover:-translate-y-2"
+    >
+      {/* Hover Gradient Effect */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover:opacity-100"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              650px circle at ${mouseX}px ${mouseY}px,
+              rgba(255, 100, 50, 0.15),
+              transparent 80%
+            )
+          `,
+        }}
+      />
+
+      {/* Icon Container with Glow */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-orange-500/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-[0_0_15px_rgba(255,165,0,0.1)] border border-primary/20`}>
+          <Icon className="h-8 w-8" />
+        </div>
+      </div>
+
+      <h3 className="mb-3 text-xl font-bold text-foreground transition-colors group-hover:text-primary">
+        {feature.title}
+      </h3>
+
+      <p className="text-sm leading-relaxed text-muted-foreground/90 relative z-10">
+        {feature.description}
+      </p>
+
+      {/* Decorative Shine */}
+      <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10 group-hover:ring-primary/30 transition-all duration-500" />
+    </motion.div>
+  );
+};
+
 export function FeaturesSection() {
-  const theme = useTheme();
   const router = useRouter();
 
   const handleExplore = () => {
-    router.push(ROUTES.CHAT);
+    router.push(ROUTES.CHAT || '/chat');
   };
 
   return (
-    <Box
-      id="features"
-      sx={{
-        py: 8,
-        px: 4,
-        position: 'relative',
-        // background: `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 100%)`,
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `radial-gradient(circle at 50% 50%, ${theme.palette.primary.main}05 0%, transparent 50%)`,
-          pointerEvents: 'none',
-        },
-      }}
-    >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Title Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography
-            variant="h3"
-            component="h2"
-            sx={{
-              fontWeight: 'bold',
-              mb: 3,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.error.main})`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Powerful Features
-          </Typography>
+    <section id="features" className="relative py-32 px-4 overflow-hidden">
 
-          <Box sx={{ position: 'relative', display: 'inline-block' }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: 'text.secondary',
-                maxWidth: 600,
-                mx: 'auto',
-                lineHeight: 1.6,
-              }}
-            >
-              Experience spiritual wisdom through cutting-edge AI technology and divine guidance
-            </Typography>
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: -4,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 60,
-                height: 2,
-                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
-                borderRadius: 1,
-                opacity: 0.6,
-              }}
-            />
-          </Box>
-        </Box>
+      {/* Background Ambience */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow delay-1000" />
+
+      <div className="container relative z-10 mx-auto max-w-7xl">
+        {/* Title Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="mb-24 text-center space-y-4"
+        >
+          <div className="inline-flex items-center justify-center space-x-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full px-4 py-1.5 mb-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary tracking-wide uppercase">Why Choose DivyaVaani?</span>
+          </div>
+
+          <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
+            Powerful <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Features</span>
+          </h2>
+
+          <p className="mx-auto max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed font-light">
+            Experience spiritual wisdom through cutting-edge AI technology and divine guidance,
+            designed to bring clarity and peace to your daily life.
+          </p>
+        </motion.div>
 
         {/* Features Grid */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: '1fr 1fr',
-              lg: '1fr 1fr 1fr 1fr'
-            },
-            gap: 3,
-            mb: 6,
-          }}
-        >
-          {FEATURES.map((feature) => {
-            const Icon = iconMap[feature.icon as keyof typeof iconMap] || Globe;
-
-            return (
-              <Paper
-                key={feature.id}
-                elevation={2}
-                sx={{
-                  p: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  borderRadius: 3,
-                  background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(255,255,255,0.8) 100%)`,
-                  backdropFilter: 'blur(10px)',
-                  border: `1px solid ${theme.palette.divider}`,
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[8],
-                    borderColor: theme.palette.primary.main,
-                  },
-                }}
-              >
-                {/* Icon */}
-                <IconButton
-                  sx={{
-                    mb: 2,
-                    width: 56,
-                    height: 56,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
-                    color: 'white',
-                    '&:hover': {
-                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.warning.dark})`,
-                      transform: 'scale(1.1)',
-                    },
-                    transition: 'all 0.3s ease-in-out',
-                  }}
-                >
-                  <Icon fontSize="medium" />
-                </IconButton>
-
-                {/* Title */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 600,
-                    mb: 2,
-                    color: theme.palette.text.primary,
-                    transition: 'color 0.3s ease-in-out',
-                  }}
-                >
-                  {feature.title}
-                </Typography>
-
-                {/* Description */}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    lineHeight: 1.6,
-                    flexGrow: 1,
-                  }}
-                >
-                  {feature.description}
-                </Typography>
-              </Paper>
-            );
-          })}
-        </Box>
+        <div className="mb-24 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((feature, idx) => (
+            <FeatureCard key={feature.id} feature={feature} index={idx} />
+          ))}
+        </div>
 
         {/* CTA Section */}
-        <Box sx={{ textAlign: 'center' }}>
-          <Paper
-            sx={{
-              display: 'inline-block',
-              px: 4,
-              py: 3,
-              borderRadius: 3,
-              background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(255,255,255,0.9) 100%)`,
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${theme.palette.divider}`,
-              boxShadow: theme.shadows[4],
-            }}
-          >
-            <Typography
-              variant="body1"
-              sx={{
-                mb: 3,
-                color: theme.palette.text.secondary,
-                maxWidth: 500,
-                mx: 'auto',
-                fontWeight: 500,
-              }}
-            >
-              Experience the ancient wisdom that has guided millions through the ages
-            </Typography>
-
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <div className="inline-block relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500 rounded-full" />
             <Button
-              variant="contained"
-              size="large"
+              size="lg"
               onClick={handleExplore}
-              sx={{
-                px: 4,
-                py: 1.5,
-                borderRadius: 2,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.warning.main})`,
-                color: 'white',
-                fontWeight: 600,
-                boxShadow: theme.shadows[4],
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.warning.dark})`,
-                  boxShadow: theme.shadows[8],
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.3s ease-in-out',
-              }}
+              className="relative h-16 px-12 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-lg font-bold text-white shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20"
             >
               Explore Spiritual Wisdom
             </Button>
-          </Paper>
-        </Box>
-      </Container>
-    </Box>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 }

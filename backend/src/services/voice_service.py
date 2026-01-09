@@ -15,15 +15,35 @@ class VoiceService:
 
     def __init__(
         self,
-        stt_provider: str = "google",
+        stt_provider: str = "deepgram",
         tts_provider: str = "cartesia",  # Use Cartesia since we have API key
         stt_api_key: Optional[str] = None,
         tts_api_key: Optional[str] = None
     ):
         self.stt_processor = SpeechToTextProcessor(stt_provider, stt_api_key)
         self.tts_processor = TextToSpeechProcessor(tts_provider, tts_api_key)
-        self.voice_processor = VoiceProcessor(stt_provider, tts_provider, stt_api_key, tts_api_key)
+        self._voice_processor = None
+        self._voice_processor_params = {
+            'stt_provider': stt_provider,
+            'tts_provider': tts_provider,
+            'stt_api_key': stt_api_key,
+            'tts_api_key': tts_api_key
+        }
         self.text_service = TextService()
+
+    @property
+    def voice_processor(self):
+        """Lazy initialization of voice processor."""
+        if self._voice_processor is None:
+            try:
+                self._voice_processor = VoiceProcessor(**self._voice_processor_params)
+            except Exception as e:
+                # Log the error but don't fail - we can still use STT/TTS directly
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Voice processor initialization failed, using STT/TTS directly: {e}")
+                self._voice_processor = None
+        return self._voice_processor
 
     async def process_voice_query(
         self,
@@ -37,8 +57,15 @@ class VoiceService:
         start_time = time.time()
 
         try:
-            # Step 1: Speech-to-Text
-            transcription = self.stt_processor.transcribe_audio(audio_data, input_language)
+            # Step 1: Speech-to-Text (Async)
+            transcription = await self.stt_processor.transcribe_audio(audio_data, input_language)
+
+            # Debug logging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Transcription result: {transcription}")
+            logger.info(f"Transcription text: '{transcription.get('text')}'")
+            logger.info(f"Transcription text type: {type(transcription.get('text'))}")
 
             if not transcription.get("text"):
                 raise ProcessingError("Speech-to-Text", "Failed to transcribe audio")
@@ -53,9 +80,9 @@ class VoiceService:
                 preferred_language=output_language if output_language != "auto" else detected_lang
             )
 
-            # Step 3: Text-to-Speech
+            # Step 3: Text-to-Speech (Async)
             response_text = qa_result["answer"]
-            tts_result = self.tts_processor.synthesize_speech(
+            tts_result = await self.tts_processor.synthesize_speech(
                 text=response_text,
                 language=output_language if output_language != "auto" else detected_lang,
                 voice=voice
@@ -85,11 +112,12 @@ class VoiceService:
         self,
         audio_data: bytes,
         language: str = "auto",
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
+        mimetype: str = "audio/wav"
     ) -> Dict[str, Any]:
         """Convert speech to text only."""
         try:
-            result = self.stt_processor.transcribe_audio(audio_data, language)
+            result = await self.stt_processor.transcribe_audio(audio_data, language, mimetype)
 
             if not result.get("text") and not result.get("error"):
                 raise ProcessingError("Speech-to-Text", "Transcription failed")
@@ -109,7 +137,7 @@ class VoiceService:
     ) -> Dict[str, Any]:
         """Convert text to speech only."""
         try:
-            result = self.tts_processor.synthesize_speech(text, language, voice, speed)
+            result = await self.tts_processor.synthesize_speech(text, language, voice, speed)
 
             if not result.get("audio_data") and not result.get("error"):
                 raise ProcessingError("Text-to-Speech", "Audio generation failed")
@@ -149,4 +177,18 @@ class VoiceService:
 
     async def health_check(self) -> Dict[str, Any]:
         """Check voice service health."""
-        return self.voice_processor.health_check()
+        # Check if voice processor is available
+        voice_processor_available = self.voice_processor is not None
+
+        if voice_processor_available:
+            return self.voice_processor.health_check()
+        else:
+            # Return health status without voice processor
+            return {
+                "stt_status": "mock_implementation" if self.stt_processor.client is None else "ready",
+                "tts_status": "mock_implementation" if self.tts_processor.client is None else "ready",
+                "audio_status": "unavailable",
+                "audio_recording": False,
+                "audio_playback": False,
+                "overall_status": "partial"
+            }

@@ -229,7 +229,15 @@ class MultilingualQASystem:
                 # Primary: Try Groq
                 try:
                     llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=self.temperature, max_tokens=self.max_tokens)
-                    system_message = SystemMessage(content="You are Krishna, the divine teacher from the Bhagavad Gita. Provide spiritually profound, practically applicable wisdom.")
+                    system_content = (
+                        "You are Krishna, the divine teacher and guide from the Bhagavad Gita. "
+                        "Your purpose is to provide wisdom that leads to peace, clarity, and right action (Dharma). "
+                        "Answer the user's question with profound yet practical spiritual insight, drawing directly from the provided context (verses). "
+                        "Tone: Compassionate, authoritative, calm, and uplifting. "
+                        "Structure: Start with a direct answer, then support it with the verse's wisdom, and end with a practical application. "
+                        "If the context doesn't fully answer the question, use your general knowledge of the Gita but mention that the specific verse might be different."
+                    )
+                    system_message = SystemMessage(content=system_content)
                     messages = [system_message, HumanMessage(content=prompt_template.format(context=context_text, question=question))]
                     
                     response = llm.invoke(messages)
@@ -243,7 +251,7 @@ class MultilingualQASystem:
                     if self.gemini_api_key:
                         try:
                             llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=self.temperature, max_tokens=self.max_tokens)
-                            system_message = SystemMessage(content="You are Krishna, the divine teacher from the Bhagavad Gita. Provide spiritually profound, practically applicable wisdom.")
+                            system_message = SystemMessage(content=system_content) # Use same enhanced prompt
                             messages = [system_message, HumanMessage(content=prompt_template.format(context=context_text, question=question))]
                             
                             response = llm.invoke(messages)

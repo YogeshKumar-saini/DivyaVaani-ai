@@ -132,7 +132,12 @@ class VoiceProcessor:
     ):
         self.stt_processor = SpeechToTextProcessor(stt_provider, stt_api_key)
         self.tts_processor = TextToSpeechProcessor(tts_provider, tts_api_key)
-        self.audio_handler = AudioHandler(sample_rate=16000, channels=1)
+        # Initialize audio handler, but don't fail if audio is not available
+        try:
+            self.audio_handler = AudioHandler(sample_rate=16000, channels=1)
+        except Exception as e:
+            logger.warning(f"Audio handler initialization failed, using mock: {e}")
+            self.audio_handler = None
 
     async def process_voice_query(
         self,
@@ -270,6 +275,9 @@ class VoiceProcessor:
             Dict with processing results
         """
         try:
+            if self.audio_handler is None:
+                return {"error": "Audio handler not available"}
+
             logger.info("🎤 Starting voice recording...")
 
             # Record audio from microphone
