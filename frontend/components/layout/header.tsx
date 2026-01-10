@@ -56,7 +56,7 @@ export function Header({ items }: HeaderProps) {
                             />
                         </div>
                         <span className={cn(
-                            "font-bold text-2xl tracking-tighter transition-all duration-300",
+                            "font-bold text-2xl tracking-tighter transition-all duration-300 hidden sm:block",
                             isHome && !scrolled ? "text-white" : "text-foreground"
                         )}>
                             DivyaVaani

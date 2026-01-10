@@ -30,7 +30,7 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
     return (
-        <section className="relative py-32 overflow-hidden">
+        <section className="relative py-16 md:py-32 overflow-hidden">
             {/* Background Elements */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none" />
 
@@ -47,7 +47,7 @@ export function TestimonialsSection() {
                         <span className="text-sm font-medium text-orange-200 uppercase tracking-widest">Trusted by 10,000+ Seekers</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-bold text-white">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
                         Voices of the <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Community</span>
                     </h2>
 

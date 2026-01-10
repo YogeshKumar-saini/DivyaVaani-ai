@@ -11,7 +11,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-auto overflow-hidden border-t border-white/10 bg-black/40 backdrop-blur-xl text-white py-20">
+    <footer className="relative mt-auto overflow-hidden border-t border-white/10 bg-black/40 backdrop-blur-xl text-white py-12 md:py-20">
 
       {/* Ambient Background */}
       <div className="absolute inset-0 z-0">
@@ -44,7 +44,7 @@ export function Footer() {
           </div>
 
           {/* Links Column 1 */}
-          <div className="md:col-span-2 md:col-start-6">
+          <div className="col-span-1 md:col-span-2 md:col-start-6">
             <h4 className="text-sm font-semibold text-orange-400 tracking-wider uppercase mb-6">Platform</h4>
             <ul className="space-y-4">
               <FooterLink href={ROUTES.HOME}>Home</FooterLink>
@@ -55,7 +55,7 @@ export function Footer() {
           </div>
 
           {/* Links Column 2 */}
-          <div className="md:col-span-2">
+          <div className="col-span-1 md:col-span-2">
             <h4 className="text-sm font-semibold text-orange-400 tracking-wider uppercase mb-6">Resources</h4>
             <ul className="space-y-4">
               <FooterLink href="/about">About Us</FooterLink>
@@ -71,11 +71,11 @@ export function Footer() {
             <p className="text-gray-400 text-sm mb-4">
               Receive weekly wisdom and updates.
             </p>
-            <div className="flex space-x-2 bg-white/5 p-1 rounded-lg border border-white/10 focus-within:border-orange-500/50 transition-colors">
+            <div className="flex space-x-2 bg-white/5 p-1 rounded-lg border border-white/10 focus-within:border-orange-500/50 transition-colors w-full">
               <Input
                 type="email"
                 placeholder="Email address"
-                className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0 h-10"
+                className="bg-transparent border-none text-white placeholder:text-gray-500 focus-visible:ring-0 h-10 w-full min-w-0"
               />
               <Button size="icon" className="bg-orange-600 hover:bg-orange-700 h-10 w-10 shrink-0 rounded-md">
                 <Send className="w-4 h-4 text-white" />

@@ -28,7 +28,7 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
   };
 
   return (
-    <section className="relative py-32 overflow-hidden">
+    <section className="relative py-16 md:py-32 overflow-hidden">
 
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[120px] -z-10" />
@@ -51,7 +51,7 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold text-white"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white"
           >
             Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-purple-600">Sample Questions</span>
           </motion.h2>
@@ -112,7 +112,7 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300 rounded-full" />
             <button
               onClick={() => router.push(ROUTES.CHAT)}
-              className="relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-full shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20"
+              className="relative px-6 py-4 md:px-10 md:py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-full shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20"
             >
               Ask Your Own Question
             </button>

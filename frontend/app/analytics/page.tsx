@@ -142,18 +142,18 @@ export default function AnalyticsPage() {
     <div className="min-h-screen relative bg-background text-foreground">
       <GrainOverlay />
       <AuroraBackground className="flex-1 w-full min-h-0 h-full relative" showRadialGradient={false}>
-        <div className="w-full relative z-10 py-12 pt-32">
+        <div className="w-full relative z-10 py-12 pt-24 md:pt-32">
           <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {/* Header */}
             <div className="mb-12 text-center relative">
-              <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4 drop-shadow-sm">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4 drop-shadow-sm">
                 Analytics Dashboard
               </h1>
-              <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-base md:text-lg mb-6 max-w-2xl mx-auto px-4">
                 Real-time system performance monitoring and usage metrics
               </p>
-              <div className="flex justify-center gap-3 items-center">
+              <div className="flex flex-wrap justify-center gap-3 items-center">
                 <Badge variant="default" className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30 backdrop-blur-sm">Live</Badge>
                 <Badge variant="outline" className="border-white/10 bg-white/5 backdrop-blur-sm">Auto-refresh</Badge>
 

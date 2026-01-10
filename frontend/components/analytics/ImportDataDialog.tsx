@@ -157,7 +157,7 @@ export function ImportDataDialog({ onUploadSuccess }: ImportDataDialogProps) {
                     Import Data
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-black/90 border-white/10 backdrop-blur-xl text-foreground overflow-hidden">
+            <DialogContent className="w-[95%] sm:max-w-md bg-black/90 border-white/10 backdrop-blur-xl text-foreground overflow-hidden rounded-xl">
                 <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>
@@ -176,7 +176,7 @@ export function ImportDataDialog({ onUploadSuccess }: ImportDataDialogProps) {
                                 whileHover={{ scale: 1.02 }}
                                 transition={{ duration: 0.2 }}
                                 className={cn(
-                                    "border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-300",
+                                    "border-2 border-dashed rounded-xl p-4 md:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-300",
                                     isDragOver
                                         ? "border-emerald-500 bg-emerald-500/10"
                                         : "border-white/20 hover:border-emerald-500/50 hover:bg-emerald-500/5"

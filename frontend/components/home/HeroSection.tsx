@@ -82,7 +82,7 @@ export function HeroSection() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-x-hidden">
       {/* Video Background Restored */}
       <motion.div
         style={{ y }}
@@ -111,10 +111,10 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2 mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:bg-white/10 transition-colors cursor-default"
+            className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 md:px-5 md:py-2 mb-4 md:mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:bg-white/10 transition-colors cursor-default"
           >
-            <Sparkles className="w-4 h-4 text-orange-400 animate-pulse" />
-            <span className="text-orange-100 text-sm font-medium tracking-wide uppercase">Next Gen Spiritual AI</span>
+            <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-orange-400 animate-pulse" />
+            <span className="text-orange-100 text-xs md:text-sm font-medium tracking-wide uppercase">Next Gen Spiritual AI</span>
           </motion.div>
 
           <div className="space-y-4">
@@ -122,7 +122,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="text-6xl md:text-8xl font-bold tracking-tighter text-white leading-[1.05]"
+              className="text-4xl sm:text-5xl md:text-8xl font-bold tracking-tighter text-white leading-[1.05]"
             >
               Wisdom of <br />
               <span className="text-white">the Ages,</span>
@@ -132,7 +132,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter"
+              className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter"
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-200 to-orange-400 animate-gradient-x pb-2">
                 Powered by AI
@@ -153,15 +153,15 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5"
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 w-full sm:w-auto"
           >
             <Button
               size="lg"
               onClick={handleStartChat}
-              className="h-16 px-10 rounded-full bg-white text-black hover:scale-105 transition-all duration-300 font-bold text-lg shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] border-none w-full sm:w-auto overflow-hidden relative group"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-white text-black hover:scale-105 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] border-none w-full sm:w-auto overflow-hidden relative group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="relative z-10 flex items-center">
+              <span className="relative z-10 flex items-center justify-center">
                 Start Journey <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
             </Button>
@@ -169,7 +169,7 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               onClick={handleLearnMore}
-              className="h-16 px-10 rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-md w-full sm:w-auto font-medium text-lg transition-all"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-md w-full sm:w-auto font-medium text-base sm:text-lg transition-all"
             >
               <PlayCircle className="mr-2 w-5 h-5" /> How it Works
             </Button>
@@ -179,7 +179,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 1 }}
-            className="pt-8 flex items-center justify-center lg:justify-start gap-10 text-white/40 text-sm font-medium tracking-widest uppercase"
+            className="pt-8 flex flex-wrap items-center justify-center lg:justify-start gap-y-4 gap-x-6 sm:gap-10 text-white/40 text-sm font-medium tracking-widest uppercase"
           >
             <div className="flex items-center gap-2">
               <span className="block text-xl font-bold text-white">1M+</span> Answers

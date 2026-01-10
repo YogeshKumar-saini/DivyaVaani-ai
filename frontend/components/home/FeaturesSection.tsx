@@ -32,7 +32,7 @@ const FeatureCard = ({ feature, index }: { feature: typeof FEATURES[number]; ind
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       onMouseMove={handleMouseMove}
-      className="group relative flex flex-col items-center rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-md transition-all duration-500 hover:-translate-y-2"
+      className="group relative flex flex-col items-center rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 text-center backdrop-blur-md transition-all duration-500 hover:-translate-y-2"
     >
       {/* Hover Gradient Effect */}
       <motion.div
@@ -78,7 +78,7 @@ export function FeaturesSection() {
   };
 
   return (
-    <section id="features" className="relative py-32 px-4 overflow-hidden">
+    <section id="features" className="relative py-16 md:py-32 px-4 overflow-hidden">
 
       {/* Background Ambience */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow" />
@@ -98,7 +98,7 @@ export function FeaturesSection() {
             <span className="text-sm font-semibold text-primary tracking-wide uppercase">Why Choose DivyaVaani?</span>
           </div>
 
-          <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white">
             Powerful <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">Features</span>
           </h2>
 
@@ -128,7 +128,7 @@ export function FeaturesSection() {
             <Button
               size="lg"
               onClick={handleExplore}
-              className="relative h-16 px-12 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-lg font-bold text-white shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20"
+              className="relative w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-base sm:text-lg font-bold text-white shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/20 whitespace-normal"
             >
               Explore Spiritual Wisdom
             </Button>
