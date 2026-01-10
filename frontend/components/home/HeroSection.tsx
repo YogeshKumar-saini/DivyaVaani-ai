@@ -82,7 +82,7 @@ export function HeroSection() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-x-hidden">
+    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Video Background Restored */}
       <motion.div
         style={{ y }}
@@ -98,7 +98,7 @@ export function HeroSection() {
         >
           <source src="/background.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background z-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black z-20" />
       </motion.div>
 
       <motion.div
@@ -212,7 +212,7 @@ export function HeroSection() {
       </motion.div>
 
       {/* Bottom Fade */}
-      <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-background via-background/50 to-transparent z-20 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black via-black/50 to-transparent z-20 pointer-events-none" />
     </div>
   );
 }

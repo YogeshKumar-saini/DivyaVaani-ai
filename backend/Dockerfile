@@ -1,5 +1,5 @@
 # Production Dockerfile for Backend
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -32,6 +32,7 @@ RUN addgroup --system --gid 1001 appuser && \
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
+    pip install --no-cache-dir "numpy<2.0.0" "Cython<3" && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code and ensure permissions
