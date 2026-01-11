@@ -1,13 +1,16 @@
-'use client';
+"use client";
 
-import { HeroSection } from '@/components/home/HeroSection';
-import { FeaturesSection } from '@/components/home/FeaturesSection';
-import { HowItWorks } from '@/components/home/HowItWorks';
-import { SampleQuestions } from '@/components/home/SampleQuestions';
-import { Footer } from '@/components/layout/Footer';
-import { TestimonialsSection } from '@/components/home/TestimonialsSection';
-import { AuroraBackground } from '@/components/ui/AuroraBackground';
-import { GrainOverlay } from '@/components/ui/GrainOverlay';
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { SampleQuestions } from "@/components/home/SampleQuestions";
+import { Footer } from "@/components/layout/Footer";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { StatsSection } from "@/components/home/StatsSection";
+import { LanguagesSection } from "@/components/home/LanguagesSection";
+import { NewsletterSection } from "@/components/home/NewsletterSection";
+import { AuroraBackground } from "@/components/ui/AuroraBackground";
+import { GrainOverlay } from "@/components/ui/GrainOverlay";
 
 export default function HomePage() {
   return (
@@ -18,15 +21,21 @@ export default function HomePage() {
       <HeroSection />
 
       {/* Main Content Areas with Aurora Background */}
-      <AuroraBackground className="flex-1 w-full min-h-0 h-full relative" showRadialGradient={false}>
+      <AuroraBackground
+        className="flex-1 w-full min-h-0 h-full relative"
+        showRadialGradient={false}
+      >
         <div className="w-full relative z-10">
           {/* Additional Decorative Gradients */}
           <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-black to-transparent z-20" />
 
           <FeaturesSection />
           <HowItWorks />
+          <StatsSection />
+          <LanguagesSection />
           <TestimonialsSection />
           <SampleQuestions />
+          <NewsletterSection />
         </div>
       </AuroraBackground>
 
