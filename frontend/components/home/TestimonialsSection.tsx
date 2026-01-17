@@ -9,7 +9,7 @@ export function TestimonialsSection() {
   return (
     <section className="relative py-16 md:py-32 overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/10 via-white/10 to-purple-950/10 pointer-events-none" />
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <motion.div
@@ -19,16 +19,16 @@ export function TestimonialsSection() {
           transition={{ duration: 0.8 }}
           className="text-center mb-20 space-y-4"
         >
-          <div className="inline-flex items-center justify-center space-x-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-1.5 mb-2 backdrop-blur-sm">
-            <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
-            <span className="text-sm font-medium text-orange-200 uppercase tracking-widest">
+          <div className="inline-flex items-center justify-center space-x-2 bg-indigo-600/15 border border-indigo-400/30 rounded-full px-4 py-1.5 mb-2 backdrop-blur-sm">
+            <Star className="w-4 h-4 text-indigo-400 fill-indigo-400" />
+            <span className="text-sm font-medium text-indigo-200 uppercase tracking-widest">
               Trusted by 10,000+ Seekers
             </span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
             Voices of the{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-200">
               Community
             </span>
           </h2>

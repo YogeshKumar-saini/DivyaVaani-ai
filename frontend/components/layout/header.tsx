@@ -34,9 +34,9 @@ export function Header({ items }: HeaderProps) {
                 "fixed top-0 z-50 w-full transition-all duration-500 ease-in-out",
                 isHome
                     ? (scrolled
-                        ? "bg-background/80 backdrop-blur-xl border-b border-white/10 py-3 shadow-2xl"
+                        ? "bg-gradient-to-r from-indigo-950/80 via-white/5 to-purple-950/80 backdrop-blur-2xl border-b border-indigo-200/20 py-3 shadow-2xl"
                         : "bg-transparent border-transparent py-5")
-                    : "bg-background/80 backdrop-blur-xl border-b border-white/10 py-3"
+                    : "bg-gradient-to-r from-indigo-950/80 via-white/5 to-purple-950/80 backdrop-blur-2xl border-b border-indigo-200/20 py-3"
             )}
             initial={{ y: -100 }}
             animate={{ y: 0 }}
@@ -66,10 +66,10 @@ export function Header({ items }: HeaderProps) {
 
                 {/* Desktop Nav */}
                 <nav className={cn(
-                    "hidden md:flex items-center space-x-2 p-1 rounded-full transition-all duration-500",
+                    "hidden md:flex items-center space-x-2 p-1.5 rounded-full transition-all duration-500",
                     isHome && !scrolled
-                        ? "bg-white/5 border border-white/10 backdrop-blur-md"
-                        : "bg-foreground/5 border border-foreground/5 backdrop-blur-sm"
+                        ? "bg-indigo-950/30 border border-indigo-300/20 backdrop-blur-lg"
+                        : "bg-indigo-900/40 border border-indigo-300/25 backdrop-blur-lg"
                 )}>
                     {items.map((item) => {
                         const isActive = pathname === item.href;

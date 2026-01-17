@@ -75,25 +75,25 @@ export function HowItWorks() {
                 transition={{ delay: index * 0.2, duration: 0.6 }}
                 className="relative z-10"
               >
-                <div className="group relative bg-white/5 backdrop-blur-md rounded-[2rem] p-6 md:p-8 border border-white/10 transition-all duration-500 hover:-translate-y-2 hover:bg-white/10 hover:border-orange-500/30 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)]">
+                <div className="group relative bg-gradient-to-br from-indigo-100/15 via-white/10 to-purple-100/15 backdrop-blur-xl rounded-[2rem] p-8 md:p-10 border border-indigo-200/30 transition-all duration-500 hover:-translate-y-3 hover:bg-indigo-100/20 hover:border-indigo-400/50 hover:shadow-[0_20px_50px_rgba(79,70,229,0.12)]">
 
                   {/* Step Number Badge */}
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-gray-900 to-black border border-white/20 flex items-center justify-center shadow-lg text-white font-bold text-lg z-20 group-hover:scale-110 transition-transform duration-300">
-                      <span className="bg-gradient-to-br from-orange-400 to-amber-400 bg-clip-text text-transparent">{step.number}</span>
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 border border-indigo-300/40 flex items-center justify-center shadow-xl text-white font-bold text-xl z-20 group-hover:scale-120 transition-transform duration-300 ring-4 ring-indigo-200/20">
+                      <span className="bg-gradient-to-br from-white to-indigo-100 bg-clip-text text-transparent">{step.number}</span>
                     </div>
                   </div>
 
-                  <div className="pt-8 flex flex-col items-center text-center">
-                    <div className="mb-6 h-20 w-20 rounded-full bg-gradient-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
-                      <Icon className="h-9 w-9 text-orange-300 group-hover:text-orange-400 transition-colors" />
+                  <div className="pt-10 flex flex-col items-center text-center">
+                    <div className="mb-8 h-24 w-24 rounded-full bg-gradient-to-br from-indigo-200/20 via-white/15 to-purple-200/20 border border-indigo-300/40 flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-lg ring-2 ring-indigo-200/20">
+                      <Icon className="h-11 w-11 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-orange-200 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-indigo-100 transition-colors">
                       {step.title}
                     </h3>
 
-                    <p className="text-sm text-gray-400 leading-relaxed font-light group-hover:text-gray-300 transition-colors">
+                    <p className="text-base text-gray-300 leading-relaxed font-light group-hover:text-gray-200 transition-colors">
                       {step.description}
                     </p>
                   </div>

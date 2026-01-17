@@ -36,12 +36,12 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
     const paragraphs = text.split('\n\n');
     const isUser = type === 'user';
     const textColor = isUser
-      ? 'text-orange-900 dark:text-white'
+      ? 'text-indigo-900 dark:text-white'
       : 'text-gray-800 dark:text-gray-100';
 
     // Bold/Italic colors
-    const boldColor = isUser ? 'text-orange-950 dark:text-white/90' : 'text-gray-900 dark:text-white/90';
-    const italicColor = isUser ? 'text-orange-900/80 dark:text-white/80' : 'text-gray-800/80 dark:text-white/80';
+    const boldColor = isUser ? 'text-indigo-950 dark:text-white/90' : 'text-gray-900 dark:text-white/90';
+    const italicColor = isUser ? 'text-indigo-900/80 dark:text-white/80' : 'text-gray-800/80 dark:text-white/80';
 
     return (
       <>

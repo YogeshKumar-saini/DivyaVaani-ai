@@ -54,14 +54,14 @@ function AnimatedCounter({ value, duration = 2 }: { value: string; duration?: nu
 
 export function StatsSection() {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden">
+    <section className="relative py-24 md:py-40 overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-orange-950/5 to-black pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px] animate-pulse-slow" />
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/20 via-purple-950/10 to-indigo-950/20 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-indigo-500/15 rounded-full blur-[180px] animate-pulse-slow" />
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         {/* Grid of Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
           {STATS.map((stat, idx) => {
             const Icon = iconMap[stat.label as keyof typeof iconMap];
 
@@ -74,28 +74,28 @@ export function StatsSection() {
                 transition={{ delay: idx * 0.1, duration: 0.6, type: 'spring', bounce: 0.4 }}
                 className="relative group"
               >
-                <div className="h-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/10 transition-all duration-500 hover:border-orange-500/40 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(249,115,22,0.2)]">
+                <div className="h-full bg-gradient-to-br from-indigo-200/15 via-white/10 to-purple-200/15 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-indigo-200/25 transition-all duration-500 hover:border-indigo-400/50 hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(79,70,229,0.15)]">
                   {/* Icon */}
                   {Icon && (
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-600/20 border border-orange-500/30 group-hover:scale-110 transition-transform duration-500">
-                      <Icon className="h-6 w-6 text-orange-400" />
+                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-indigo-600/20 border border-indigo-400/30 group-hover:scale-125 transition-transform duration-500 shadow-lg">
+                      <Icon className="h-7 w-7 text-indigo-400 group-hover:text-indigo-300" />
                     </div>
                   )}
 
                   {/* Value */}
-                  <div className="mb-2">
-                    <div className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-white via-orange-100 to-orange-400 group-hover:from-orange-300 group-hover:to-orange-500 transition-all duration-500">
+                  <div className="mb-3">
+                    <div className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-200 via-white to-purple-200 group-hover:from-indigo-100 group-hover:to-purple-100 transition-all duration-500">
                       <AnimatedCounter value={stat.value} />
                     </div>
                   </div>
 
                   {/* Label */}
-                  <div className="mb-1 text-base md:text-lg font-bold text-white/90 group-hover:text-orange-200 transition-colors">
+                  <div className="mb-2 text-lg md:text-xl font-bold text-white group-hover:text-indigo-100 transition-colors">
                     {stat.label}
                   </div>
 
                   {/* Description */}
-                  <div className="text-xs md:text-sm text-gray-400 font-light group-hover:text-gray-300 transition-colors">
+                  <div className="text-sm md:text-base text-gray-300 font-light group-hover:text-gray-200 transition-colors">
                     {stat.description}
                   </div>
 

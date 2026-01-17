@@ -36,7 +36,7 @@ export default function RootLayout({
         <meta name="description" content="Professional AI-powered spiritual guidance system providing intelligent answers from all spiritual traditions and religious wisdom" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className="font-sans antialiased min-h-screen relative overflow-x-hidden bg-background text-foreground">
+      <body className="font-sans antialiased min-h-screen relative overflow-x-hidden bg-gradient-to-br from-indigo-100 via-white to-purple-100 text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

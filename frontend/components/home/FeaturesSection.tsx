@@ -32,11 +32,11 @@ const FeatureCard = ({ feature, index }: { feature: typeof FEATURES[number]; ind
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       onMouseMove={handleMouseMove}
-      className="group relative flex flex-col items-center rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 text-center backdrop-blur-md transition-all duration-500 hover:-translate-y-2"
+      className="group relative flex flex-col items-center rounded-3xl border border-indigo-100/30 bg-gradient-to-br from-white/10 via-indigo-50/10 to-purple-50/10 p-8 md:p-10 text-center backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-3xl"
     >
       {/* Hover Gradient Effect */}
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover:opacity-100 bg-gradient-to-br from-indigo-200/40 via-white/10 to-purple-200/40"
         style={{
           background: useMotionTemplate`
             radial-gradient(
@@ -81,7 +81,7 @@ export function FeaturesSection() {
     <section id="features" className="relative py-16 md:py-32 px-4 overflow-hidden">
 
       {/* Background Ambience */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] -z-10 mix-blend-screen animate-pulse-slow delay-1000" />
 
       <div className="container relative z-10 mx-auto max-w-7xl">
@@ -93,9 +93,9 @@ export function FeaturesSection() {
           transition={{ duration: 0.8 }}
           className="mb-24 text-center space-y-4"
         >
-          <div className="inline-flex items-center justify-center space-x-2 bg-primary/10 backdrop-blur-sm border border-primary/20 rounded-full px-4 py-1.5 mb-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary tracking-wide uppercase">Why Choose DivyaVaani?</span>
+          <div className="inline-flex items-center justify-center space-x-2 bg-indigo-600/15 backdrop-blur-sm border border-indigo-400/30 rounded-full px-4 py-1.5 mb-2">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span className="text-sm font-semibold text-indigo-200 tracking-wide uppercase">Why Choose DivyaVaani?</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white">

@@ -41,8 +41,8 @@ export function NewsletterSection() {
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-950/10 to-transparent pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-orange-500/10 via-red-500/10 to-purple-500/10 rounded-full blur-[120px] animate-pulse-slow" />
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/10 via-white/10 to-purple-950/10 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[120px] animate-pulse-slow" />
 
       <div className="container relative z-10 mx-auto max-w-5xl px-4">
         <motion.div
@@ -53,12 +53,12 @@ export function NewsletterSection() {
           className="relative"
         >
           {/* Main Card */}
-          <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/20 overflow-hidden shadow-2xl">
+          <div className="relative bg-gradient-to-br from-indigo-100/10 to-purple-100/10 backdrop-blur-xl rounded-[2.5rem] border border-indigo-200/20 overflow-hidden shadow-2xl">
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-purple-500/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/10 pointer-events-none" />
 
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
 
             <div className="relative z-10 p-8 md:p-12 lg:p-16">

@@ -26,18 +26,18 @@ const TypingDemo = () => {
   }, [text, isTyping]);
 
   return (
-    <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-colors duration-500">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+    <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-3xl relative overflow-hidden group hover:border-indigo-200 transition-colors duration-500">
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-200/30 via-white/10 to-purple-200/30 pointer-events-none" />
 
-      <div className="flex items-center space-x-2 mb-6 relative z-10">
-        <div className="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-        <div className="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
-        <div className="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+      <div className="flex items-center space-x-2 mb-8 relative z-10">
+        <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+        <div className="w-3 h-3 rounded-full bg-yellow-400/80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+        <div className="w-3 h-3 rounded-full bg-green-400/80 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
       </div>
 
-      <div className="space-y-6 relative z-10">
+      <div className="space-y-8 relative z-10">
         <div className="flex items-start space-x-4">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-sm font-bold text-orange-600 shrink-0 shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-orange-200 flex items-center justify-center text-lg font-bold text-orange-700 shrink-0 shadow-xl">
             You
           </div>
           <div className="bg-white/10 rounded-2xl rounded-tl-none px-5 py-3 text-sm md:text-base text-white/90 backdrop-blur-md border border-white/5 font-medium tracking-wide">
@@ -158,9 +158,9 @@ export function HeroSection() {
             <Button
               size="lg"
               onClick={handleStartChat}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-white text-black hover:scale-105 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] border-none w-full sm:w-auto overflow-hidden relative group"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-105 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.4)] hover:shadow-[0_0_60px_rgba(79,70,229,0.6)] border-none w-full sm:w-auto overflow-hidden relative group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-100 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <span className="relative z-10 flex items-center justify-center">
                 Start Journey <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
@@ -169,7 +169,7 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               onClick={handleLearnMore}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-md w-full sm:w-auto font-medium text-base sm:text-lg transition-all"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/40 hover:border-indigo-300/60 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all"
             >
               <PlayCircle className="mr-2 w-5 h-5" /> How it Works
             </Button>
@@ -203,7 +203,7 @@ export function HeroSection() {
           className="hidden lg:flex justify-end relative perspective-1000"
         >
           {/* Abstract Glow Behind Card */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-orange-500/20 to-purple-500/20 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-indigo-500/25 to-purple-500/20 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
 
           <div className="transform transition-transform hover:scale-[1.02] duration-500 hover:-rotate-1">
             <TypingDemo />
