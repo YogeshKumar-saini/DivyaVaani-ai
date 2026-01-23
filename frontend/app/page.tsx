@@ -13,10 +13,12 @@ import { AuroraBackground } from "@/components/ui/AuroraBackground";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { CursorGlow } from "@/components/ui/cursor-glow";
+import { ScrollBackground } from "@/components/home/ScrollBackground";
 
 export default function HomePage() {
   return (
-    <div className="dark min-h-screen flex flex-col relative bg-black text-foreground">
+    <div className="dark min-h-screen flex flex-col relative text-foreground">
+      <ScrollBackground />
       <ScrollProgress />
       <CursorGlow />
       <GrainOverlay />
@@ -28,6 +30,7 @@ export default function HomePage() {
       <AuroraBackground
         className="flex-1 w-full min-h-0 h-full relative"
         showRadialGradient={false}
+        transparent
       >
         <div className="w-full relative z-10">
           {/* Additional Decorative Gradients */}

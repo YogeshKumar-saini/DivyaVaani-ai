@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
     children?: ReactNode;
     showRadialGradient?: boolean;
+    transparent?: boolean;
 }
 
 const ShootingStar = ({ delay = 0, top = 20, left = 50 }: { delay?: number; top?: number; left?: number }) => {
@@ -24,12 +25,14 @@ export const AuroraBackground = ({
     className,
     children,
     showRadialGradient = true,
+    transparent = false,
     ...props
 }: AuroraBackgroundProps) => {
     return (
         <div
             className={cn(
-                "relative flex flex-col min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-slate-950 transition-bg",
+                "relative flex flex-col min-h-screen items-center justify-center text-slate-950 transition-bg",
+                transparent ? "bg-transparent" : "bg-zinc-50 dark:bg-zinc-950",
                 className
             )}
             {...props}
