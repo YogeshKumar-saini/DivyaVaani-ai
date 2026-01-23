@@ -158,20 +158,23 @@ export function HeroSection() {
             <Button
               size="lg"
               onClick={handleStartChat}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-105 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.4)] hover:shadow-[0_0_60px_rgba(79,70,229,0.6)] border-none w-full sm:w-auto overflow-hidden relative group"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.5)] hover:shadow-[0_0_80px_rgba(79,70,229,0.7)] border-none w-full sm:w-auto overflow-hidden relative group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-300 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700" />
               <span className="relative z-10 flex items-center justify-center">
-                Start Journey <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Start Journey <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
               </span>
             </Button>
             <Button
               variant="outline"
               size="lg"
               onClick={handleLearnMore}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/40 hover:border-indigo-300/60 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/50 hover:border-indigo-300/70 hover:scale-105 active:scale-95 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all duration-300 group overflow-hidden relative"
             >
-              <PlayCircle className="mr-2 w-5 h-5" /> How it Works
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <PlayCircle className="mr-2 w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" /> 
+              <span className="relative z-10">How it Works</span>
             </Button>
           </motion.div>
 

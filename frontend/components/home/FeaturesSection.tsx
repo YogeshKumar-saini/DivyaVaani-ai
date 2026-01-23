@@ -31,8 +31,9 @@ const FeatureCard = ({ feature, index }: { feature: typeof FEATURES[number]; ind
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover={{ y: -8, scale: 1.02 }}
       onMouseMove={handleMouseMove}
-      className="group relative flex flex-col items-center rounded-3xl border border-indigo-100/30 bg-gradient-to-br from-white/10 via-indigo-50/10 to-purple-50/10 p-8 md:p-10 text-center backdrop-blur-xl shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-3xl"
+      className="group relative flex flex-col items-center rounded-3xl border border-indigo-100/30 bg-gradient-to-br from-white/10 via-indigo-50/10 to-purple-50/10 p-8 md:p-10 text-center backdrop-blur-xl shadow-2xl transition-all duration-500 hover:shadow-[0_20px_60px_rgba(249,115,22,0.15)]"
     >
       {/* Hover Gradient Effect */}
       <motion.div
@@ -50,22 +51,29 @@ const FeatureCard = ({ feature, index }: { feature: typeof FEATURES[number]; ind
 
       {/* Icon Container with Glow */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-orange-500/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-[0_0_15px_rgba(255,165,0,0.1)] border border-primary/20`}>
-          <Icon className="h-8 w-8" />
-        </div>
+        <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse" />
+        <motion.div
+          whileHover={{ rotate: [0, -5, 5, -5, 0], scale: 1.15 }}
+          transition={{ duration: 0.5 }}
+          className={`relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.2)] border border-orange-500/30 group-hover:shadow-[0_0_40px_rgba(249,115,22,0.4)]`}
+        >
+          <Icon className="h-8 w-8 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+        </motion.div>
       </div>
 
-      <h3 className="mb-3 text-xl font-bold text-foreground transition-colors group-hover:text-primary">
+      <h3 className="mb-3 text-xl font-bold text-foreground transition-colors group-hover:text-orange-400">
         {feature.title}
       </h3>
 
-      <p className="text-sm leading-relaxed text-muted-foreground/90 relative z-10">
+      <p className="text-sm leading-relaxed text-muted-foreground/90 relative z-10 transition-colors group-hover:text-muted-foreground">
         {feature.description}
       </p>
 
       {/* Decorative Shine */}
-      <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10 group-hover:ring-primary/30 transition-all duration-500" />
+      <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10 group-hover:ring-orange-500/40 transition-all duration-500" />
+      
+      {/* Bottom gradient glow */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </motion.div>
   );
 };

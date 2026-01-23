@@ -74,28 +74,33 @@ export function StatsSection() {
                 transition={{ delay: idx * 0.1, duration: 0.6, type: 'spring', bounce: 0.4 }}
                 className="relative group"
               >
-                <div className="h-full bg-gradient-to-br from-indigo-200/15 via-white/10 to-purple-200/15 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-indigo-200/25 transition-all duration-500 hover:border-indigo-400/50 hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(79,70,229,0.15)]">
+                <div className="relative h-full bg-gradient-to-br from-indigo-200/15 via-white/10 to-purple-200/15 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-indigo-200/25 transition-all duration-500 hover:border-orange-400/50 hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(249,115,22,0.2)] overflow-hidden">
+                  {/* Animated background shimmer */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/10 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+                  </div>
+                  
                   {/* Icon */}
                   {Icon && (
-                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-indigo-600/20 border border-indigo-400/30 group-hover:scale-125 transition-transform duration-500 shadow-lg">
-                      <Icon className="h-7 w-7 text-indigo-400 group-hover:text-indigo-300" />
+                    <div className="relative mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 via-purple-500/15 to-red-600/20 border border-orange-400/30 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-orange-500/30">
+                      <Icon className="h-7 w-7 text-orange-400 group-hover:text-orange-300 transition-colors" />
                     </div>
                   )}
 
                   {/* Value */}
-                  <div className="mb-3">
-                    <div className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-200 via-white to-purple-200 group-hover:from-indigo-100 group-hover:to-purple-100 transition-all duration-500">
+                  <div className="relative mb-3">
+                    <div className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-orange-300 via-white to-orange-300 group-hover:from-orange-200 group-hover:via-white group-hover:to-orange-200 transition-all duration-500 animate-gradient-x">
                       <AnimatedCounter value={stat.value} />
                     </div>
                   </div>
 
                   {/* Label */}
-                  <div className="mb-2 text-lg md:text-xl font-bold text-white group-hover:text-indigo-100 transition-colors">
+                  <div className="relative mb-2 text-lg md:text-xl font-bold text-white group-hover:text-orange-100 transition-colors">
                     {stat.label}
                   </div>
 
                   {/* Description */}
-                  <div className="text-sm md:text-base text-gray-300 font-light group-hover:text-gray-200 transition-colors">
+                  <div className="relative text-sm md:text-base text-gray-300 font-light group-hover:text-gray-200 transition-colors">
                     {stat.description}
                   </div>
 

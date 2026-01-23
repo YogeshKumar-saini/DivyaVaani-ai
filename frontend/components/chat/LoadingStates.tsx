@@ -28,38 +28,39 @@ export function LoadingState({
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Animated Avatar */}
       <div className="flex-shrink-0 relative">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 shadow-lg ring-2 ring-white dark:ring-gray-800">
-          <Brain className="h-4 w-4 text-white animate-pulse" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg ring-2 ring-white/10 animate-pulse">
+          <Brain className="h-5 w-5 text-white" />
         </div>
 
-        {/* Pulsing background effect */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 animate-ping opacity-20"></div>
+        {/* Pulsing background effect with gradient */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-500 to-red-600 animate-ping opacity-20"></div>
+        <div className="absolute inset-0 rounded-full bg-orange-500/30 animate-pulse blur-md"></div>
       </div>
 
       {/* Loading Content */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
+      <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl rounded-tl-none px-5 py-4 shadow-xl">
         <div className="flex items-center gap-3">
-          {/* Typing Animation */}
+          {/* Typing Animation with gradient */}
           <div className="flex items-center gap-1">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="flex space-x-1.5">
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }}></div>
             </div>
           </div>
 
           {/* Loading Text */}
-          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+          <span className="text-sm text-white/80 font-medium">
             {animatedMessage}
           </span>
 
           {/* Subtle loader */}
-          <Loader2 className="h-4 w-4 text-purple-500 animate-spin" />
+          <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
         </div>
 
-        {/* Progress indicator */}
-        <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-          <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+        {/* Progress indicator with gradient */}
+        <div className="mt-3 w-full bg-white/5 rounded-full h-1 overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 h-1 rounded-full animate-shimmer" style={{ width: '100%', backgroundSize: '200% 100%' }}></div>
         </div>
       </div>
     </div>
@@ -143,9 +144,11 @@ export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenP
                 <button
                   key={idx}
                   onClick={() => onExampleClick(question)}
-                  className="p-3 text-left text-sm text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-white dark:hover:bg-gray-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+                  className="group relative p-4 text-left text-sm text-gray-700 dark:text-gray-300 bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/15 dark:hover:bg-white/10 hover:border-orange-500/40 dark:hover:border-orange-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
                 >
-                  &ldquo;{question}&rdquo;
+                  {/* Gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <span className="relative z-10">&ldquo;{question}&rdquo;</span>
                 </button>
               ))}
             </div>
