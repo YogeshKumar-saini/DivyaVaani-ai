@@ -4,7 +4,7 @@ import * as React from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface MagneticCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface MagneticCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onAnimationStart' | 'onDrag' | 'onDragEnd' | 'onDragEnter' | 'onDragExit' | 'onDragLeave' | 'onDragOver' | 'onDragStart' | 'onDrop'> {
   children: React.ReactNode;
   magneticStrength?: number;
   tiltStrength?: number;

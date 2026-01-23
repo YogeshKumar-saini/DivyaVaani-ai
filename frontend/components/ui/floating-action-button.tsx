@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
-interface FloatingActionButtonProps extends React.ComponentProps<'button'> {
+interface FloatingActionButtonProps extends Omit<React.ComponentProps<'button'>, 'onAnimationStart' | 'onDrag' | 'onDragEnd' | 'onDragEnter' | 'onDragExit' | 'onDragLeave' | 'onDragOver' | 'onDragStart' | 'onDrop'> {
   icon: LucideIcon;
   label?: string;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';

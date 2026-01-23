@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { MobileSidebar } from './sidebar';
 import { cn } from '@/lib/utils';
-import { useScroll, useMotionValueEvent, motion, AnimatePresence } from 'framer-motion';
+import { useScroll, useMotionValueEvent, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 interface HeaderProps {

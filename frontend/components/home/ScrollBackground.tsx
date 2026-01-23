@@ -14,19 +14,25 @@ function clamp01(value: number) {
 }
 
 function useSceneOpacity(progress: MotionValue<number>, start: number, end: number, fade = 0.08) {
+  let inputRange: number[];
+  let outputRange: number[];
+
   if (start <= 0) {
     const outEnd = clamp01(end + fade);
-    return useTransform(progress, [0, end, outEnd], [1, 1, 0], { clamp: true });
-  }
-
-  if (end >= 1) {
+    inputRange = [0, end, outEnd];
+    outputRange = [1, 1, 0];
+  } else if (end >= 1) {
     const inStart = clamp01(start - fade);
-    return useTransform(progress, [inStart, start, 1], [0, 1, 1], { clamp: true });
+    inputRange = [inStart, start, 1];
+    outputRange = [0, 1, 1];
+  } else {
+    const inStart = clamp01(start - fade);
+    const outEnd = clamp01(end + fade);
+    inputRange = [inStart, start, end, outEnd];
+    outputRange = [0, 1, 1, 0];
   }
 
-  const inStart = clamp01(start - fade);
-  const outEnd = clamp01(end + fade);
-  return useTransform(progress, [inStart, start, end, outEnd], [0, 1, 1, 0], { clamp: true });
+  return useTransform(progress, inputRange, outputRange, { clamp: true });
 }
 
 function useSceneScale(progress: MotionValue<number>, start: number, end: number) {

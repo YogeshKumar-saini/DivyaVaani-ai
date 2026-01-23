@@ -7,10 +7,14 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
+interface Source {
+  verse: string;
+}
+
 interface StreamingMessageProps {
   content: string;
   isStreaming: boolean;
-  sources?: any[];
+  sources?: Source[];
   className?: string;
 }
 
