@@ -8,12 +8,12 @@ DivyaVaani is an AI-powered spiritual companion that provides wisdom from the Bh
 
 ### Base URL
 ```
-http://localhost:5001
+http://localhost:8000
 ```
 
 ### Health Check
 ```bash
-curl http://localhost:5001/health
+curl http://localhost:8000/health
 ```
 
 ### Authentication

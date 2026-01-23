@@ -3,7 +3,7 @@
  * Handles all HTTP requests with error handling, retry logic, and type safety
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 export enum ErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',
