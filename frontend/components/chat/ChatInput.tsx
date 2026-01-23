@@ -123,15 +123,19 @@ export function ChatInput({
       {/* Main Container */}
       <div
         className={`relative flex items-end gap-2 p-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300
-          ${isFocused ? 'bg-white/15 border-white/20 shadow-orange-500/10 ring-1 ring-white/20' : 'hover:bg-white/10'}`}
+          ${isFocused ? 'bg-white/15 border-orange-500/40 shadow-[0_0_30px_rgba(249,115,22,0.15)] ring-2 ring-orange-500/20' : 'hover:bg-white/12 hover:border-white/20'}`}
       >
+        {/* Animated Glow Effect */}
+        {isFocused && (
+          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10 animate-gradient-x opacity-50 pointer-events-none" />
+        )}
         {/* Left Tools */}
         <div className="flex items-center gap-1 mb-1 ml-1">
           <button
             type="button"
             onClick={openFilePicker}
             disabled={isUploading}
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 hover:scale-110 active:scale-95"
             title="Attach file"
           >
             <Paperclip className="h-5 w-5" />
@@ -164,7 +168,7 @@ export function ChatInput({
         <div className="flex items-center gap-2 mb-1 mr-1">
           <button
             type="button"
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors hidden sm:block"
+            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 hidden sm:block hover:scale-110 active:scale-95"
             title="Voice input"
           >
             <Mic className="h-5 w-5" />
@@ -173,13 +177,17 @@ export function ChatInput({
           <button
             type="submit"
             disabled={isLoading || !input.trim() || isAtLimit}
-            className={`group relative flex items-center justify-center h-11 w-11 rounded-full transition-all duration-300 shadow-lg
-              ${isLoading || !input.trim() || isAtLimit ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-105 active:scale-95 hover:shadow-orange-500/25'}`}
+            className={`group relative flex items-center justify-center h-11 w-11 rounded-full transition-all duration-300 shadow-lg overflow-hidden
+              ${isLoading || !input.trim() || isAtLimit ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-110 active:scale-95 hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]'}`}
           >
+            {/* Animated shine on hover */}
+            {input.trim() && !isLoading && !isAtLimit && (
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500" />
+            )}
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin relative z-10" />
             ) : (
-              <Send className={`h-5 w-5 ml-0.5 transition-transform duration-200 ${input.trim() ? 'group-hover:-translate-y-0.5 group-hover:translate-x-0.5' : ''}`} />
+              <Send className={`h-5 w-5 ml-0.5 transition-transform duration-200 relative z-10 ${input.trim() ? 'group-hover:rotate-12' : ''}`} />
             )}
           </button>
         </div>

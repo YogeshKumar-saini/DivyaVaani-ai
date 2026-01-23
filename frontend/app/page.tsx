@@ -11,10 +11,14 @@ import { LanguagesSection } from "@/components/home/LanguagesSection";
 import { NewsletterSection } from "@/components/home/NewsletterSection";
 import { AuroraBackground } from "@/components/ui/AuroraBackground";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { CursorGlow } from "@/components/ui/cursor-glow";
 
 export default function HomePage() {
   return (
     <div className="dark min-h-screen flex flex-col relative bg-black text-foreground">
+      <ScrollProgress />
+      <CursorGlow />
       <GrainOverlay />
 
       {/* Hero with its own video background */}

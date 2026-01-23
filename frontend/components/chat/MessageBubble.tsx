@@ -89,7 +89,8 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={{ scale: 1.005 }}
       className={`group relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}
     >
       <div className={`flex py-2 ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -108,21 +109,23 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
 
           {/* Message Bubble */}
           <div
-            className={`relative rounded-3xl p-5 shadow-lg backdrop-blur-xl transition-all duration-200 border ${type === 'user'
-              ? 'bg-orange-100 dark:bg-orange-600/20 border-orange-200 dark:border-orange-500/20 rounded-tr-none'
-              : 'bg-white dark:bg-white/10 border-gray-100 dark:border-white/10 rounded-tl-none'
+            className={`relative rounded-3xl p-5 shadow-lg backdrop-blur-xl transition-all duration-300 border group-hover:shadow-2xl ${type === 'user'
+              ? 'bg-orange-100 dark:bg-orange-600/20 border-orange-200 dark:border-orange-500/20 rounded-tr-none group-hover:border-orange-300 dark:group-hover:border-orange-500/30'
+              : 'bg-white dark:bg-white/10 border-gray-100 dark:border-white/10 rounded-tl-none group-hover:border-gray-200 dark:group-hover:border-white/20'
               }`}
           >
+            {/* Subtle gradient overlay on hover */}
+            <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${type === 'user' ? 'rounded-tr-none bg-gradient-to-br from-orange-300/10 to-transparent' : 'rounded-tl-none bg-gradient-to-br from-white/5 to-transparent'}`} />
             {/* Copy Button */}
             <button
               onClick={copyToClipboard}
-              className={`absolute top-3 right-3 p-1.5 rounded-lg transition-all duration-200 text-gray-400 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 ${copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              className={`absolute top-3 right-3 p-1.5 rounded-lg transition-all duration-200 text-gray-400 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 hover:scale-110 active:scale-95 z-10 ${copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               title="Copy message"
             >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
 
-            <div className="leading-relaxed">
+            <div className="leading-relaxed relative z-0">
               {processText(content)}
             </div>
           </div>
