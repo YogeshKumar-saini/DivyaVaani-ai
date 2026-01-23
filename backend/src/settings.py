@@ -35,7 +35,7 @@ class Settings(BaseModel):
 
     # Vector stores
     api_host: str = Field(default="0.0.0.0")
-    api_port: int = Field(default=5001, ge=1, le=65535)
+    api_port: int = Field(default=8000, ge=1, le=65535)
 
     # Pinecone Vector Store
     pinecone_api_key: Optional[str] = Field(default=None)
@@ -62,7 +62,7 @@ class Settings(BaseModel):
     metrics_port: int = Field(default=9090, ge=1, le=65535)
 
     # Frontend
-    next_public_api_base_url: str = Field(default="http://localhost:5001")
+    next_public_api_base_url: str = Field(default="http://localhost:8000")
 
     # LiveKit Voice Agent Configuration
     livekit_url: Optional[str] = Field(default=None, description="LiveKit server URL")

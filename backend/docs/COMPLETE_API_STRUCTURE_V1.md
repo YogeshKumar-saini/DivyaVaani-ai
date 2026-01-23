@@ -4,7 +4,7 @@
 
 The Bhagavad Gita QA System API provides intelligent question-answering capabilities powered by the Bhagavad Gita wisdom using advanced RAG (Retrieval-Augmented Generation) technology. The API supports both text and voice interactions, with comprehensive analytics, health monitoring, and feedback collection.
 
-**Base URL:** `http://localhost:5001` (development) / Production URL (deployment)
+**Base URL:** `http://localhost:8000` (development) / Production URL (deployment)
 
 **Version:** 1.0.0
 
