@@ -106,6 +106,41 @@ class TextService:
         except Exception as e:
             raise ProcessingError("Query Processing", str(e))
 
+    async def process_query_stream(
+        self,
+        question: str,
+        user_id: Optional[str] = None,
+        preferred_language: Optional[str] = None
+    ):
+        """Process a text query with streaming response.
+        
+        Yields chunks in the format:
+        {
+            'type': 'token' | 'metadata' | 'source',
+            'content': str (for tokens),
+            'data': dict (for metadata/sources)
+        }
+        """
+        try:
+            # Validate input
+            if not question or not question.strip():
+                raise APIError("EMPTY_QUESTION", "Question cannot be empty", 400)
+
+            if len(question.strip()) < 3:
+                raise APIError("QUESTION_TOO_SHORT", "Question must be at least 3 characters", 400)
+
+            # Get QA system
+            qa_system = await self._get_qa_system()
+            
+            # Stream response from QA system
+            async for chunk in qa_system.ask_stream(question, user_id, preferred_language):
+                yield chunk
+
+        except (APIError, ProcessingError, ServiceUnavailableError):
+            raise
+        except Exception as e:
+            raise ProcessingError("Stream Processing", str(e))
+
     async def get_query_history(self, user_id: str, limit: int = 20) -> Dict[str, Any]:
         """Get query history for a user."""
         try:

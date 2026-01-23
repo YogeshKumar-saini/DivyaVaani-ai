@@ -340,6 +340,172 @@ class MultilingualQASystem:
             )
             return error_response.to_dict()
 
+    async def ask_stream(self, question: str, user_id: str = "default", preferred_language: str = "en"):
+        """Stream Q&A response token-by-token for better UX.
+        
+        Yields chunks in the format:
+        {
+            'type': 'token' | 'metadata' | 'source',
+            'content': str (for tokens),
+            'data': dict (for metadata/sources)
+        }
+        """
+        import asyncio
+        start_time = datetime.now()
+
+        try:
+            # Input validation
+            if not question or not question.strip():
+                raise ValueError("Question cannot be empty")
+            question = question.strip()
+
+            # Detect language
+            language = preferred_language if preferred_language in ['en', 'hi', 'sa'] else self.language_detector.detect(question)
+            
+            # Retrieve contexts
+            contexts = self.retriever.retrieve(question, top_k=7)
+            
+            # Yield source metadata early
+            if contexts:
+                yield {
+                    'type': 'metadata',
+                    'data': {
+                        'sources_count': len(contexts),
+                        'language': language
+                    }
+                }
+                
+                # Yield sources
+                for ctx in contexts[:3]:  # Top 3 sources
+                    yield {
+                        'type': 'source',
+                        'data': {
+                            'verse': ctx['verse'],
+                            'score': round(ctx.get('score', 0), 3),
+                            'text': ctx['text'][:200] + '...' if len(ctx['text']) > 200 else ctx['text']
+                        }
+                    }
+
+            # Handle no contexts
+            if not contexts:
+                fallback_answer = self.language_processor.get_fallback_response(question.lower(), language)
+                # Stream fallback answer word by word
+                words = fallback_answer.split()
+                for i, word in enumerate(words):
+                    yield {
+                        'type': 'token',
+                        'content': word + (' ' if i < len(words) - 1 else '')
+                    }
+                    await asyncio.sleep(0.02)  # Small delay for streaming effect
+                return
+
+            # Get memory context
+            memory_context = self.memory_manager.get_context()
+            
+            # Get prompt
+            prompt_template, context_text = self.prompt_manager.get_prompt(language, contexts, question)
+            if memory_context:
+                context_text += memory_context
+
+            # Generate streaming answer
+            try:
+                # Try Groq with streaming
+                llm = ChatGroq(
+                    model_name="llama-3.1-8b-instant",
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    streaming=True  # Enable streaming
+                )
+                
+                system_content = (
+                    "You are Krishna, the divine teacher and guide from the Bhagavad Gita. "
+                    "Provide wisdom that leads to peace, clarity, and right action (Dharma). "
+                    "Answer with profound yet practical spiritual insight from the provided verses. "
+                    "Tone: Compassionate, authoritative, calm, uplifting."
+                )
+                
+                system_message = SystemMessage(content=system_content)
+                messages = [
+                    system_message,
+                    HumanMessage(content=prompt_template.format(context=context_text, question=question))
+                ]
+                
+                full_answer = ""
+                
+                # Stream tokens from LLM
+                async for chunk in llm.astream(messages):
+                    if hasattr(chunk, 'content') and chunk.content:
+                        full_answer += chunk.content
+                        yield {
+                            'type': 'token',
+                            'content': chunk.content
+                        }
+                
+                model_used = "llama-3.1-8b-instant"
+
+            except Exception as e:
+                log.warning(f"Streaming failed: {e}. Falling back to non-streaming.")
+                # Fallback to non-streaming
+                try:
+                    llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=self.temperature, max_tokens=self.max_tokens)
+                    response = llm.invoke(messages)
+                    full_answer = response.content.strip()
+                    model_used = "llama-3.1-8b-instant"
+                    
+                    # Stream word by word as fallback
+                    words = full_answer.split()
+                    for i, word in enumerate(words):
+                        yield {
+                            'type': 'token',
+                            'content': word + (' ' if i < len(words) - 1 else '')
+                        }
+                        await asyncio.sleep(0.01)
+                        
+                except Exception as e2:
+                    log.error(f"All streaming attempts failed: {e2}")
+                    full_answer = self.language_processor.get_fallback_response(question.lower(), language)
+                    model_used = "fallback"
+                    
+                    words = full_answer.split()
+                    for i, word in enumerate(words):
+                        yield {
+                            'type': 'token',
+                            'content': word + (' ' if i < len(words) - 1 else '')
+                        }
+                        await asyncio.sleep(0.02)
+
+            # Calculate final metadata
+            processing_time = (datetime.now() - start_time).total_seconds()
+            quality_metrics = self.quality_assessor.assess(full_answer, contexts)
+            confidence_score = self.quality_assessor.calculate_confidence(contexts, full_answer)
+            
+            # Yield final metadata
+            yield {
+                'type': 'metadata',
+                'data': {
+                    'confidence': confidence_score,
+                    'processing_time': processing_time,
+                    'model_used': model_used,
+                    'quality_score': quality_metrics.get('overall_score', 0.5)
+                }
+            }
+            
+            # Update memory
+            self.memory_manager.save_context(question, full_answer)
+            
+            # Track analytics
+            self.analytics_tracker.track_query(language, processing_time, quality_metrics["overall_score"], question, user_id)
+
+        except Exception as e:
+            log.error(f"Critical error in streaming: {e}")
+            yield {
+                'type': 'error',
+                'data': {
+                    'message': 'An error occurred while processing your question',
+                    'error': str(e)
+                }
+            }
+
     def _format_contexts(self, contexts: List[Dict]) -> List[Dict]:
         """Format contexts for response."""
         formatted = []

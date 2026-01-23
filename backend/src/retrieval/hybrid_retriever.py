@@ -17,13 +17,17 @@ class HybridRetriever:
         bm25_store: BM25Store,
         embedding_generator: EmbeddingGenerator,
         dataframe: pd.DataFrame,
-        embeddings: np.ndarray
+        embeddings: np.ndarray,
+        reranker=None
     ):
         self.faiss_store = faiss_store
         self.bm25_store = bm25_store
         self.embedding_generator = embedding_generator
         self.df = dataframe
         self.embeddings = embeddings
+        self.reranker = reranker
+        if reranker:
+            log.info("HybridRetriever initialized with reranking enabled")
     
     def retrieve(
         self,
@@ -122,6 +126,15 @@ class HybridRetriever:
                 except Exception as e:
                     log.warning(f"Error formatting result for index {idx}: {e}")
                     continue
+
+            # Apply reranking if available
+            if self.reranker and len(results) > 0:
+                try:
+                    log.info(f"Applying reranking to {len(results)} results...")
+                    results = self.reranker.rerank(query=query, documents=results, top_n=min(top_k, len(results)))
+                    log.info(f"Reranking complete. Top score: {results[0]['score']:.3f}")
+                except Exception as e:
+                    log.warning(f"Reranking failed: {e}. Using original results.")
 
             log.info(f"Retrieved {len(results)} results for query: {query[:50]}...")
             return results

@@ -51,6 +51,18 @@ async def lifespan(app: FastAPI):
     # Startup
     log.info("Starting DivyaVaani AI - Universal Spiritual Guidance System", extra={"environment": settings.environment})
 
+    # Initialize database - TEMPORARILY DISABLED FOR TESTING
+    # TODO: Re-enable after fixing connection timeout issue
+    # try:
+    #     from src.storage import init_db, check_db_connection
+    #     if check_db_connection():
+    #         init_db()
+    #         log.info("Database initialized successfully")
+    #     else:
+    #         log.warning("Database connection failed - conversation persistence disabled")
+    # except Exception as e:
+    #     log.error(f"Database initialization error: {e}")
+
     # Initialize system in background
     startup_task = asyncio.create_task(initialize_system())
 
@@ -108,6 +120,8 @@ if static_path.exists() and settings.is_development:
 
 # Include routers with modality-based prefixes
 app.include_router(text_query_router, prefix="/text", tags=["text"])
+from src.api.routes.text import stream_router
+app.include_router(stream_router, prefix="/text", tags=["streaming"])
 app.include_router(voice_query_router, prefix="/voice", tags=["voice"])
 app.include_router(stt_router, prefix="/voice/stt", tags=["speech-to-text"])
 app.include_router(tts_router, prefix="/voice/tts", tags=["text-to-speech"])
@@ -118,6 +132,10 @@ app.include_router(documents_router, prefix="", tags=["documents"])
 # Include conversation router
 from src.api.routes.conversation import router as conversation_router
 app.include_router(conversation_router, prefix="/conversation", tags=["conversation"])
+
+# Include conversation history router
+from src.api.routes.conversations import history_router
+app.include_router(history_router, prefix="/conversations", tags=["conversation-history"])
 
 # Request/Response middleware for logging and metrics
 @app.middleware("http")
