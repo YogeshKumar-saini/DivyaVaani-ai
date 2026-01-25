@@ -5,9 +5,9 @@ import { ROUTES } from '@/lib/utils/constants';
 import { Button } from '@/components/ui/button';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Sparkles, ArrowRight, PlayCircle } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback, memo } from 'react';
 
-const TypingDemo = () => {
+const TypingDemo = memo(() => {
   const [text, setText] = useState('');
   const fullText = "What is the meaning of Dharma in my daily life?";
   const [isTyping, setIsTyping] = useState(true);
@@ -26,7 +26,7 @@ const TypingDemo = () => {
   }, [text, isTyping]);
 
   return (
-    <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-3xl relative overflow-hidden group hover:border-indigo-200 transition-colors duration-500">
+    <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-3xl relative overflow-hidden group hover:border-indigo-200 transition-colors duration-500 gpu-accelerated">
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-200/30 via-white/10 to-purple-200/30 pointer-events-none" />
 
       <div className="flex items-center space-x-2 mb-8 relative z-10">
@@ -64,26 +64,28 @@ const TypingDemo = () => {
       </div>
     </div>
   );
-};
+});
 
-export function HeroSection() {
+TypingDemo.displayName = 'TypingDemo';
+
+export const HeroSection = memo(() => {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
-  const handleStartChat = () => {
+  const handleStartChat = useCallback(() => {
     router.push(ROUTES.CHAT || '/chat');
-  };
+  }, [router]);
 
-  const handleLearnMore = () => {
+  const handleLearnMore = useCallback(() => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   return (
     <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Video Background Restored */}
+      {/* Video Background with optimized loading */}
       <motion.div
         style={{ y }}
         className="absolute inset-0 z-0"
@@ -111,7 +113,7 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 md:px-5 md:py-2 mb-4 md:mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:bg-white/10 transition-colors cursor-default"
+            className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 md:px-5 md:py-2 mb-4 md:mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:bg-white/10 transition-colors cursor-default gpu-accelerated"
           >
             <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-orange-400 animate-pulse" />
             <span className="text-orange-100 text-xs md:text-sm font-medium tracking-wide uppercase">Next Gen Spiritual AI</span>
@@ -158,7 +160,7 @@ export function HeroSection() {
             <Button
               size="lg"
               onClick={handleStartChat}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.5)] hover:shadow-[0_0_80px_rgba(79,70,229,0.7)] border-none w-full sm:w-auto overflow-hidden relative group"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.5)] hover:shadow-[0_0_80px_rgba(79,70,229,0.7)] border-none w-full sm:w-auto overflow-hidden relative group gpu-accelerated"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-300 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700" />
@@ -170,7 +172,7 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               onClick={handleLearnMore}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/50 hover:border-indigo-300/70 hover:scale-105 active:scale-95 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all duration-300 group overflow-hidden relative"
+              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/50 hover:border-indigo-300/70 hover:scale-105 active:scale-95 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all duration-300 group overflow-hidden relative gpu-accelerated"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <PlayCircle className="mr-2 w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" /> 
@@ -206,9 +208,9 @@ export function HeroSection() {
           className="hidden lg:flex justify-end relative perspective-1000"
         >
           {/* Abstract Glow Behind Card */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-indigo-500/25 to-purple-500/20 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-indigo-500/25 to-purple-500/20 rounded-full blur-[100px] -z-10 animate-pulse-slow" aria-hidden="true" />
 
-          <div className="transform transition-transform hover:scale-[1.02] duration-500 hover:-rotate-1">
+          <div className="transform transition-transform hover:scale-[1.02] duration-500 hover:-rotate-1 gpu-accelerated">
             <TypingDemo />
           </div>
         </motion.div>
@@ -218,4 +220,6 @@ export function HeroSection() {
       <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black via-black/50 to-transparent z-20 pointer-events-none" />
     </div>
   );
-}
+});
+
+HeroSection.displayName = 'HeroSection';

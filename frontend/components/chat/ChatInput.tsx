@@ -1,6 +1,6 @@
 import { fileService } from '@/lib/api/file-service';
 import { useToast } from '@/lib/context/ToastContext';
-import { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback, memo } from 'react';
 import { Paperclip, Send, Loader2, Mic } from 'lucide-react';
 
 interface ChatInputProps {
@@ -13,7 +13,7 @@ interface ChatInputProps {
   className?: string;
 }
 
-export function ChatInput({
+const ChatInputInner = memo<ChatInputProps>(({
   input,
   setInput,
   isLoading,
@@ -21,7 +21,7 @@ export function ChatInput({
   placeholder = "Ask about dharma, karma, yoga...",
   maxLength = 2000,
   className = ''
-}: ChatInputProps) {
+}) => {
   const { success, error, info } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -32,18 +32,12 @@ export function ChatInput({
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    textarea.style.height = 'auto'; // reset to measure
+    textarea.style.height = 'auto';
     const scrollH = textarea.scrollHeight;
     const minH = 44;
     const maxH = 160;
     const newH = Math.min(Math.max(scrollH, minH), maxH);
     textarea.style.height = `${newH}px`;
-  }, [input]);
-
-  useEffect(() => {
-    if (!input && textareaRef.current) {
-      textareaRef.current.focus();
-    }
   }, [input]);
 
   const handleSubmit = useCallback(() => {
@@ -81,7 +75,6 @@ export function ChatInput({
       const response = await fileService.uploadFile({ file });
       if (response.success) {
         success(`Successfully uploaded ${file.name}`);
-        // Optional: you could append a message to the input or just notify
         console.log('Upload response:', response);
       }
     } catch (err: unknown) {
@@ -90,7 +83,6 @@ export function ChatInput({
       error(errorMessage);
     } finally {
       setIsUploading(false);
-      // Reset input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -114,6 +106,8 @@ export function ChatInput({
           <div
             id="input-help"
             className={`text-xs font-medium backdrop-blur-md px-2 py-1 rounded-full ${isAtLimit ? 'bg-red-500/10 text-red-400' : isNearLimit ? 'bg-amber-500/10 text-amber-400' : 'text-gray-400'}`}
+            role="status"
+            aria-live="polite"
           >
             {remaining} characters
           </div>
@@ -122,21 +116,24 @@ export function ChatInput({
 
       {/* Main Container */}
       <div
-        className={`relative flex items-end gap-2 p-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300
+        className={`relative flex items-end gap-2 p-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300 gpu-accelerated
           ${isFocused ? 'bg-white/15 border-orange-500/40 shadow-[0_0_30px_rgba(249,115,22,0.15)] ring-2 ring-orange-500/20' : 'hover:bg-white/12 hover:border-white/20'}`}
       >
         {/* Animated Glow Effect */}
         {isFocused && (
-          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10 animate-gradient-x opacity-50 pointer-events-none" />
+          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10 animate-gradient-x opacity-50 pointer-events-none" aria-hidden="true" />
         )}
+        
         {/* Left Tools */}
         <div className="flex items-center gap-1 mb-1 ml-1">
           <button
             type="button"
             onClick={openFilePicker}
             disabled={isUploading}
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 hover:scale-110 active:scale-95"
+            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             title="Attach file"
+            aria-label="Attach file"
+            aria-busy={isUploading}
           >
             <Paperclip className="h-5 w-5" />
           </button>
@@ -157,10 +154,12 @@ export function ChatInput({
             disabled={isLoading}
             maxLength={maxLength}
             rows={1}
-            className="w-full resize-none border-none outline-none bg-transparent text-white placeholder-white/40 text-base leading-relaxed min-h-[24px] max-h-[160px] overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-white/10"
+            className="w-full resize-none border-none outline-none bg-transparent text-white placeholder-white/40 text-base leading-relaxed min-h-[24px] max-h-[160px] overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-white/10 focus:ring-0"
             style={{
-              caretColor: '#f97316', // Orange caret
+              caretColor: '#f97316',
             }}
+            aria-label="Type your message"
+            aria-describedby={input.length > 0 ? 'input-help' : undefined}
           />
         </div>
 
@@ -168,8 +167,9 @@ export function ChatInput({
         <div className="flex items-center gap-2 mb-1 mr-1">
           <button
             type="button"
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 hidden sm:block hover:scale-110 active:scale-95"
+            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 hidden sm:block hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             title="Voice input"
+            aria-label="Voice input"
           >
             <Mic className="h-5 w-5" />
           </button>
@@ -177,17 +177,18 @@ export function ChatInput({
           <button
             type="submit"
             disabled={isLoading || !input.trim() || isAtLimit}
-            className={`group relative flex items-center justify-center h-11 w-11 rounded-full transition-all duration-300 shadow-lg overflow-hidden
+            aria-label="Send message"
+            className={`group relative flex items-center justify-center h-11 w-11 rounded-full transition-all duration-300 shadow-lg overflow-hidden gpu-accelerated
               ${isLoading || !input.trim() || isAtLimit ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-110 active:scale-95 hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]'}`}
           >
             {/* Animated shine on hover */}
             {input.trim() && !isLoading && !isAtLimit && (
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500" aria-hidden="true" />
             )}
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin relative z-10" />
+              <Loader2 className="h-5 w-5 animate-spin relative z-10" aria-hidden="true" />
             ) : (
-              <Send className={`h-5 w-5 ml-0.5 transition-transform duration-200 relative z-10 ${input.trim() ? 'group-hover:rotate-12' : ''}`} />
+              <Send className={`h-5 w-5 ml-0.5 transition-transform duration-200 relative z-10 ${input.trim() ? 'group-hover:rotate-12' : ''}`} aria-hidden="true" />
             )}
           </button>
         </div>
@@ -199,7 +200,12 @@ export function ChatInput({
         multiple
         className="hidden"
         onChange={handleFileChange}
+        aria-hidden="true"
       />
     </form>
   );
-}
+});
+
+ChatInputInner.displayName = 'ChatInputInner';
+
+export const ChatInput = ChatInputInner;

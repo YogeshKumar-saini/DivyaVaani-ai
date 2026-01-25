@@ -2,42 +2,52 @@
 
 @plugin "tailwindcss-animate";
 
+/* Performance optimization: Use GPU acceleration */
 @layer utilities {
   .animate-pulse-slow {
     animation: pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    will-change: opacity;
   }
 
   .animate-shooting-star {
     animation: shooting-star 10s linear infinite;
+    will-change: transform, opacity;
   }
 
   .animate-gradient-x {
     animation: gradient-x 3s ease infinite;
     background-size: 200% 200%;
+    will-change: background-position;
   }
 
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
+    will-change: background-position;
   }
 
   .animate-glow {
     animation: glow 2s ease-in-out infinite alternate;
+    will-change: box-shadow;
   }
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
+    will-change: transform;
   }
 
   .animate-bounce-subtle {
     animation: bounce-subtle 2s ease-in-out infinite;
+    will-change: transform;
   }
 
   .animate-spin-slow {
     animation: spin 3s linear infinite;
+    will-change: transform;
   }
 
   .animate-pulse-glow {
     animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    will-change: opacity, box-shadow;
   }
 
   .text-shadow-glow {
@@ -47,7 +57,10 @@
   .glass-effect {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Performance optimization for backdrop-filter */
+    transform: translateZ(0);
   }
 
   .gradient-border {
@@ -55,6 +68,19 @@
     background: linear-gradient(var(--background), var(--background)) padding-box,
                 linear-gradient(135deg, rgba(255, 165, 0, 0.5), rgba(138, 43, 226, 0.5)) border-box;
     border: 2px solid transparent;
+  }
+
+  /* GPU acceleration for transforms */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Optimized scroll behavior */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -200,6 +226,18 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Performance optimization for scrolling */
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent layout shifts */
+  img, video {
+    max-width: 100%;
+    height: auto;
+    display: block;
   }
 }
 
@@ -215,6 +253,7 @@
 
 .animate-aurora {
   animation: aurora 60s linear infinite;
+  will-change: background-position;
 }
 
 @keyframes gradient-x {
@@ -273,7 +312,7 @@
   }
 }
 
-/* Scrollbar Styles */
+/* Optimized Scrollbar Styles */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -286,6 +325,8 @@
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
+  /* Performance optimization for scrollbar */
+  will-change: background;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
@@ -301,4 +342,41 @@
 ::-moz-selection {
   background-color: rgba(255, 165, 0, 0.3);
   color: white;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-pulse-slow,
+  .animate-shooting-star,
+  .animate-gradient-x,
+  .animate-shimmer,
+  .animate-glow,
+  .animate-float,
+  .animate-bounce-subtle,
+  .animate-spin-slow,
+  .animate-pulse-glow,
+  .animate-aurora {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  * {
+    border-width: 2px !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }

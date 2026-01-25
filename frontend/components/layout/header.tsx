@@ -4,8 +4,9 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { MobileSidebar } from './sidebar';
 import { cn } from '@/lib/utils';
-import { useScroll, useMotionValueEvent, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useOptimizedScroll } from '@/lib/design-system/performance-utils';
 
 interface HeaderProps {
     items: {
@@ -14,24 +15,26 @@ interface HeaderProps {
     }[];
 }
 
-export function Header({ items }: HeaderProps) {
-    const { scrollY } = useScroll();
+export const Header = React.memo(({ items }: HeaderProps) => {
     const [scrolled, setScrolled] = React.useState(false);
     const pathname = usePathname();
     const isHome = pathname === '/';
 
-    useMotionValueEvent(scrollY, "change", (latest) => {
-        if (latest > 50 && !scrolled) {
-            setScrolled(true);
-        } else if (latest <= 50 && scrolled) {
-            setScrolled(false);
-        }
-    });
+    // Use optimized scroll handler
+    useOptimizedScroll((scrollY) => {
+        const shouldBeScrolled = scrollY > 50;
+        setScrolled((prev) => {
+            if (prev !== shouldBeScrolled) {
+                return shouldBeScrolled;
+            }
+            return prev;
+        });
+    }, []);
 
     return (
         <motion.header
             className={cn(
-                "fixed top-0 z-50 w-full transition-all duration-500 ease-in-out",
+                "fixed top-0 z-50 w-full transition-all duration-500 ease-in-out gpu-accelerated",
                 isHome
                     ? (scrolled
                         ? "bg-gradient-to-r from-indigo-950/80 via-white/5 to-purple-950/80 backdrop-blur-2xl border-b border-indigo-200/20 py-3 shadow-2xl"
@@ -53,6 +56,8 @@ export function Header({ items }: HeaderProps) {
                                 width={40}
                                 height={40}
                                 className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                loading="eager"
+                                priority
                             />
                         </div>
                         <span className={cn(
@@ -66,7 +71,7 @@ export function Header({ items }: HeaderProps) {
 
                 {/* Desktop Nav */}
                 <nav className={cn(
-                    "hidden md:flex items-center space-x-2 p-1.5 rounded-full transition-all duration-500",
+                    "hidden md:flex items-center space-x-2 p-1.5 rounded-full transition-all duration-500 gpu-accelerated",
                     isHome && !scrolled
                         ? "bg-indigo-950/30 border border-indigo-300/20 backdrop-blur-lg"
                         : "bg-indigo-900/40 border border-indigo-300/25 backdrop-blur-lg"
@@ -116,7 +121,7 @@ export function Header({ items }: HeaderProps) {
                         Login
                     </Button>
                     <Button className={cn(
-                        "rounded-full hover:scale-105 transition-all duration-300 shadow-xl font-bold px-6",
+                        "rounded-full hover:scale-105 transition-all duration-300 shadow-xl font-bold px-6 gpu-accelerated",
                         isHome && !scrolled
                             ? "bg-white text-black hover:bg-gray-100"
                             : "bg-orange-600 hover:bg-orange-700 text-white"
@@ -127,4 +132,6 @@ export function Header({ items }: HeaderProps) {
             </div>
         </motion.header>
     );
-}
+});
+
+Header.displayName = 'Header';
