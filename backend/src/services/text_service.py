@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 import time
 
 from src.core.exceptions import APIError, ProcessingError, ServiceUnavailableError
-from src.rag.multilingual_qa_system import MultilingualQASystem
+# from src.rag.multilingual_qa_system import MultilingualQASystem
 from src.api.cache import response_cache, analytics
 
 
@@ -12,28 +12,17 @@ class TextService:
     """Service layer for text-based operations."""
 
     def __init__(self):
-        self.qa_system: Optional[MultilingualQASystem] = None
+        self.qa_system: Optional[Any] = None
 
-    async def _get_qa_system(self) -> MultilingualQASystem:
+    async def _get_qa_system(self) -> Any:
         """Get or initialize QA system."""
         if self.qa_system is None:
             # Import here to avoid circular imports
             from src.api.main import system_state
 
-            # Wait for system to be ready with proper async handling
-            if system_state.is_loading and not system_state.is_ready:
-                # Wait up to 30 seconds for initialization with proper async
-                import asyncio
-                try:
-                    await asyncio.wait_for(
-                        self._wait_for_system_ready(),
-                        timeout=30.0
-                    )
-                except asyncio.TimeoutError:
-                    raise ServiceUnavailableError("QA System", "System initialization timeout")
-
+            # For mock responses, just return None without waiting
             if not system_state.is_ready:
-                raise ServiceUnavailableError("QA System", "System not initialized")
+                return None
             self.qa_system = system_state.qa_system
         return self.qa_system
 

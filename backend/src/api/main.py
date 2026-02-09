@@ -35,7 +35,7 @@ from .routes.voice import voice_query_router, stt_router, tts_router
 class SystemState:
     """Thread-safe system state management."""
     def __init__(self):
-        self.qa_system: Optional[MultilingualQASystem] = None
+        self.qa_system: Optional[Any] = None  # MultilingualQASystem
         self.is_loading = False
         self.is_ready = False
         self.last_health_check = 0.0
@@ -65,6 +65,15 @@ async def lifespan(app: FastAPI):
 
     # Initialize system in background
     startup_task = asyncio.create_task(initialize_system())
+
+    # Wait for initialization to complete
+    try:
+        await asyncio.wait_for(startup_task, timeout=60.0)
+        log.info("System initialization completed")
+    except asyncio.TimeoutError:
+        log.error("System initialization timed out")
+    except Exception as e:
+        log.error(f"System initialization failed: {e}")
 
     # Wait for initial health check
     await asyncio.sleep(1)
@@ -126,8 +135,8 @@ app.include_router(voice_query_router, prefix="/voice", tags=["voice"])
 app.include_router(stt_router, prefix="/voice/stt", tags=["speech-to-text"])
 app.include_router(tts_router, prefix="/voice/tts", tags=["text-to-speech"])
 
-from src.api.routes.documents import router as documents_router
-app.include_router(documents_router, prefix="", tags=["documents"])
+# from src.api.routes.documents import router as documents_router
+# app.include_router(documents_router, prefix="", tags=["documents"])
 
 # Include conversation router
 from src.api.routes.conversation import router as conversation_router

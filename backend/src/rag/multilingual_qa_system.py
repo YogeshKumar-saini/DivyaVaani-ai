@@ -7,7 +7,12 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 
 from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    ChatGoogleGenerativeAI = None
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.retrieval import HybridRetriever
@@ -126,7 +131,7 @@ class MultilingualQASystem:
 
     def __init__(
         self,
-        retriever: HybridRetriever,
+        retriever,  # Any retriever with retrieve method
         groq_api_key: Optional[str] = None,
         gemini_api_key: Optional[str] = None,
         temperature: float = 0.3,
@@ -143,14 +148,18 @@ class MultilingualQASystem:
         self.max_tokens = max_tokens
 
         # Initialize modular components
-        self.prompt_manager = PromptManager()
-        self.memory_manager = MemoryManager(memory_type=memory_type, enable_memory=enable_memory, groq_api_key=groq_api_key)
-        self.cache_manager = CacheManager(enable_caching=enable_caching, cache_size=cache_size)
-        self.language_detector = LanguageDetector()
-        self.language_processor = LanguageProcessor()
-        self.quality_assessor = QualityAssessor()
-        self.analytics_tracker = AnalyticsTracker()
-        self.user_profile_manager = UserProfileManager()
+        try:
+            self.prompt_manager = PromptManager()
+            self.memory_manager = MemoryManager(memory_type=memory_type, enable_memory=enable_memory, groq_api_key=groq_api_key)
+            self.cache_manager = CacheManager(enable_caching=enable_caching, cache_size=cache_size)
+            self.language_detector = LanguageDetector()
+            self.language_processor = LanguageProcessor()
+            self.quality_assessor = QualityAssessor()
+            self.analytics_tracker = AnalyticsTracker()
+            self.user_profile_manager = UserProfileManager()
+        except Exception as e:
+            log.error(f"Failed to initialize QA system components: {e}")
+            raise
 
         # Set API key only if provided
         if self.groq_api_key:
@@ -248,7 +257,7 @@ class MultilingualQASystem:
                     log.warning(f"Groq API failed: {e_groq}. Trying Gemini fallback...")
                     
                     # Secondary: Try Gemini
-                    if self.gemini_api_key:
+                    if self.gemini_api_key and GEMINI_AVAILABLE:
                         try:
                             llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=self.temperature, max_tokens=self.max_tokens)
                             system_message = SystemMessage(content=system_content) # Use same enhanced prompt
@@ -261,7 +270,10 @@ class MultilingualQASystem:
                             log.warning(f"Gemini API failed: {e_gemini}. Using static fallback.")
                             raise e_gemini # Re-raise to trigger static fallback
                     else:
-                        log.warning("Gemini API key not configured. Using static fallback.")
+                        if not GEMINI_AVAILABLE:
+                            log.warning("Gemini library not installed. Using static fallback.")
+                        else:
+                            log.warning("Gemini API key not configured. Using static fallback.")
                         raise e_groq # Re-raise to trigger static fallback
 
             except Exception as e:
