@@ -45,6 +45,12 @@ class Settings(BaseModel):
 
     # Security
     cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    
+    # Auth
+    secret_key: str = Field(default="09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
+    algorithm: str = Field(default="HS256")
+    access_token_expire_minutes: int = Field(default=30)
+
     enable_rate_limiting: bool = Field(default=True)
     rate_limit_requests: int = Field(default=100, ge=1)
     rate_limit_window: int = Field(default=60, ge=1)

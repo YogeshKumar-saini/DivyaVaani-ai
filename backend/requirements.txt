@@ -38,6 +38,10 @@ langchain-groq
 # langchain-google-genai  # Temporarily commented out due to package availability issues
 langchain-huggingface==1.1.0
 openai==1.6.0
+cohere
+
+# Vector DB
+pinecone
 
 # Translation
 langdetect==1.0.9
@@ -69,11 +73,19 @@ tabula-py==2.8.2
 accelerate==0.25.0
 
 # API
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi==0.129.0
+uvicorn[standard]==0.40.0
 python-multipart==0.0.6
 slowapi==0.1.9
 tenacity==8.2.3
+
+# Authentication & Security
+sqlalchemy
+psycopg2-binary
+bcrypt==4.0.1
+passlib[bcrypt]
+python-jose[cryptography]
+email-validator
 
 # Distributed Caching
 redis==5.0.1

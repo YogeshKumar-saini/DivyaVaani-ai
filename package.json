@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@google-cloud/firestore": "^8.3.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@next/font": "^14.2.15",
+    "firebase": "^12.9.0",
+    "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.3",
+    "react-google-recaptcha-v3": "^1.11.0",
+    "react-otp-input": "^3.1.1",
+    "yup": "^1.7.1"
+  }
+}

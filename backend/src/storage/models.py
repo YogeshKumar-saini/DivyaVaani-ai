@@ -1,6 +1,6 @@
 """Database models for conversation persistence."""
 
-from sqlalchemy import Column, String, Text, DateTime, Float, Integer, JSON, ForeignKey, Index
+from sqlalchemy import Column, String, Text, DateTime, Float, Integer, JSON, ForeignKey, Index, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -119,3 +119,36 @@ class ConversationSummary(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+
+
+class User(Base):
+    """User account model - matches existing database schema."""
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
+    display_name = Column(String(100), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+    google_id = Column(String(255), nullable=True)
+    is_email_verified = Column(Boolean, default=False)
+    subscription_type = Column(String(20), default="free")
+    is_active = Column(Boolean, default=True)
+    
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "email": self.email,
+            "full_name": self.full_name,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_login_at": self.last_login_at.isoformat() if self.last_login_at else None
+        }
+

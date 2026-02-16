@@ -23,6 +23,8 @@ const navItems = [
   { title: "About", href: ROUTES.ABOUT || "/about" },
 ];
 
+import { AuthProvider } from "@/lib/context/auth-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,11 +47,13 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <ToastProvider>
-              <AppProvider>
-                <Header items={navItems} />
-                {children}
-                <ToastContainer />
-              </AppProvider>
+              <AuthProvider>
+                <AppProvider>
+                  <Header items={navItems} />
+                  {children}
+                  <ToastContainer />
+                </AppProvider>
+              </AuthProvider>
             </ToastProvider>
           </ErrorBoundary>
         </ThemeProvider>

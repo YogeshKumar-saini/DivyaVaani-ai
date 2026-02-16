@@ -51,17 +51,16 @@ async def lifespan(app: FastAPI):
     # Startup
     log.info("Starting DivyaVaani AI - Universal Spiritual Guidance System", extra={"environment": settings.environment})
 
-    # Initialize database - TEMPORARILY DISABLED FOR TESTING
-    # TODO: Re-enable after fixing connection timeout issue
-    # try:
-    #     from src.storage import init_db, check_db_connection
-    #     if check_db_connection():
-    #         init_db()
-    #         log.info("Database initialized successfully")
-    #     else:
-    #         log.warning("Database connection failed - conversation persistence disabled")
-    # except Exception as e:
-    #     log.error(f"Database initialization error: {e}")
+    # Initialize database
+    try:
+        from src.storage.database import init_db, check_db_connection
+        if check_db_connection():
+            init_db()
+            log.info("Database initialized successfully")
+        else:
+            log.warning("Database connection failed - conversation persistence disabled")
+    except Exception as e:
+        log.error(f"Database initialization error: {e}")
 
     # Initialize system in background
     startup_task = asyncio.create_task(initialize_system())
@@ -145,6 +144,10 @@ app.include_router(conversation_router, prefix="/conversation", tags=["conversat
 # Include conversation history router
 from src.api.routes.conversations import history_router
 app.include_router(history_router, prefix="/conversations", tags=["conversation-history"])
+
+# Include authentication router
+from src.api.routes import auth
+app.include_router(auth.router)
 
 # Request/Response middleware for logging and metrics
 @app.middleware("http")
