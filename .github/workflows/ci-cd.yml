@@ -73,6 +73,8 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         envs: ECR_REGISTRY,ECR_PASSWORD,ENV_FILE
         script: |
+          set -e  # Fail immediately if any command fails
+
           # Navigate to app directory
           cd /home/ubuntu/divyavaani-ai
           
