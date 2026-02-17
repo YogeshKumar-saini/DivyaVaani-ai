@@ -2,6 +2,8 @@ import { fileService } from '@/lib/api/file-service';
 import { useToast } from '@/lib/context/ToastContext';
 import { useState, useRef, useLayoutEffect, useCallback, memo } from 'react';
 import { Paperclip, Send, Loader2, Mic } from 'lucide-react';
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   input: string;
@@ -123,7 +125,7 @@ const ChatInputInner = memo<ChatInputProps>(({
         {isFocused && (
           <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10 animate-gradient-x opacity-50 pointer-events-none" aria-hidden="true" />
         )}
-        
+
         {/* Left Tools */}
         <div className="flex items-center gap-1 mb-1 ml-1">
           <button
@@ -174,23 +176,23 @@ const ChatInputInner = memo<ChatInputProps>(({
             <Mic className="h-5 w-5" />
           </button>
 
-          <button
+          <EnhancedButton
             type="submit"
             disabled={isLoading || !input.trim() || isAtLimit}
             aria-label="Send message"
-            className={`group relative flex items-center justify-center h-11 w-11 rounded-full transition-all duration-300 shadow-lg overflow-hidden gpu-accelerated
-              ${isLoading || !input.trim() || isAtLimit ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-110 active:scale-95 hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]'}`}
+            className={cn(
+              "h-11 w-11 rounded-full p-0 flex items-center justify-center shrink-0",
+              (isLoading || !input.trim() || isAtLimit) ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-110 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+            )}
+            glow
+            ripple
           >
-            {/* Animated shine on hover */}
-            {input.trim() && !isLoading && !isAtLimit && (
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-500" aria-hidden="true" />
-            )}
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin relative z-10" aria-hidden="true" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
-              <Send className={`h-5 w-5 ml-0.5 transition-transform duration-200 relative z-10 ${input.trim() ? 'group-hover:rotate-12' : ''}`} aria-hidden="true" />
+              <Send className={cn("h-5 w-5 transition-transform duration-200", input.trim() ? 'group-hover:rotate-12' : '')} aria-hidden="true" />
             )}
-          </button>
+          </EnhancedButton>
         </div>
       </div>
 

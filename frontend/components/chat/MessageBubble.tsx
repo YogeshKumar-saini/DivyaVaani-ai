@@ -35,13 +35,11 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
   const processText = (text: string): React.ReactElement => {
     const paragraphs = text.split('\n\n');
     const isUser = type === 'user';
-    const textColor = isUser
-      ? 'text-indigo-900 dark:text-white'
-      : 'text-gray-800 dark:text-gray-100';
+    const textColor = 'text-gray-100'; // Always light text for dark mode theme
 
     // Bold/Italic colors
-    const boldColor = isUser ? 'text-indigo-950 dark:text-white/90' : 'text-gray-900 dark:text-white/90';
-    const italicColor = isUser ? 'text-indigo-900/80 dark:text-white/80' : 'text-gray-800/80 dark:text-white/80';
+    const boldColor = 'text-white/90 font-bold';
+    const italicColor = 'text-white/80 italic';
 
     return (
       <>
@@ -69,7 +67,7 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
           spiritualTerms.forEach(term => {
             const regex = new RegExp(`\\b${term}\\b`, 'gi');
             processedParagraph = processedParagraph.replace(regex, (match) => {
-              return `<span class="text-orange-600 dark:text-orange-300 font-medium">${match}</span>`;
+              return `<span class="text-orange-300 font-semibold drop-shadow-sm">${match}</span>`;
             });
           });
 
@@ -110,8 +108,8 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
           {/* Message Bubble */}
           <div
             className={`relative rounded-3xl p-5 shadow-lg backdrop-blur-xl transition-all duration-300 border group-hover:shadow-2xl ${type === 'user'
-              ? 'bg-orange-100 dark:bg-orange-600/20 border-orange-200 dark:border-orange-500/20 rounded-tr-none group-hover:border-orange-300 dark:group-hover:border-orange-500/30'
-              : 'bg-white dark:bg-white/10 border-gray-100 dark:border-white/10 rounded-tl-none group-hover:border-gray-200 dark:group-hover:border-white/20'
+              ? 'bg-gradient-to-br from-orange-500/20 to-amber-600/20 text-white border-orange-500/30 rounded-tr-none'
+              : 'bg-white/5 text-gray-100 border-white/10 rounded-tl-none'
               }`}
           >
             {/* Subtle gradient overlay on hover */}

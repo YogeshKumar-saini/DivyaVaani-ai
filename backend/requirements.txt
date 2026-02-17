@@ -86,6 +86,9 @@ bcrypt==4.0.1
 passlib[bcrypt]
 python-jose[cryptography]
 email-validator
+google-auth
+requests
+fastapi-mail
 
 # Distributed Caching
 redis==5.0.1

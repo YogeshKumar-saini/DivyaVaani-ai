@@ -51,6 +51,21 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+class PasswordUpdate(BaseModel):
+    old_password: str
+    new_password: str
+
 class User(UserBase):
     id: str
     is_active: bool

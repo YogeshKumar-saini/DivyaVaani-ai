@@ -51,6 +51,7 @@ async def text_to_speech(
             temp_path = temp_file.name
 
         # Return audio response
+        from starlette.background import BackgroundTask
         return FileResponse(
             path=temp_path,
             media_type=f"audio/{audio_format}",
@@ -61,7 +62,7 @@ async def text_to_speech(
                 "X-Language": language,
                 "X-Voice": voice
             },
-            background=lambda: os.unlink(temp_path)  # Cleanup after sending
+            background=BackgroundTask(os.unlink, temp_path)  # Cleanup after sending
         )
 
     except APIError as e:

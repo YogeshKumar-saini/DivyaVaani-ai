@@ -13,12 +13,12 @@ class Settings(BaseModel):
     app_environment: str = Field(default="development")
 
     # API Keys with validation
-    groq_api_key: Optional[str] = Field(default=None)
-    gemini_api_key: Optional[str] = Field(default=None)
-    openai_api_key: Optional[str] = Field(default=None)
-    deepgram_api_key: Optional[str] = Field(default=None)
-    cohere_api_key: Optional[str] = Field(default=None)
-    huggingface_api_key: Optional[str] = Field(default=None)
+    groq_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
+    gemini_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY"))
+    openai_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    deepgram_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("DEEPGRAM_API_KEY"))
+    cohere_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("COHERE_API_KEY"))
+    huggingface_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("HUGGINGFACE_API_KEY"))
 
     # Paths
     data_path: str = Field(default="data/bhagavad_gita.csv")
@@ -44,16 +44,28 @@ class Settings(BaseModel):
     pinecone_region: str = Field(default="us-east-1")
 
     # Security
-    cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"])
     
     # Auth
     secret_key: str = Field(default="09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
     algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=30)
+    google_client_id: Optional[str] = Field(default_factory=lambda: os.getenv("GOOGLE_CLIENT_ID") or "8832500585-r2p759jqaka789gr0v2l3dnahs2rpc8c.apps.googleusercontent.com")
 
     enable_rate_limiting: bool = Field(default=True)
     rate_limit_requests: int = Field(default=100, ge=1)
     rate_limit_window: int = Field(default=60, ge=1)
+
+    # Email Settings
+    mail_username: str = Field(default_factory=lambda: os.getenv("MAIL_USERNAME"))
+    mail_password: str = Field(default_factory=lambda: os.getenv("MAIL_PASSWORD"))
+    mail_from: str = Field(default_factory=lambda: os.getenv("MAIL_FROM"))
+    mail_port: int = Field(default_factory=lambda: int(os.getenv("MAIL_PORT", 587)))
+    mail_server: str = Field(default_factory=lambda: os.getenv("MAIL_SERVER"))
+    mail_starttls: bool = Field(default=True)
+    mail_ssl_tls: bool = Field(default=False)
+    use_credentials: bool = Field(default=True)
+    validate_certs: bool = Field(default=True)
 
     # Caching
     cache_ttl: int = Field(default=3600, ge=60)
@@ -157,7 +169,22 @@ class Settings(BaseModel):
 # Initialize settings with validation
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    
+    # robustly load .env from project root or backend directory
+    # Current file is in backend/src/settings.py
+    # .env is in backend/.env
+    current_dir = Path(__file__).resolve().parent
+    backend_dir = current_dir.parent
+    env_path = backend_dir / ".env"
+    
+    # Load env file with override=True to ensure file values take precedence
+    load_dotenv(dotenv_path=env_path, override=True)
+    
+    # Double check if GOOGLE_CLIENT_ID is loaded
+    if not os.getenv("GOOGLE_CLIENT_ID"):
+        print(f"WARNING: GOOGLE_CLIENT_ID not found in environment. Checked path: {env_path}")
+    else:
+        print(f"Configuration loaded. Google Client ID: ...{os.getenv('GOOGLE_CLIENT_ID')[-10:] if os.getenv('GOOGLE_CLIENT_ID') else 'None'}")
 
     settings = Settings()
     settings.ensure_directories()

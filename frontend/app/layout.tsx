@@ -24,6 +24,7 @@ const navItems = [
 ];
 
 import { AuthProvider } from "@/lib/context/auth-provider";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function RootLayout({
   children,
@@ -47,13 +48,15 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <ToastProvider>
-              <AuthProvider>
-                <AppProvider>
-                  <Header items={navItems} />
-                  {children}
-                  <ToastContainer />
-                </AppProvider>
-              </AuthProvider>
+              <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "8832500585-r2p759jqaka789gr0v2l3dnahs2rpc8c.apps.googleusercontent.com"}>
+                <AuthProvider>
+                  <AppProvider>
+                    <Header items={navItems} />
+                    {children}
+                    <ToastContainer />
+                  </AppProvider>
+                </AuthProvider>
+              </GoogleOAuthProvider>
             </ToastProvider>
           </ErrorBoundary>
         </ThemeProvider>

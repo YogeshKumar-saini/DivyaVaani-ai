@@ -140,6 +140,10 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     email_verified_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Password Reset
+    reset_pass_token = Column(String(255), nullable=True)
+    reset_pass_token_expire = Column(DateTime(timezone=True), nullable=True)
 
     def to_dict(self):
         """Convert to dictionary for JSON serialization."""

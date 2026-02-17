@@ -6,48 +6,39 @@
 @layer utilities {
   .animate-pulse-slow {
     animation: pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    will-change: opacity;
   }
 
   .animate-shooting-star {
     animation: shooting-star 10s linear infinite;
-    will-change: transform, opacity;
   }
 
   .animate-gradient-x {
     animation: gradient-x 3s ease infinite;
     background-size: 200% 200%;
-    will-change: background-position;
   }
 
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
-    will-change: background-position;
   }
 
   .animate-glow {
     animation: glow 2s ease-in-out infinite alternate;
-    will-change: box-shadow;
   }
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
-    will-change: transform;
   }
 
   .animate-bounce-subtle {
     animation: bounce-subtle 2s ease-in-out infinite;
-    will-change: transform;
   }
 
   .animate-spin-slow {
     animation: spin 3s linear infinite;
-    will-change: transform;
   }
 
   .animate-pulse-glow {
     animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    will-change: opacity, box-shadow;
   }
 
   .text-shadow-glow {

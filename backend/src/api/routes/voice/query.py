@@ -63,6 +63,7 @@ async def voice_query(
         safe_response_text = urllib.parse.quote(response_text, safe='')
 
         # Return audio response
+        from starlette.background import BackgroundTask
         return FileResponse(
             path=temp_path,
             media_type="audio/mpeg",
@@ -72,7 +73,7 @@ async def voice_query(
                 "X-Transcription": safe_transcription,
                 "X-Response-Text": safe_response_text
             },
-            background=lambda: os.unlink(temp_path)  # Cleanup after sending
+            background=BackgroundTask(os.unlink, temp_path)  # Cleanup after sending
         )
 
     except APIError as e:
