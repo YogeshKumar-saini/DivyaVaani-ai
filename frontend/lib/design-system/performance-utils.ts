@@ -49,7 +49,7 @@ export function useThrottle<T extends (...args: unknown[]) => unknown>(
 /**
  * Optimized scroll handler with requestAnimationFrame
  */
-// eslint-disable-next-line react-hooks/exhaustive-deps
+
 export function useOptimizedScroll(
   callback: (scrollY: number) => void,
   deps: React.DependencyList = []
@@ -64,6 +64,7 @@ export function useOptimizedScroll(
       });
       ticking.current = true;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callback, ...deps]);
 
   useEffect(() => {
@@ -101,7 +102,7 @@ export function useIntersectionObserver(
 /**
  * Optimized resize handler with requestAnimationFrame
  */
-// eslint-disable-next-line react-hooks/exhaustive-deps
+
 export function useOptimizedResize(
   callback: () => void,
   deps: React.DependencyList = []
@@ -116,6 +117,7 @@ export function useOptimizedResize(
       });
       ticking.current = true;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callback, ...deps]);
 
   useEffect(() => {

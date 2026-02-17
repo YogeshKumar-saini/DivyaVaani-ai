@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { textService } from "@/lib/api/text-service";
-import { conversationService, Message as ApiMessage } from "@/lib/api/conversation-service";
+import { conversationService } from "@/lib/api/conversation-service";
 import { useAuth } from "@/lib/context/auth-provider";
 import { LanguageDetector } from "@/components/LanguageSelector";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -12,7 +12,6 @@ import { LoadingState, WelcomeScreen } from "@/components/chat/LoadingStates";
 import { Info, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/ui/AuroraBackground";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 interface Context {
@@ -189,7 +188,7 @@ export default function ChatPageContent() {
 
     } catch (error) {
       console.error(error);
-      let errorContent = "I apologize, but I encountered an error. ";
+      const errorContent = "I apologize, but I encountered an error. ";
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/context/auth-provider";
 import { conversationService, Conversation } from "@/lib/api/conversation-service";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquarePlus, MessageSquare, Trash2, Loader2, ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
+import { MessageSquarePlus, MessageSquare, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { isToday, isYesterday, isAfter, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,32 +33,12 @@ export function ChatSidebar({
     isCollapsed = false,
     onCollapseChange
 }: ChatSidebarProps) {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [groupedConversations, setGroupedConversations] = useState<Record<string, Conversation[]>>({});
 
-    useEffect(() => {
-        if (user) {
-            fetchConversations();
-        }
-    }, [user]);
-
-    const fetchConversations = async () => {
-        if (!user) return;
-        setIsLoading(true);
-        try {
-            const data = await conversationService.getConversations(user.id);
-            setConversations(data);
-            groupConversations(data);
-        } catch (error) {
-            console.error("Failed to fetch conversations:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const groupConversations = (data: Conversation[]) => {
+    const groupConversations = useCallback((data: Conversation[]) => {
         const groups: Record<string, Conversation[]> = {
             "Today": [],
             "Yesterday": [],
@@ -87,7 +67,27 @@ export function ChatSidebar({
         });
 
         setGroupedConversations(groups);
-    };
+    }, []);
+
+    const fetchConversations = useCallback(async () => {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+            const data = await conversationService.getConversations(user.id);
+            setConversations(data);
+            groupConversations(data);
+        } catch (error) {
+            console.error("Failed to fetch conversations:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user, groupConversations]);
+
+    useEffect(() => {
+        if (user) {
+            fetchConversations();
+        }
+    }, [user, fetchConversations]);
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();

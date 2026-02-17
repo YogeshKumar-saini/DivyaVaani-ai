@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
-    const { user, token, logout, login } = useAuth(); // login used to refresh user context if needed
+    const { user, token, logout } = useAuth(); // login used to refresh user context if needed
     const router = useRouter();
 
     // Profile State
@@ -48,7 +48,7 @@ export default function ProfilePage() {
         setProfileError("");
 
         try {
-            const updatedUser = await authService.updateProfile(token, {
+            await authService.updateProfile(token, {
                 full_name: fullName,
                 avatar_url: avatarUrl
             });

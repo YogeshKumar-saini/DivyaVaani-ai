@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/api/auth-service";
 import { Suspense } from 'react';
-import { Loader2, Lock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Loader2, Lock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 function ResetPasswordForm() {

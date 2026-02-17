@@ -34,7 +34,7 @@ const MessageBubbleComponent = ({ type, content, timestamp, className = '', mess
 
   const processText = (text: string): React.ReactElement => {
     const paragraphs = text.split('\n\n');
-    const isUser = type === 'user';
+
     const textColor = 'text-gray-100'; // Always light text for dark mode theme
 
     // Bold/Italic colors
