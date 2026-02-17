@@ -11,7 +11,15 @@ from google.auth.transport import requests
 import secrets
 import string
 
-from src.api.models import Token, User, UserCreate
+from src.api.models import (
+    Token, 
+    User, 
+    UserCreate,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    UserUpdate,
+    PasswordUpdate
+)
 from src.security.auth import (
     create_access_token,
     get_current_active_user,
@@ -184,7 +192,7 @@ async def read_users_me(
 
 @router.post("/forgot-password", status_code=202)
 async def forgot_password(
-    request: models.PasswordResetRequest,
+    request: PasswordResetRequest,
     db: Session = Depends(get_db)
 ):
     """Request a password reset email."""
@@ -207,7 +215,7 @@ async def forgot_password(
 
 @router.post("/reset-password")
 async def reset_password(
-    request: models.PasswordResetConfirm,
+    request: PasswordResetConfirm,
     db: Session = Depends(get_db)
 ):
     """Reset password using token."""
@@ -228,7 +236,7 @@ async def reset_password(
 
 @router.put("/users/me", response_model=User)
 async def update_user_me(
-    user_update: models.UserUpdate,
+    user_update: UserUpdate,
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -245,7 +253,7 @@ async def update_user_me(
 
 @router.put("/users/password")
 async def update_password(
-    password_update: models.PasswordUpdate,
+    password_update: PasswordUpdate,
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):

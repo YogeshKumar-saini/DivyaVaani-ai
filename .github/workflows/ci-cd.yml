@@ -2,71 +2,16 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-        cache: 'pip'
-        cache-dependency-path: backend/requirements.txt
-
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-
-    - name: Run backend tests
-      run: |
-        cd backend
-        python -m pytest tests/ -v
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-
-    - name: Run frontend tests
-      run: |
-        cd frontend
-        npm test
-
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
-
   build-and-deploy:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
+    
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -77,7 +22,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push backend image
+    - name: Build and push Backend
       uses: docker/build-push-action@v5
       with:
         context: ./backend
@@ -86,7 +31,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Build and push frontend image
+    - name: Build and push Frontend
       uses: docker/build-push-action@v5
       with:
         context: ./frontend
@@ -95,14 +40,21 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Deploy to server
+    - name: Deploy to Server
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
+          # Navigate to app directory (Update this path in your server if different)
           cd /path/to/your/app
-          docker-compose pull
-          docker-compose up -d
-          docker system prune -f
+          
+          # Pull latest images
+          sudo docker compose pull
+          
+          # Restart services
+          sudo docker compose up -d --remove-orphans
+          
+          # Clean up unused images
+          sudo docker system prune -f

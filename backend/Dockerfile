@@ -1,10 +1,13 @@
-# Production Dockerfile for Backend
+# Use Python 3.10 slim image for a smaller footprint
 FROM python:3.10-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    NLTK_DATA=/home/appuser/nltk_data \
+    HF_HOME=/home/appuser/cache/huggingface \
+    TRANSFORMERS_CACHE=/home/appuser/cache/transformers
 
 WORKDIR /app
 
@@ -23,11 +26,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     libtesseract-dev \
     libmagic1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
+# Create a non-root user with a home directory
 RUN addgroup --system --gid 1001 appuser && \
-    adduser --system --uid 1001 --gid 1001 appuser
+    adduser --system --uid 1001 --gid 1001 --home /home/appuser appuser
 
 # Install Python dependencies
 COPY requirements.txt .
@@ -35,17 +39,23 @@ RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir "numpy<2.0.0" "Cython<3" && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy the source code and ensure permissions
-COPY --chown=appuser:appuser . .
+# Create necessary directories in /home/appuser for writable permissions
+RUN mkdir -p /home/appuser/nltk_data \
+    /home/appuser/cache/huggingface \
+    /home/appuser/cache/transformers \
+    /app/cache \
+    /app/logs \
+    /app/artifacts && \
+    chown -R appuser:appuser /home/appuser /app/cache /app/logs /app/artifacts
 
-# Create necessary directories and set permissions
-RUN mkdir -p cache logs artifacts && \
-    chown -R appuser:appuser cache logs artifacts
-
+# Switch to non-root user
 USER appuser
+
+# Copy source code (ownership is set on copy to ensure read permissions)
+COPY --chown=appuser:appuser . .
 
 # Expose the API port
 EXPOSE 8000
 
 # Run the application
-CMD ["python", "-m", "src.api.main"]
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

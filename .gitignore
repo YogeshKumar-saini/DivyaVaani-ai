@@ -94,3 +94,5 @@ checkpoints/
 *.wav
 *.flac
 *.ogg
+test_all_endpoints.py
+verify_routes.py

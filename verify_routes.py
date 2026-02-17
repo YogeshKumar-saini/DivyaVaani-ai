@@ -57,7 +57,7 @@ def run_tests():
         "query": "What is the meaning of life according to Gita?",
         "language": "en"
     }
-    test_endpoint("POST", "/text/query", data=payload)
+    test_endpoint("POST", "/text", data=payload)
 
     # 6. Stream Query (POST) - if applicable
     # test_endpoint("POST", "/text/stream", data=payload) # Streaming might need special handling
