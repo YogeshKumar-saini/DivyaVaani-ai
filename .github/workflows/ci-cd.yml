@@ -79,7 +79,7 @@ jobs:
           cd /home/ubuntu/divyavaani-ai
           
           # Login to ECR on server
-          echo $ECR_PASSWORD | docker login --username AWS --password-stdin $ECR_REGISTRY
+          echo $ECR_PASSWORD | sudo docker login --username AWS --password-stdin $ECR_REGISTRY
           
           # Create .env file with secrets AND ECR registry
           echo "$ENV_FILE" > .env
