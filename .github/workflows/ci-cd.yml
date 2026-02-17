@@ -13,21 +13,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build and push Backend
       uses: docker/build-push-action@v5
       with:
         context: ./backend
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/divyavaani-backend:latest
+        tags: ${{ steps.login-ecr.outputs.registry }}/divyavaani-backend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -36,25 +41,45 @@ jobs:
       with:
         context: ./frontend
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/divyavaani-frontend:latest
+        tags: ${{ steps.login-ecr.outputs.registry }}/divyavaani-frontend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Get ECR Login Password
+      id: ecr-password
+      run: |
+        echo "password=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})" >> $GITHUB_OUTPUT
+
     - name: Deploy to Server
       uses: appleboy/ssh-action@v1.0.0
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_PASSWORD: ${{ steps.ecr-password.outputs.password }}
+        ENV_FILE: ${{ secrets.ENV_FILE }}
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        envs: ECR_REGISTRY,ECR_PASSWORD,ENV_FILE
         script: |
-          # Navigate to app directory (Update this path in your server if different)
+          # Navigate to app directory
           cd /path/to/your/app
           
-          # Pull latest images
-          sudo docker compose pull
+          # Login to ECR on server
+          echo $ECR_PASSWORD | docker login --username AWS --password-stdin $ECR_REGISTRY
+          
+          # Pull latest code
+          git pull origin main
+          
+          # Create .env file with secrets AND ECR registry
+          echo "$ENV_FILE" > .env
+          echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
+          
+          # Pull latest images from ECR
+          sudo docker compose -f docker-compose.prod.yml pull
           
           # Restart services
-          sudo docker compose up -d --remove-orphans
+          sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
           
-          # Clean up unused images
+          # Clean up
           sudo docker system prune -f

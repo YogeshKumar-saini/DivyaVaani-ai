@@ -1,29 +1,21 @@
 services:
   backend:
-    image: ${DOCKER_USERNAME:-yogeshsaini}/divyavaani-backend:latest
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${ECR_REGISTRY}/divyavaani-backend:latest
     volumes:
-      - ./backend:/app
-      - backend_cache:/app/cache
+      - backend_cache:/home/appuser/cache
       - backend_logs:/app/logs
       - backend_artifacts:/app/artifacts
+      - backend_nltk:/home/appuser/nltk_data
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env
+      - .env
     depends_on:
       - redis
     restart: always
 
   frontend:
-    image: ${DOCKER_USERNAME:-yogeshsaini}/divyavaani-frontend:latest
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+    image: ${ECR_REGISTRY}/divyavaani-frontend:latest
     ports:
       - "3000:3000"
     restart: always
@@ -36,10 +28,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    restart: unless-stopped
+    restart: always
 
 volumes:
   redis_data:
   backend_cache:
   backend_logs:
   backend_artifacts:
+  backend_nltk:
