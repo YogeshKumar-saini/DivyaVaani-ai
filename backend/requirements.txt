@@ -27,7 +27,7 @@ indic-transliteration
 # Topic modeling
 bertopic==0.16.0
 umap-learn==0.5.5
-hdbscan==0.8.33
+hdbscan>=0.8.33
 scikit-learn==1.3.2
 
 # LLM & RAG
