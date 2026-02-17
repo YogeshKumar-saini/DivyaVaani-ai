@@ -44,6 +44,8 @@ jobs:
         tags: ${{ steps.login-ecr.outputs.registry }}/divyavaani-frontend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          NEXT_PUBLIC_API_BASE_URL=http://${{ secrets.SERVER_HOST }}:8000
 
     - name: Get ECR Login Password
       id: ecr-password
