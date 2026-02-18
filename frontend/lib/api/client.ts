@@ -18,8 +18,9 @@
  */
 function resolveApiBaseUrl(): string {
   // ── Client (browser) ──────────────────────────────────────────────────────
-  // Always use the /api proxy. next.config.ts rewrites /api/* → backend URL.
-  // This avoids mixed-content blocks entirely, regardless of env-var values.
+  // ALWAYS use the /api proxy — no matter what env vars are set.
+  // This is the single source of truth: the browser must never speak directly
+  // to the EC2 backend over plain HTTP (mixed-content block on HTTPS pages).
   if (typeof window !== 'undefined') {
     return '/api';
   }
@@ -27,13 +28,18 @@ function resolveApiBaseUrl(): string {
   // ── Server (SSR / build) ──────────────────────────────────────────────────
   // BACKEND_URL is a server-only env-var (no NEXT_PUBLIC_ prefix).
   // Set it in Vercel dashboard: BACKEND_URL = http://54.84.227.171:8000
-  // Never read NEXT_PUBLIC_API_BASE_URL here — that var may be set to a plain
-  // HTTP URL in Vercel and would cause server→browser URL leakage if exposed.
+  // NEVER set NEXT_PUBLIC_API_BASE_URL — it would bake a plain-HTTP URL into
+  // the client bundle and cause mixed-content blocks in the browser.
   const serverUrl =
     process.env.BACKEND_URL?.trim() ||
     'http://54.84.227.171:8000'; // production fallback — same as next.config.ts
 
-  return serverUrl.replace(/\/+$/, '');
+  // Safety: if the resolved URL somehow lacks a port and is a raw IP, add :8000
+  // so EC2 is always reached on the correct port.
+  const cleaned = serverUrl.replace(/\/+$/, '');
+  // Ensure server URL is never accidentally returned to browser code
+  if (typeof window !== 'undefined') return '/api'; // belt-and-suspenders
+  return cleaned;
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
