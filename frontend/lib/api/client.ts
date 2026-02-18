@@ -3,7 +3,28 @@
  * Handles all HTTP requests with error handling, retry logic, and type safety
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+function resolveApiBaseUrl(): string {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+
+  if (typeof window !== 'undefined') {
+    if (!configuredBaseUrl) {
+      return '/api';
+    }
+
+    if (window.location.protocol === 'https:' && configuredBaseUrl.startsWith('http://')) {
+      console.warn(
+        'Ignoring insecure NEXT_PUBLIC_API_BASE_URL on HTTPS origin. Falling back to /api proxy.'
+      );
+      return '/api';
+    }
+
+    return configuredBaseUrl.replace(/\/+$/, '');
+  }
+
+  return (configuredBaseUrl || 'http://localhost:8000').replace(/\/+$/, '');
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export enum ErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',

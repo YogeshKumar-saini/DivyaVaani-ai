@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion, AnimatePresence } from "framer-motion";
@@ -178,6 +181,10 @@ export function AuthModal({
       }}
     >
       <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden bg-transparent border-0 shadow-none [&>button]:text-white/40 [&>button]:hover:text-white/70 [&>button]:z-50">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{heading}</DialogTitle>
+          <DialogDescription>{subheading}</DialogDescription>
+        </DialogHeader>
         {/* Glass card */}
         <div className="relative rounded-3xl border border-white/10 bg-slate-950/85 backdrop-blur-3xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.04)] overflow-hidden">
 
@@ -518,6 +525,9 @@ export function AuthModal({
                       shape="rectangular"
                       size="large"
                       width="400"
+                      text="continue_with"
+                      logo_alignment="left"
+                      locale="en"
                     />
                   </div>
                 </div>

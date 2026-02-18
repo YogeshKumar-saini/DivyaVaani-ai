@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { API_BASE_URL } from '@/lib/api/client';
 
 export interface StreamEvent {
   type: 'start' | 'thinking' | 'token' | 'metadata' | 'source' | 'done' | 'error';
@@ -67,7 +68,7 @@ export function useStreamingQuery() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/text/stream`, {
+      const response = await fetch(`${API_BASE_URL}/text/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

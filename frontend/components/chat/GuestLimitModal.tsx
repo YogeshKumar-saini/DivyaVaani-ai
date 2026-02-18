@@ -289,6 +289,10 @@ export function GuestLimitModal({
           >
             <div
               className="pointer-events-auto w-full max-w-[920px] relative rounded-[28px] overflow-hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="guest-limit-modal-title"
+              aria-describedby="guest-limit-modal-description"
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "linear-gradient(135deg, rgba(15,10,35,0.97) 0%, rgba(10,8,28,0.97) 50%, rgba(18,10,38,0.97) 100%)",
@@ -320,6 +324,7 @@ export function GuestLimitModal({
               {/* ── Close button ── */}
               <button
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full flex items-center justify-center text-white/30 hover:text-white/80 transition-all duration-200 group"
                 style={{
                   background: "rgba(255,255,255,0.05)",
@@ -386,7 +391,10 @@ export function GuestLimitModal({
                         </div>
                       </div>
                       <div>
-                        <h2 className="text-[21px] font-bold text-white tracking-tight leading-tight">
+                        <h2
+                          id="guest-limit-modal-title"
+                          className="text-[21px] font-bold text-white tracking-tight leading-tight"
+                        >
                           You&apos;ve reached your<br />
                           <span
                             className="bg-clip-text text-transparent"
@@ -395,7 +403,10 @@ export function GuestLimitModal({
                             free message limit
                           </span>
                         </h2>
-                        <p className="mt-1.5 text-[13px] text-white/35 font-light leading-relaxed">
+                        <p
+                          id="guest-limit-modal-description"
+                          className="mt-1.5 text-[13px] text-white/35 font-light leading-relaxed"
+                        >
                           Create a free account to continue seeking wisdom — unlimited.
                         </p>
                       </div>
@@ -698,6 +709,8 @@ export function GuestLimitModal({
                               shape="rectangular"
                               size="large"
                               width="400"
+                              text="continue_with"
+                              logo_alignment="left"
                             />
                           </div>
                         </div>
