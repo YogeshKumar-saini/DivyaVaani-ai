@@ -15,11 +15,44 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// Strip any trailing slash once so every path join is clean
-const BACKEND_ORIGIN = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
+function getBackendOrigin(req: NextRequest): { origin: string; error?: string } {
+  const raw = (process.env.BACKEND_URL ?? '').trim();
 
-if (!BACKEND_ORIGIN) {
-  console.error('[route.ts] BACKEND_URL is not set. Add it to frontend/.env.local or the Vercel dashboard.');
+  if (!raw) {
+    return {
+      origin: '',
+      error: 'BACKEND_URL is not set. Add it in Vercel Project Settings -> Environment Variables.',
+    };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return {
+      origin: '',
+      error: `BACKEND_URL is not a valid URL: "${raw}"`,
+    };
+  }
+
+  const frontendHost = req.headers.get('host') ?? '';
+  if (frontendHost && parsed.host === frontendHost) {
+    return {
+      origin: '',
+      error: `BACKEND_URL points to the frontend host (${parsed.host}). It must point to your backend server (for example http://<backend-ip>:8000).`,
+    };
+  }
+
+  if (parsed.pathname && parsed.pathname !== '/' && parsed.pathname.startsWith('/api')) {
+    return {
+      origin: '',
+      error: `BACKEND_URL should not include an /api path: "${raw}"`,
+    };
+  }
+
+  return {
+    origin: parsed.origin.replace(/\/+$/, ''),
+  };
 }
 
 // 25-second timeout — Vercel Hobby limit is 10s, Pro is 60s.
@@ -34,11 +67,14 @@ async function proxyRequest(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
-  if (!BACKEND_ORIGIN) {
+  const backend = getBackendOrigin(req);
+
+  if (backend.error) {
+    console.error(`[API proxy] Misconfigured BACKEND_URL: ${backend.error}`);
     return NextResponse.json(
       {
-        detail: 'Proxy misconfigured: BACKEND_URL environment variable is not set.',
-        hint: 'Add BACKEND_URL (e.g. http://<ip>:8000) to the Vercel dashboard → Settings → Environment Variables, then redeploy.',
+        detail: 'Proxy misconfigured',
+        hint: backend.error,
       },
       { status: 503 }
     );
@@ -49,7 +85,7 @@ async function proxyRequest(
   // Reconstruct the backend URL: /api/foo/bar?x=1 → BACKEND/foo/bar?x=1
   const pathStr = path.join('/');
   const search = req.nextUrl.search; // includes leading '?'
-  const targetUrl = `${BACKEND_ORIGIN}/${pathStr}${search}`;
+  const targetUrl = `${backend.origin}/${pathStr}${search}`;
 
   // Forward request body for methods that carry one
   const hasBody = !['GET', 'HEAD'].includes(req.method);
