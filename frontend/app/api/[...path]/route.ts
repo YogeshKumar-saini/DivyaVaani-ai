@@ -15,45 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-function getBackendOrigin(req: NextRequest): { origin: string; error?: string } {
-  const raw = (process.env.BACKEND_URL ?? '').trim();
-
-  if (!raw) {
-    return {
-      origin: '',
-      error: 'BACKEND_URL is not set. Add it in Vercel Project Settings -> Environment Variables.',
-    };
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    return {
-      origin: '',
-      error: `BACKEND_URL is not a valid URL: "${raw}"`,
-    };
-  }
-
-  const frontendHost = req.headers.get('host') ?? '';
-  if (frontendHost && parsed.host === frontendHost) {
-    return {
-      origin: '',
-      error: `BACKEND_URL points to the frontend host (${parsed.host}). It must point to your backend server (for example http://<backend-ip>:8000).`,
-    };
-  }
-
-  if (parsed.pathname && parsed.pathname !== '/' && parsed.pathname.startsWith('/api')) {
-    return {
-      origin: '',
-      error: `BACKEND_URL should not include an /api path: "${raw}"`,
-    };
-  }
-
-  return {
-    origin: parsed.origin.replace(/\/+$/, ''),
-  };
-}
+const BACKEND_ORIGIN = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
 
 // 25-second timeout — Vercel Hobby limit is 10s, Pro is 60s.
 // Keeps us well under the Pro limit while failing fast on a dead backend.
@@ -67,14 +29,10 @@ async function proxyRequest(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
-  const backend = getBackendOrigin(req);
-
-  if (backend.error) {
-    console.error(`[API proxy] Misconfigured BACKEND_URL: ${backend.error}`);
+  if (!BACKEND_ORIGIN) {
     return NextResponse.json(
       {
-        detail: 'Proxy misconfigured',
-        hint: backend.error,
+        detail: 'BACKEND_URL is not set',
       },
       { status: 503 }
     );
@@ -85,7 +43,7 @@ async function proxyRequest(
   // Reconstruct the backend URL: /api/foo/bar?x=1 → BACKEND/foo/bar?x=1
   const pathStr = path.join('/');
   const search = req.nextUrl.search; // includes leading '?'
-  const targetUrl = `${backend.origin}/${pathStr}${search}`;
+  const targetUrl = `${BACKEND_ORIGIN}/${pathStr}${search}`;
 
   // Forward request body for methods that carry one
   const hasBody = !['GET', 'HEAD'].includes(req.method);
