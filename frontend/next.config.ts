@@ -3,21 +3,21 @@ import type { NextConfig } from "next";
 /**
  * Backend origin used by the /api rewrite proxy.
  *
- * Priority (highest → lowest):
- *  1. BACKEND_URL  — server-only env var set in Vercel dashboard (recommended)
- *  2. Hardcoded EC2 production IP — ensures Vercel works even if the env var
- *     is not yet configured (safe default for this project)
+ * Set BACKEND_URL in:
+ *  - frontend/.env.local  for local development  (e.g. http://localhost:8000)
+ *  - Vercel dashboard → Environment Variables   for production
  *
- * For local development override with BACKEND_URL=http://localhost:8000 in
- * your .env.local file.
- *
- * ⚠️  Never use a NEXT_PUBLIC_ prefix here — the destination must NOT be
- *     exposed to the browser. The proxy runs server-side on Vercel's infra,
- *     so server→EC2 HTTP traffic is not subject to mixed-content policy.
+ * ⚠️  Never use a NEXT_PUBLIC_ prefix — the destination must NOT be exposed
+ *     to the browser. The proxy runs server-side so HTTP→backend traffic is
+ *     not subject to the browser's mixed-content policy.
  */
-const BACKEND_URL =
-  process.env.BACKEND_URL?.replace(/\/+$/, "") ||
-  "http://54.84.227.171:8000";
+const BACKEND_URL = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
+if (!BACKEND_URL) {
+  console.error(
+    '[next.config.ts] BACKEND_URL is not set. ' +
+    'Add it to frontend/.env.local or the Vercel dashboard.'
+  );
+}
 
 const nextConfig: NextConfig = {
   // "standalone" is for self-hosted Docker deployments only.

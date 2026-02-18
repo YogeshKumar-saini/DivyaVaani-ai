@@ -15,9 +15,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_ORIGIN =
-  process.env.BACKEND_URL?.replace(/\/+$/, '') ||
-  'http://54.84.227.171:8000';
+const BACKEND_ORIGIN = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
+if (!BACKEND_ORIGIN) {
+  console.error(
+    '[route.ts] BACKEND_URL is not set. ' +
+    'Add it to frontend/.env.local or the Vercel dashboard.'
+  );
+}
 
 /**
  * Forward a Next.js request to the backend and return the response.

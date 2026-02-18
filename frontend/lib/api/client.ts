@@ -3,41 +3,43 @@
  * Handles all HTTP requests with error handling, retry logic, and type safety
  */
 
-// ─── IMPORTANT: how the base URL is resolved ─────────────────────────────────
+// ─── How the base URL is resolved ────────────────────────────────────────────
 //
-// Browser  → always '/api'  (Next.js route handler proxies to EC2 server-side)
-//            The browser NEVER builds an absolute URL to the EC2 backend.
-//            This prevents "Blocked loading mixed active content" errors when
-//            the frontend is served over HTTPS (Vercel) and the backend is HTTP.
+// Browser  → always '/api'  (Next.js route handler proxies to backend)
+//            The browser NEVER uses an absolute backend URL.
+//            This prevents "mixed active content" blocks on HTTPS pages.
 //
-// Server   → process.env.BACKEND_URL  (server-only, set in Vercel dashboard)
-//            Falls back to the hardcoded EC2 address if the var is not set.
-//            This variable MUST NOT have a NEXT_PUBLIC_ prefix — doing so
-//            would expose the plain-HTTP URL to the browser bundle.
+// Server   → process.env.BACKEND_URL  (server-only, no NEXT_PUBLIC_ prefix)
+//            Set in Vercel dashboard → Environment Variables for production.
+//            Set in frontend/.env.local for local development.
 //
-// ⚠️  NEVER set NEXT_PUBLIC_API_BASE_URL in Vercel env vars.
-//     Next.js inlines NEXT_PUBLIC_* values at build time into the client JS.
-//     If it points to an HTTP URL, every browser request will be blocked.
-//     frontend/.env.production explicitly sets it to empty to prevent accidents.
+// ⚠️  NEVER set NEXT_PUBLIC_API_BASE_URL — Next.js inlines NEXT_PUBLIC_*
+//     values into the client bundle at build time. A plain-HTTP value there
+//     will cause mixed-content blocks in every browser.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const _isBrowser = typeof window !== 'undefined';
 
 /**
  * Returns the correct API base URL for the current runtime context.
- * Must only be called once at module load time (see API_BASE_URL export below).
+ * Called once at module load time (see API_BASE_URL export below).
  */
 function resolveApiBaseUrl(): string {
   if (_isBrowser) {
-    // Browser: always use the relative proxy path — never an absolute EC2 URL.
+    // Browser: always use the relative proxy path.
     return '/api';
   }
 
-  // Server (SSR / Next.js Route Handlers / build): read the server-only var.
-  const serverUrl =
-    (process.env.BACKEND_URL ?? '').trim() ||
-    'http://54.84.227.171:8000';
-
+  // Server: read the environment variable — no hardcoded server IP.
+  const serverUrl = (process.env.BACKEND_URL ?? '').trim();
+  if (!serverUrl) {
+    console.error(
+      '[client.ts] BACKEND_URL is not set. ' +
+      'Add it to frontend/.env.local for local dev or ' +
+      'Vercel dashboard → Environment Variables for production.'
+    );
+    return 'http://localhost:8000'; // safe fallback — only used server-side
+  }
   return serverUrl.replace(/\/+$/, '');
 }
 
