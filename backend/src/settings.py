@@ -44,7 +44,7 @@ class Settings(BaseModel):
     pinecone_region: str = Field(default="us-east-1")
 
     # Security
-    cors_origins: List[str] = Field(default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(","))
+    cors_origins: List[str] = Field(default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,https://divya-vaani-ai.vercel.app").split(","))
     
     # Auth
     secret_key: str = Field(default="09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
@@ -115,6 +115,7 @@ class Settings(BaseModel):
 
     # Frontend
     next_public_api_base_url: str = Field(default="http://localhost:8000")
+    frontend_url: str = Field(default="http://localhost:3000")
 
     # LiveKit Voice Agent Configuration
     livekit_url: Optional[str] = Field(default=None, description="LiveKit server URL")

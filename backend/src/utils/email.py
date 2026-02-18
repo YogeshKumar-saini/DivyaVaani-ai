@@ -55,9 +55,13 @@ def _get_connection_config() -> ConnectionConfig:
 
 
 def _get_frontend_base() -> str:
-    """Return the frontend base URL (strips :8000 from API URL if needed)."""
-    base = settings.next_public_api_base_url or "http://localhost:3000"
-    return base.replace(":8000", ":3000")
+    """Return the frontend base URL.
+
+    Set FRONTEND_URL in the backend .env / environment:
+      - Local:      FRONTEND_URL=http://localhost:3000
+      - Production: FRONTEND_URL=https://divya-vaani-ai.vercel.app
+    """
+    return (settings.frontend_url or "http://localhost:3000").rstrip("/")
 
 
 # ---------------------------------------------------------------------------

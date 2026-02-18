@@ -54,7 +54,7 @@ export class TextService {
       preferred_language: preferredLanguage,
     };
 
-    return apiClient.request<TextQueryResponse>('/text/', {
+    return apiClient.request<TextQueryResponse>('/text', {
       method: 'POST',
       body: JSON.stringify(requestBody),
     });

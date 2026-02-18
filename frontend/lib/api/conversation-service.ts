@@ -68,7 +68,7 @@ export class ConversationService {
       user_id: userId,
     });
     
-    return apiClient.request<Conversation>(`/conversations/?${params.toString()}`, {
+    return apiClient.request<Conversation>(`/conversations?${params.toString()}`, {
       method: 'POST',
       body: JSON.stringify({
         title: data.title,
@@ -91,7 +91,7 @@ export class ConversationService {
       offset: offset.toString(),
     });
     
-    return apiClient.request<Conversation[]>(`/conversations/?${params.toString()}`);
+    return apiClient.request<Conversation[]>(`/conversations?${params.toString()}`);
   }
 
   /**
