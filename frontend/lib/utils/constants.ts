@@ -8,8 +8,11 @@ export const APP_TAGLINE = "Universal Spiritual Wisdom Meets Modern AI";
 export const APP_DESCRIPTION =
   "Your divine spiritual companion powered by wisdom from all spiritual traditions";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+// ⚠️  Do NOT add API_BASE_URL here.
+// Use `import { apiClient } from '@/lib/api/client'` for all HTTP calls.
+// The API base URL is managed centrally in frontend/lib/api/client.ts so that
+// the browser always uses the /api rewrite proxy (avoiding mixed-content errors
+// on the HTTPS Vercel domain) while SSR uses the direct backend origin.
 
 export const ROUTES = {
   HOME: "/",

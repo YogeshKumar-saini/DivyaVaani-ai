@@ -25,12 +25,13 @@ function resolveApiBaseUrl(): string {
   }
 
   // ── Server (SSR / build) ──────────────────────────────────────────────────
-  // BACKEND_URL is a server-only env-var (no NEXT_PUBLIC_ prefix) set in
-  // Vercel to the actual backend origin, e.g. http://54.84.227.171:8000
+  // BACKEND_URL is a server-only env-var (no NEXT_PUBLIC_ prefix).
+  // Set it in Vercel dashboard: BACKEND_URL = http://54.84.227.171:8000
+  // Never read NEXT_PUBLIC_API_BASE_URL here — that var may be set to a plain
+  // HTTP URL in Vercel and would cause server→browser URL leakage if exposed.
   const serverUrl =
     process.env.BACKEND_URL?.trim() ||
-    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-    'http://localhost:8000';
+    'http://54.84.227.171:8000'; // production fallback — same as next.config.ts
 
   return serverUrl.replace(/\/+$/, '');
 }
