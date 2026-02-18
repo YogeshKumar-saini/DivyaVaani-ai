@@ -3,25 +3,36 @@
  * Handles all HTTP requests with error handling, retry logic, and type safety
  */
 
+/**
+ * Returns the API base URL.
+ *
+ * - In the BROWSER we always go through the Next.js `/api` rewrite proxy so
+ *   the browser never makes a plain-HTTP request to the EC2 backend, which
+ *   would be blocked as "mixed active content" when the frontend is served
+ *   over HTTPS (e.g. on Vercel).
+ *
+ * - On the SERVER (SSR / API routes) we can talk directly to the backend over
+ *   HTTP because server-to-server requests are not subject to the browser's
+ *   mixed-content policy. The URL is taken from the BACKEND_URL env-var (set
+ *   in Vercel as a server-only variable) with a fallback to the EC2 IP.
+ */
 function resolveApiBaseUrl(): string {
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-
+  // ── Client (browser) ──────────────────────────────────────────────────────
+  // Always use the /api proxy. next.config.ts rewrites /api/* → backend URL.
+  // This avoids mixed-content blocks entirely, regardless of env-var values.
   if (typeof window !== 'undefined') {
-    if (!configuredBaseUrl) {
-      return '/api';
-    }
-
-    if (window.location.protocol === 'https:' && configuredBaseUrl.startsWith('http://')) {
-      console.warn(
-        'Ignoring insecure NEXT_PUBLIC_API_BASE_URL on HTTPS origin. Falling back to /api proxy.'
-      );
-      return '/api';
-    }
-
-    return configuredBaseUrl.replace(/\/+$/, '');
+    return '/api';
   }
 
-  return (configuredBaseUrl || 'http://localhost:8000').replace(/\/+$/, '');
+  // ── Server (SSR / build) ──────────────────────────────────────────────────
+  // BACKEND_URL is a server-only env-var (no NEXT_PUBLIC_ prefix) set in
+  // Vercel to the actual backend origin, e.g. http://54.84.227.171:8000
+  const serverUrl =
+    process.env.BACKEND_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+    'http://localhost:8000';
+
+  return serverUrl.replace(/\/+$/, '');
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();

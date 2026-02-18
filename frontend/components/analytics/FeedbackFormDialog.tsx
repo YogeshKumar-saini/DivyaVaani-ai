@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -102,6 +103,18 @@ export function FeedbackFormDialog({ onSubmit }: FeedbackFormDialogProps) {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[500px] bg-[#0e0e16] border border-white/10 text-white shadow-2xl shadow-black/60 p-0 overflow-hidden">
+        {/*
+          Always-present accessible header (visually hidden).
+          Radix requires DialogTitle to be present whenever DialogContent
+          is mounted — even when AnimatePresence swaps to the success screen.
+        */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>Share Feedback</DialogTitle>
+          <DialogDescription>
+            Submit your feedback to help us improve DivyaVaani
+          </DialogDescription>
+        </DialogHeader>
+
         {/* Top accent line */}
         <div className="h-px w-full bg-linear-to-r from-transparent via-violet-500/50 to-transparent" />
 
