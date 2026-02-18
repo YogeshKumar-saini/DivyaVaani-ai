@@ -18,29 +18,27 @@
 //     will cause mixed-content blocks in every browser.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const _isBrowser = typeof window !== 'undefined';
-
 /**
  * Returns the correct API base URL for the current runtime context.
  * Called once at module load time (see API_BASE_URL export below).
+ *
+ * Browser  → '/api'           — proxied server-side, never a raw backend URL
+ * Server   → process.env.BACKEND_URL  — set in Vercel dashboard or .env.local
  */
 function resolveApiBaseUrl(): string {
-  if (_isBrowser) {
-    // Browser: always use the relative proxy path.
+  if (typeof window !== 'undefined') {
     return '/api';
   }
-
-  // Server: read the environment variable — no hardcoded server IP.
-  const serverUrl = (process.env.BACKEND_URL ?? '').trim();
-  if (!serverUrl) {
+  const url = (process.env.BACKEND_URL ?? '').trim();
+  if (!url) {
     console.error(
-      '[client.ts] BACKEND_URL is not set. ' +
-      'Add it to frontend/.env.local for local dev or ' +
-      'Vercel dashboard → Environment Variables for production.'
+      '[DivyaVaani] BACKEND_URL is not set. ' +
+      'Add BACKEND_URL to frontend/.env.local (local) or ' +
+      'Vercel → Settings → Environment Variables (production).'
     );
-    return 'http://localhost:8000'; // safe fallback — only used server-side
+    return 'http://localhost:8000';
   }
-  return serverUrl.replace(/\/+$/, '');
+  return url.replace(/\/+$/, '');
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
