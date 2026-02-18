@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.production is safe to commit — it contains no secrets, only overrides
+# that prevent NEXT_PUBLIC_API_BASE_URL from being baked into the client bundle.
+!.env.production
 
 # vercel
 .vercel
