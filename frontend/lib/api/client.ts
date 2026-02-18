@@ -27,18 +27,17 @@
  */
 function resolveApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
+    // Browser always uses the Next.js proxy — never a raw backend URL.
+    // This prevents mixed-content blocks on HTTPS pages.
     return '/api';
   }
-  const url = (process.env.BACKEND_URL ?? '').trim();
+  // Server-side: read BACKEND_URL (no NEXT_PUBLIC_ prefix → never in client bundle)
+  const url = process.env.BACKEND_URL ?? '';
   if (!url) {
-    console.error(
-      '[DivyaVaani] BACKEND_URL is not set. ' +
-      'Add BACKEND_URL to frontend/.env.local (local) or ' +
-      'Vercel → Settings → Environment Variables (production).'
-    );
+    console.error('[DivyaVaani] BACKEND_URL is not set. Add it to .env.local or the Vercel dashboard.');
     return 'http://localhost:8000';
   }
-  return url.replace(/\/+$/, '');
+  return url;
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();

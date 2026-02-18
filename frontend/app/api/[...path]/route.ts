@@ -15,12 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_ORIGIN = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
+const BACKEND_ORIGIN = process.env.BACKEND_URL ?? '';
 if (!BACKEND_ORIGIN) {
-  console.error(
-    '[route.ts] BACKEND_URL is not set. ' +
-    'Add it to frontend/.env.local or the Vercel dashboard.'
-  );
+  console.error('[route.ts] BACKEND_URL is not set. Add it to frontend/.env.local or the Vercel dashboard.');
 }
 
 /**
