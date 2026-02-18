@@ -3,223 +3,233 @@
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/lib/utils/constants';
 import { Button } from '@/components/ui/button';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Sparkles, ArrowRight, PlayCircle } from 'lucide-react';
-import { useRef, useState, useEffect, useCallback, memo } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, ArrowRight, ChevronDown, MessageCircle, Mic, Globe2, Shield } from 'lucide-react';
+import { useMemo } from 'react';
 
-const TypingDemo = memo(() => {
-  const [text, setText] = useState('');
-  const fullText = "What is the meaning of Dharma in my daily life?";
-  const [isTyping, setIsTyping] = useState(true);
+const heroStats = [
+  { label: 'Guided Answers', value: '1M+' },
+  { label: 'Languages', value: '12+' },
+  { label: 'Community Rating', value: '4.9★' },
+  { label: 'Active Seekers', value: '50K+' },
+];
 
-  useEffect(() => {
-    if (isTyping) {
-      if (text.length < fullText.length) {
-        const timeout = setTimeout(() => {
-          setText(fullText.slice(0, text.length + 1));
-        }, 80);
-        return () => clearTimeout(timeout);
-      } else {
-        setIsTyping(false);
-      }
-    }
-  }, [text, isTyping]);
+const FLOAT_PARTICLES = [
+  { top: '12%', left: '6%', size: 'h-1.5 w-1.5', delay: 0, dur: 7 },
+  { top: '25%', left: '90%', size: 'h-1 w-1', delay: 1.2, dur: 5.5 },
+  { top: '72%', left: '4%', size: 'h-2 w-2', delay: 0.6, dur: 9 },
+  { top: '80%', left: '88%', size: 'h-1.5 w-1.5', delay: 2, dur: 6.5 },
+  { top: '50%', left: '96%', size: 'h-1 w-1', delay: 0.3, dur: 8 },
+  { top: '38%', left: '2%', size: 'h-1 w-1', delay: 1.8, dur: 7.5 },
+];
 
-  return (
-    <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-3xl relative overflow-hidden group hover:border-indigo-200 transition-colors duration-500 gpu-accelerated">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-200/30 via-white/10 to-purple-200/30 pointer-events-none" />
-
-      <div className="flex items-center space-x-2 mb-8 relative z-10">
-        <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-        <div className="w-3 h-3 rounded-full bg-yellow-400/80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
-        <div className="w-3 h-3 rounded-full bg-green-400/80 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-      </div>
-
-      <div className="space-y-8 relative z-10">
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 rounded-full bg-orange-200 flex items-center justify-center text-lg font-bold text-orange-700 shrink-0 shadow-xl">
-            You
-          </div>
-          <div className="bg-white/10 rounded-2xl rounded-tl-none px-5 py-3 text-sm md:text-base text-white/90 backdrop-blur-md border border-white/5 font-medium tracking-wide">
-            {text}<span className="animate-pulse text-orange-400">|</span>
-          </div>
-        </div>
-
-        {!isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-start space-x-4"
-          >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shrink-0 border border-white/10 shadow-[0_0_15px_rgba(249,115,22,0.6)]">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div className="bg-gradient-to-br from-orange-500/10 to-red-600/10 border border-orange-500/20 rounded-2xl rounded-tr-none px-5 py-4 text-sm md:text-base text-gray-100 leading-relaxed backdrop-blur-md shadow-inner">
-              <span className="text-orange-200 font-semibold block mb-1">DivyaVaani Analysis:</span>
-              Dharma is your essential nature and righteous duty. In daily life, it means acting with integrity, compassion, and aligning your actions with the greater good of all beings.
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
-});
-
-TypingDemo.displayName = 'TypingDemo';
-
-export const HeroSection = memo(() => {
+export function HeroSection() {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 100]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
-  const handleStartChat = useCallback(() => {
-    router.push(ROUTES.CHAT || '/chat');
-  }, [router]);
-
-  const handleLearnMore = useCallback(() => {
-    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+  const quickQuestions = useMemo(
+    () => [
+      { q: 'How can I stay calm when life feels uncertain?', icon: MessageCircle },
+      { q: 'What does karma mean in daily choices?', icon: Globe2 },
+      { q: 'Give me a morning reflection for gratitude.', icon: Mic },
+    ],
+    []
+  );
 
   return (
-    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Video Background with optimized loading */}
-      <motion.div
-        style={{ y }}
-        className="absolute inset-0 z-0"
-      >
-        <div className="absolute inset-0 bg-black/40 z-10" />
+    <section className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* ── Video background ── */}
+      <div className="absolute inset-0 -z-20 overflow-hidden">
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover scale-110"
-        >
-          <source src="/background.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black z-20" />
-      </motion.div>
+          className="h-full w-full object-cover scale-105"
+          src="/background.mp4"
+        />
+        <div className="absolute inset-0 bg-black/55" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(135deg,rgba(6,182,212,0.22) 0%,rgba(245,158,11,0.12) 55%,transparent 100%)',
+          }}
+        />
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-black/90 to-transparent" />
+      </div>
 
-      <motion.div
-        style={{ y, opacity }}
-        className="container relative z-20 px-4 pt-20 grid lg:grid-cols-2 gap-16 items-center min-h-[calc(100vh-80px)]"
-      >
-        {/* Text Content */}
-        <div className="text-center lg:text-left space-y-10">
+      {/* Floating particles */}
+      {FLOAT_PARTICLES.map((p, i) => (
+        <motion.div
+          key={i}
+          className={`absolute ${p.size} rounded-full bg-cyan-300/60 blur-[1px] pointer-events-none`}
+          style={{ top: p.top, left: p.left }}
+          animate={{ y: [0, -18, 0], opacity: [0.4, 1, 0.4] }}
+          transition={{ repeat: Infinity, duration: p.dur, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* Decorative glows */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute -top-40 left-1/2 h-128 w-240 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[140px]" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-amber-300/10 blur-[120px]" />
+        <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-violet-400/10 blur-[120px]" />
+      </div>
+
+      {/* ── Main content ── */}
+      <div className="section-shell flex flex-1 flex-col justify-center gap-14 py-32 lg:flex-row lg:items-center lg:gap-12">
+
+        {/* Left column */}
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className="flex-1 space-y-8 lg:max-w-[54%]"
+        >
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="inline-flex items-center space-x-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 md:px-5 md:py-2 mb-4 md:mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:bg-white/10 transition-colors cursor-default gpu-accelerated"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="status-pill w-fit"
           >
-            <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-orange-400 animate-pulse" />
-            <span className="text-orange-100 text-xs md:text-sm font-medium tracking-wide uppercase">Next Gen Spiritual AI</span>
+            <Sparkles className="mr-2 h-3.5 w-3.5 animate-pulse" />
+            Spiritual guidance · Modern interface
           </motion.div>
 
+          {/* Headline */}
           <div className="space-y-4">
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl md:text-8xl font-bold tracking-tighter text-white leading-[1.05]"
-            >
-              Wisdom of <br />
-              <span className="text-white">the Ages,</span>
-            </motion.h1>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter"
-            >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-200 to-orange-400 animate-gradient-x pb-2">
-                Powered by AI
-              </span>
-            </motion.h1>
+            <h1 className="text-4xl font-bold leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
+              Seek clarity with
+              <span className="text-gradient mt-1 block">AI grounded in<br />timeless wisdom.</span>
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-slate-300/90 sm:text-lg">
+              DivyaVaani helps you ask difficult questions and receive thoughtful answers
+              rooted in spiritual texts — contextualised for your everyday life.
+            </p>
           </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-lg md:text-xl text-gray-300/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light tracking-wide"
-          >
-            DivyaVaani unifies knowledge from all major spiritual traditions to provide you with profound, personalized guidance on your life&apos;s journey.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 w-full sm:w-auto"
-          >
+          {/* CTA buttons */}
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
-              onClick={handleStartChat}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:scale-110 active:scale-95 transition-all duration-300 font-bold text-base sm:text-lg shadow-[0_0_40px_rgba(79,70,229,0.5)] hover:shadow-[0_0_80px_rgba(79,70,229,0.7)] border-none w-full sm:w-auto overflow-hidden relative group gpu-accelerated"
+              onClick={() => router.push(ROUTES.CHAT || '/chat')}
+              className="group h-[3.25rem] rounded-full border border-cyan-200/50 bg-linear-to-r from-cyan-300 to-amber-200 px-8 text-sm font-semibold text-slate-950 shadow-[0_0_30px_rgba(6,182,212,0.35)] transition-all hover:shadow-[0_0_50px_rgba(6,182,212,0.55)] hover:scale-[1.03]"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-300 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700" />
-              <span className="relative z-10 flex items-center justify-center">
-                Start Journey <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-              </span>
+              Start a Conversation
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button
               variant="outline"
               size="lg"
-              onClick={handleLearnMore}
-              className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-950/30 border-indigo-300/40 text-white hover:bg-indigo-900/50 hover:border-indigo-300/70 hover:scale-105 active:scale-95 backdrop-blur-xl w-full sm:w-auto font-medium text-base sm:text-lg transition-all duration-300 group overflow-hidden relative gpu-accelerated"
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              className="h-[3.25rem] rounded-full border-white/20 bg-white/5 px-8 text-sm text-white backdrop-blur-sm hover:bg-white/10 hover:border-white/35"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <PlayCircle className="mr-2 w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" /> 
-              <span className="relative z-10">How it Works</span>
+              Explore Features
             </Button>
-          </motion.div>
+          </div>
 
+          {/* Stats row */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 1 }}
-            className="pt-8 flex flex-wrap items-center justify-center lg:justify-start gap-y-4 gap-x-6 sm:gap-10 text-white/40 text-sm font-medium tracking-widest uppercase"
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-white/10 pt-6"
           >
-            <div className="flex items-center gap-2">
-              <span className="block text-xl font-bold text-white">1M+</span> Answers
-            </div>
-            <div className="w-1 h-1 rounded-full bg-white/20" />
-            <div className="flex items-center gap-2">
-              <span className="block text-xl font-bold text-white">12+</span> Languages
-            </div>
-            <div className="w-1 h-1 rounded-full bg-white/20" />
-            <div className="flex items-center gap-2">
-              <span className="block text-xl font-bold text-white">4.9</span> Rating
-            </div>
+            {heroStats.map((item) => (
+              <div key={item.label} className="text-center sm:text-left">
+                <p className="text-2xl font-bold text-white">{item.value}</p>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
+              </div>
+            ))}
           </motion.div>
-        </div>
 
-        {/* Visual / Demo */}
+          {/* Trust badge */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center gap-2 text-xs text-slate-400"
+          >
+            <Shield className="h-3.5 w-3.5 text-emerald-400" />
+            100% private · No data sold · Open-source friendly
+          </motion.div>
+        </motion.div>
+
+        {/* Right column — card */}
         <motion.div
-          initial={{ opacity: 0, x: 50, rotate: 5 }}
-          animate={{ opacity: 1, x: 0, rotate: 0 }}
-          transition={{ duration: 1.2, delay: 0.6, type: "spring", bounce: 0.3 }}
-          className="hidden lg:flex justify-end relative perspective-1000"
+          initial={{ opacity: 0, y: 28, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="w-full lg:max-w-[42%]"
         >
-          {/* Abstract Glow Behind Card */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-indigo-500/25 to-purple-500/20 rounded-full blur-[100px] -z-10 animate-pulse-slow" aria-hidden="true" />
+          <div className="relative rounded-3xl border border-white/10 bg-white/5 p-1 backdrop-blur-2xl shadow-[0_32px_80px_rgba(2,6,23,0.55)]">
+            {/* Coloured glow ring behind card */}
+            <div className="absolute -inset-px rounded-3xl bg-linear-to-br from-cyan-400/20 via-transparent to-amber-300/15 opacity-60 blur-sm pointer-events-none" />
 
-          <div className="transform transition-transform hover:scale-[1.02] duration-500 hover:-rotate-1 gpu-accelerated">
-            <TypingDemo />
+            <div className="relative rounded-[1.4rem] border border-white/8 bg-black/30 p-5 sm:p-6">
+              {/* Card header */}
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/80">
+                  Live Prompt Ideas
+                </p>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 border border-emerald-400/25">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Available now
+                </span>
+              </div>
+
+              {/* Questions */}
+              <div className="space-y-3">
+                {quickQuestions.map(({ q, icon: Icon }, index) => (
+                  <motion.button
+                    key={q}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                    whileHover={{ scale: 1.015, x: 4 }}
+                    onClick={() => router.push(`${ROUTES.CHAT || '/chat'}?q=${encodeURIComponent(q)}`)}
+                    className="w-full rounded-2xl border border-white/8 bg-white/5 p-4 text-left transition-all duration-200 hover:border-cyan-300/30 hover:bg-white/8 hover:shadow-[0_8px_24px_rgba(6,182,212,0.15)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 shrink-0 rounded-xl border border-cyan-200/30 bg-cyan-300/12 p-2 text-cyan-200">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <p className="text-sm leading-relaxed text-slate-200">{q}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Tip */}
+              <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/8 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200/70">Tip</p>
+                <p className="pt-1 text-sm text-amber-50/90">
+                  Ask short, specific questions first — then follow up to go deeper.
+                </p>
+              </div>
+            </div>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
 
-      {/* Bottom Fade */}
-      <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black via-black/50 to-transparent z-20 pointer-events-none" />
-    </div>
+      {/* Scroll down indicator */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
+        aria-label="Scroll down"
+      >
+        <span className="text-[10px] uppercase tracking-[0.2em]">Explore</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+        >
+          <ChevronDown className="h-5 w-5" />
+        </motion.div>
+      </motion.button>
+    </section>
   );
-});
-
-HeroSection.displayName = 'HeroSection';
+}

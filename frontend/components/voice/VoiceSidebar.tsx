@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mic, Volume2, Languages, Activity, Settings2, Sparkles, Check } from 'lucide-react';
+import { X, Mic, Volume2, Languages, Activity, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -9,25 +9,30 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { GrainOverlay } from '@/components/ui/GrainOverlay';
-import { motion } from 'framer-motion';
+
 
 interface VoiceSidebarProps {
   onClose: () => void;
+  isPanel?: boolean;
 }
 
-export function VoiceSidebar({ onClose }: VoiceSidebarProps) {
+export function VoiceSidebar({ onClose, isPanel = false }: VoiceSidebarProps) {
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
   const [voiceVolume, setVoiceVolume] = useState(70);
   const [micSensitivity, setMicSensitivity] = useState(60);
   const [noiseReduction, setNoiseReduction] = useState(true);
 
   return (
-    <div className="flex h-full flex-col relative overflow-hidden bg-black/40 text-foreground">
+    <div className={cn("flex h-full flex-col relative overflow-hidden bg-black/40 text-foreground", isPanel && "bg-transparent")}>
       <GrainOverlay />
 
-      {/* Background gradients */}
-      <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-purple-500/10 to-transparent pointer-events-none" />
+      {/* Background gradients - adjust for panel */}
+      {!isPanel && (
+        <>
+          <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-purple-500/10 to-transparent pointer-events-none" />
+        </>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/10 p-6 relative z-10 bg-black/20 backdrop-blur-md">
@@ -40,14 +45,16 @@ export function VoiceSidebar({ onClose }: VoiceSidebarProps) {
             <p className="text-xs text-white/50">Configure your audio experience</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 rounded-full"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        {!isPanel && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Settings Content */}
@@ -167,7 +174,7 @@ export function VoiceSidebar({ onClose }: VoiceSidebarProps) {
       {/* Footer */}
       <div className="p-4 bg-black/40 border-t border-white/5 backdrop-blur-xl relative z-10">
         <Button className="w-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-purple-900/20" onClick={onClose}>
-          <Check className="h-4 w-4 mr-2" /> Save & Close
+          <Check className="h-4 w-4 mr-2" /> {isPanel ? "Save Settings" : "Save & Close"}
         </Button>
       </div>
     </div>

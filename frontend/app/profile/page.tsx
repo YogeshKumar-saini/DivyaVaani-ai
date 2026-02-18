@@ -5,20 +5,29 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth-provider';
 import { authService } from '@/lib/api/auth-service';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShieldCheck, BadgeCheck, Clock3, LogOut, User, Lock, Mail, Camera } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { GrainOverlay } from '@/components/ui/GrainOverlay';
+import {
+  ShieldCheck, BadgeCheck, Clock3, LogOut, User, Lock, Mail,
+  Camera, CheckCircle2, Pencil
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+const fadeUp: import('framer-motion').Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (d: number = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: d, ease: [0.4, 0, 0.2, 1] } }),
+};
+
+type Tab = 'profile' | 'security';
 
 export default function ProfilePage() {
   const { user, token, logout } = useAuth();
   const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState<Tab>('profile');
 
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -41,14 +50,9 @@ export default function ProfilePage() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-
     setIsProfileLoading(true);
-
     try {
-      await authService.updateProfile(token, {
-        full_name: fullName,
-        avatar_url: avatarUrl,
-      });
+      await authService.updateProfile(token, { full_name: fullName, avatar_url: avatarUrl });
       toast.success('Profile updated successfully');
       window.location.reload();
     } catch (err: unknown) {
@@ -61,19 +65,13 @@ export default function ProfilePage() {
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-
     if (newPassword !== confirmPassword) {
       toast.error('New passwords do not match');
       return;
     }
-
     setIsPasswordLoading(true);
-
     try {
-      await authService.updatePassword(token, {
-        old_password: oldPassword,
-        new_password: newPassword,
-      });
+      await authService.updatePassword(token, { old_password: oldPassword, new_password: newPassword });
       toast.success('Password updated successfully');
       setOldPassword('');
       setNewPassword('');
@@ -87,184 +85,334 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
+  const initials = user.full_name
+    ? user.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user.email.charAt(0).toUpperCase();
+
+  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'security', label: 'Security', icon: Lock },
+  ];
+
+  const statusItems = [
+    { icon: BadgeCheck, label: 'Profile active', color: 'text-emerald-400', bg: 'bg-emerald-500/8 border-emerald-500/15' },
+    { icon: ShieldCheck, label: 'Account secure', color: 'text-blue-400', bg: 'bg-blue-500/8 border-blue-500/15' },
+    { icon: Clock3, label: 'Last update: now', color: 'text-violet-400', bg: 'bg-violet-500/8 border-violet-500/15' },
+  ];
+
   return (
-    <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <GrainOverlay />
+    <div className="min-h-screen py-6 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Ambient orbs */}
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-violet-900/8 blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-900/6 blur-[100px] pointer-events-none" />
 
-      {/* Background gradients */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
+      <div className="mx-auto max-w-5xl relative z-10 space-y-6">
 
-      <motion.div
-        className="mx-auto max-w-6xl space-y-8 relative z-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <section className="rounded-3xl border border-white/10 bg-black/20 p-8 md:p-10 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70">Account Settings</h1>
-            <p className="mt-2 text-white/60 text-lg font-light">Manage your profile, security, and account hygiene.</p>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { icon: BadgeCheck, text: "Profile completion: Active", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-                { icon: ShieldCheck, text: "Security posture: Good", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-                { icon: Clock3, text: "Last updated: just now", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" }
-              ].map((item, i) => (
-                <div key={i} className={`rounded-xl border ${item.bg} p-4 text-sm text-white/80 flex items-center gap-3 backdrop-blur-sm`}>
-                  <item.icon className={`h-5 w-5 ${item.color}`} />
-                  {item.text}
+        {/* Page header */}
+        <motion.div
+          variants={fadeUp} custom={0} initial="hidden" animate="visible"
+          className="rounded-2xl bg-white/3 border border-white/7 p-6 md:p-8 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-linear-to-br from-violet-600/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-violet-500/30 to-transparent" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1 text-[11px] font-semibold tracking-[0.15em] uppercase text-white/40 mb-3">
+                <User className="h-3 w-3 text-violet-400" />
+                Account
+              </div>
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-white leading-tight">Account Settings</h1>
+              <p className="mt-1 text-white/40 text-[14px] font-light">Manage your profile information and security.</p>
+            </div>
+            <div className="sm:ml-auto flex flex-wrap items-center gap-2">
+              {statusItems.map((item) => (
+                <div key={item.label}
+                  className={`flex items-center gap-2 rounded-xl border ${item.bg} px-3 py-1.5 text-[12px] text-white/60`}
+                >
+                  <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
+                  {item.label}
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <Card className="lg:col-span-1 border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl h-fit">
-            <CardContent className="pt-8 pb-8 flex flex-col items-center">
-              <div className="relative group cursor-pointer">
-                <Avatar className="h-32 w-32 mb-6 ring-4 ring-white/10 shadow-2xl group-hover:ring-primary/50 transition-all duration-500">
+        {/* Main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+          {/* Sidebar / Avatar card */}
+          <motion.div
+            variants={fadeUp} custom={0.08} initial="hidden" animate="visible"
+            className="lg:col-span-1"
+          >
+            <div className="rounded-2xl bg-white/3 border border-white/7 p-6 flex flex-col items-center text-center">
+              {/* Avatar */}
+              <div className="relative group mb-4">
+                <Avatar className="h-24 w-24 ring-2 ring-white/10 group-hover:ring-violet-500/40 transition-all duration-500 shadow-2xl">
                   <AvatarImage src={user.avatar_url} className="object-cover" />
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-bold">
-                    {user.full_name?.charAt(0) || user.email.charAt(0)}
+                  <AvatarFallback className="bg-linear-to-br from-violet-600/50 to-indigo-600/50 text-white text-2xl font-bold tracking-tight">
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-2 -right-2 p-2 bg-black/80 rounded-full border border-white/20 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Camera className="h-4 w-4" />
+                <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer shadow-lg">
+                  <Camera className="h-3.5 w-3.5 text-white/60" />
                 </div>
               </div>
 
-              <h2 className="font-bold text-xl text-center text-white mb-1">{user.full_name || 'User'}</h2>
-              <p className="text-sm text-white/50 text-center mb-6 break-all font-mono bg-white/5 px-2 py-1 rounded-md border border-white/5">{user.email}</p>
+              <h2 className="font-bold text-white text-[16px] leading-tight">{user.full_name || 'User'}</h2>
+              <p className="text-[12px] text-white/35 mt-1 break-all font-mono">{user.email}</p>
 
-              <Button
-                variant="outline"
-                className="w-full bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 font-medium h-10 transition-all"
+              {/* Divider */}
+              <div className="w-full h-px bg-white/6 my-4" />
+
+              {/* Nav tabs (on mobile/col) */}
+              <nav className="w-full space-y-1">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const active = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200',
+                        active
+                          ? 'bg-violet-600/15 text-violet-300 border border-violet-500/20'
+                          : 'text-white/40 hover:text-white/70 hover:bg-white/4'
+                      )}
+                    >
+                      <Icon className={cn('h-4 w-4', active ? 'text-violet-400' : 'text-white/30')} />
+                      {tab.label}
+                      {active && (
+                        <motion.div layoutId="tab-dot" className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-white/6 my-4" />
+
+              <button
                 onClick={logout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/15 bg-red-500/8 text-red-400/80 hover:bg-red-500/15 hover:text-red-300 text-[13px] font-medium transition-all duration-200"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4" />
                 Sign Out
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </motion.div>
 
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="mb-6 bg-black/20 border border-white/10 p-1 w-full sm:w-auto h-12 rounded-xl backdrop-blur-md">
-                <TabsTrigger value="profile" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 h-10 px-6 rounded-lg transition-all">Profile Details</TabsTrigger>
-                <TabsTrigger value="password" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 h-10 px-6 rounded-lg transition-all">Security</TabsTrigger>
-              </TabsList>
+          {/* Tab content */}
+          <motion.div
+            variants={fadeUp} custom={0.15} initial="hidden" animate="visible"
+            className="lg:col-span-3"
+          >
+            <AnimatePresence mode="wait">
+              {activeTab === 'profile' && (
+                <motion.div
+                  key="profile-tab"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="rounded-2xl bg-white/3 border border-white/7 overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 px-6 py-5 border-b border-white/6">
+                    <div className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/15">
+                      <Pencil className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-white font-semibold text-[15px]">Profile Information</h2>
+                      <p className="text-white/35 text-[12px]">Update your personal details</p>
+                    </div>
+                  </div>
 
-              <TabsContent value="profile" className="mt-0">
-                <Card className="border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Profile Information</CardTitle>
-                    <CardDescription className="text-white/50">Update your personal details visible to others.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleProfileUpdate} className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-white/80">Email Address</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                          <Input id="email" value={user.email} disabled className="pl-10 bg-white/5 border-white/10 text-white/50 cursor-not-allowed selection:bg-white/20" />
+                  <form onSubmit={handleProfileUpdate} className="p-6 space-y-5">
+                    {/* Email (read-only) */}
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] uppercase tracking-widest text-white/35 font-semibold flex items-center gap-1.5">
+                        <Mail className="h-3 w-3" />
+                        Email Address
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={user.email}
+                          disabled
+                          className="bg-white/2 border-white/6 text-white/40 cursor-not-allowed font-mono text-[13px] h-11 rounded-xl"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <span className="text-[10px] text-white/20 bg-white/5 px-2 py-0.5 rounded-full">read-only</span>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-white/80">Full Name</Label>
+                    {/* Full Name */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="fullName" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold flex items-center gap-1.5">
+                        <User className="h-3 w-3" />
+                        Full Name
+                      </Label>
+                      <Input
+                        id="fullName"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Your display name"
+                        className="bg-white/3 border-white/8 text-white h-11 rounded-xl focus:border-violet-500/40 focus:bg-white/5 transition-all placeholder:text-white/20"
+                      />
+                    </div>
+
+                    {/* Avatar URL */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="avatarUrl" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold flex items-center gap-1.5">
+                        <Camera className="h-3 w-3" />
+                        Avatar URL
+                      </Label>
+                      <Input
+                        id="avatarUrl"
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        placeholder="https://example.com/avatar.jpg"
+                        className="bg-white/3 border-white/8 text-white h-11 rounded-xl focus:border-violet-500/40 focus:bg-white/5 transition-all placeholder:text-white/20"
+                      />
+                      <p className="text-[11px] text-white/25">Link to a publicly accessible image (PNG, JPG, WebP)</p>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={isProfileLoading}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-[13px] font-semibold shadow-lg shadow-violet-900/25 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {isProfileLoading ? (
+                          <>
+                            <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            Save Changes
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+
+              {activeTab === 'security' && (
+                <motion.div
+                  key="security-tab"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="rounded-2xl bg-white/3 border border-white/7 overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 px-6 py-5 border-b border-white/6">
+                    <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/15">
+                      <Lock className="h-4 w-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-white font-semibold text-[15px]">Change Password</h2>
+                      <p className="text-white/35 text-[12px]">Keep your account safe with a strong password</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handlePasswordUpdate} className="p-6 space-y-5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="oldPassword" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold">
+                        Current Password
+                      </Label>
+                      <Input
+                        id="oldPassword"
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        required
+                        placeholder="••••••••"
+                        className="bg-white/3 border-white/8 text-white h-11 rounded-xl focus:border-violet-500/40 focus:bg-white/5 transition-all placeholder:text-white/15"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="newPassword" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold">
+                          New Password
+                        </Label>
                         <Input
-                          id="fullName"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-white/20 transition-all h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="avatarUrl" className="text-white/80">Avatar URL</Label>
-                        <Input
-                          id="avatarUrl"
-                          value={avatarUrl}
-                          onChange={(e) => setAvatarUrl(e.target.value)}
-                          placeholder="https://example.com/avatar.jpg"
-                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-white/20 transition-all h-11"
-                        />
-                        <p className="text-xs text-white/40">Link to an image file (PNG, JPG) for your profile picture.</p>
-                      </div>
-
-                      <div className="flex justify-end pt-4">
-                        <Button type="submit" disabled={isProfileLoading} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-11 px-8 rounded-xl font-semibold">
-                          {isProfileLoading ? 'Saving Changes...' : 'Save Changes'}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="password" className="mt-0">
-                <Card className="border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2"><Lock className="h-5 w-5 text-primary" /> Change Password</CardTitle>
-                    <CardDescription className="text-white/50">Ensure your account uses a strong, unique password.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="oldPassword" className="text-white/80">Current Password</Label>
-                        <Input
-                          id="oldPassword"
+                          id="newPassword"
                           type="password"
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
                           required
-                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
+                          minLength={8}
+                          placeholder="Min. 8 characters"
+                          className="bg-white/3 border-white/8 text-white h-11 rounded-xl focus:border-violet-500/40 focus:bg-white/5 transition-all placeholder:text-white/15"
                         />
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="newPassword" className="text-white/80">New Password</Label>
-                          <Input
-                            id="newPassword"
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required
-                            minLength={8}
-                            className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="confirmPassword" className="text-white/80">Confirm New Password</Label>
-                          <Input
-                            id="confirmPassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                            minLength={8}
-                            className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
-                          />
-                        </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="confirmPassword" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold">
+                          Confirm Password
+                        </Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          placeholder="Repeat new password"
+                          className={cn(
+                            'bg-white/3 border-white/8 text-white h-11 rounded-xl focus:bg-white/5 transition-all placeholder:text-white/15',
+                            confirmPassword && newPassword !== confirmPassword
+                              ? 'border-red-500/40 focus:border-red-500/40'
+                              : 'focus:border-violet-500/40'
+                          )}
+                        />
+                        {confirmPassword && newPassword !== confirmPassword && (
+                          <p className="text-[11px] text-red-400/70 mt-1">Passwords do not match</p>
+                        )}
                       </div>
+                    </div>
 
-                      <div className="flex justify-end pt-4">
-                        <Button type="submit" disabled={isPasswordLoading} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-11 px-8 rounded-xl font-semibold">
-                          {isPasswordLoading ? 'Updating...' : 'Update Password'}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+                    {/* Password strength hint */}
+                    <div className="rounded-xl border border-white/6 bg-white/2 px-4 py-3 text-[12px] text-white/30 space-y-1">
+                      <p className="font-semibold text-white/25 text-[10px] uppercase tracking-wider mb-1.5">Password tips</p>
+                      <p>• At least 8 characters long</p>
+                      <p>• Mix uppercase, numbers & symbols</p>
+                      <p>• Avoid reusing old passwords</p>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={isPasswordLoading || (!!confirmPassword && newPassword !== confirmPassword)}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-[13px] font-semibold shadow-lg shadow-violet-900/25 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {isPasswordLoading ? (
+                          <>
+                            <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="h-4 w-4" />
+                            Update Password
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
+

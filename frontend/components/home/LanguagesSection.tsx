@@ -30,9 +30,9 @@ const FEATURES_LIST = [
 export function LanguagesSection() {
   return (
     <section className="relative py-16 md:py-32 overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
-      <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] -z-10 animate-pulse-slow" />
+      {/* Subtle edge glows – transparent so scroll background shows */}
+      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] rounded-full blur-[120px] -z-10 pointer-events-none opacity-25" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)' }} />
+      <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full blur-[120px] -z-10 pointer-events-none opacity-25" style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.18) 0%, transparent 70%)' }} />
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         {/* Header */}
@@ -52,7 +52,7 @@ export function LanguagesSection() {
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
             Speak in Your{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-400 to-pink-400">
               Native Tongue
             </span>
           </h2>
@@ -72,7 +72,7 @@ export function LanguagesSection() {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-50" />
+            <div className="absolute -inset-4 bg-linear-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-50" />
 
             <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -100,7 +100,7 @@ export function LanguagesSection() {
                     </div>
 
                     {/* Hover glow */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   </motion.div>
                 ))}
               </div>
@@ -113,7 +113,7 @@ export function LanguagesSection() {
                 transition={{ delay: 0.6 }}
                 className="mt-6 text-center"
               >
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full px-5 py-2">
+                <div className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-full px-5 py-2">
                   <Sparkles className="w-4 h-4 text-blue-300" />
                   <span className="text-sm font-bold text-blue-100">
                     12+ Languages Supported
@@ -141,7 +141,7 @@ export function LanguagesSection() {
                   transition={{ delay: idx * 0.1, duration: 0.5 }}
                   className="flex items-start space-x-4 group"
                 >
-                  <div className="shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="shrink-0 h-8 w-8 rounded-full bg-linear-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <Check className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
@@ -169,9 +169,9 @@ export function LanguagesSection() {
               transition={{ delay: 0.8 }}
               className="pt-6"
             >
-              <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-md">
+              <div className="bg-linear-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-md">
                 <div className="flex items-center space-x-3 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                     <Globe2 className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-white">
@@ -196,7 +196,7 @@ export function LanguagesSection() {
           className="relative"
         >
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-purple-500/20 to-transparent rounded-full blur-3xl" />
 
             <div className="relative z-10">
               <h3 className="text-2xl md:text-3xl font-bold text-center text-white mb-8">
@@ -221,7 +221,7 @@ export function LanguagesSection() {
                     whileHover={{ scale: 1.03 }}
                     className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all duration-300"
                   >
-                    <div className={`inline-block text-xs font-bold bg-gradient-to-r ${item.color} text-transparent bg-clip-text mb-2 uppercase tracking-wider`}>
+                    <div className={`inline-block text-xs font-bold bg-linear-to-r ${item.color} text-transparent bg-clip-text mb-2 uppercase tracking-wider`}>
                       {item.lang}
                     </div>
                     <p className="text-white/90 text-sm leading-relaxed font-light">

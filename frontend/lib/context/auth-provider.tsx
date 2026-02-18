@@ -8,8 +8,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (data: LoginData) => Promise<void>;
-  googleLogin: (token: string) => Promise<void>;
+  login: (data: LoginData, options?: { redirectTo?: string | false }) => Promise<void>;
+  googleLogin: (token: string, options?: { redirectTo?: string | false }) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
 }
@@ -41,28 +41,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (data: LoginData) => {
+  const login = async (data: LoginData, options?: { redirectTo?: string | false }) => {
     const { access_token } = await authService.login(data);
     localStorage.setItem('token', access_token);
     setToken(access_token);
     const userData = await authService.me(access_token);
     setUser(userData);
-    router.push('/');
+    // redirectTo: false = no redirect; undefined = default '/'; string = custom path
+    if (options?.redirectTo !== false) {
+      router.push(options?.redirectTo ?? '/');
+    }
   };
 
-  const googleLogin = async (googleToken: string) => {
+  const googleLogin = async (googleToken: string, options?: { redirectTo?: string | false }) => {
     const { access_token } = await authService.googleLogin(googleToken);
     localStorage.setItem('token', access_token);
     setToken(access_token);
     const userData = await authService.me(access_token);
     setUser(userData);
-    router.push('/');
-  }
+    if (options?.redirectTo !== false) {
+      router.push(options?.redirectTo ?? '/');
+    }
+  };
 
   const register = async (data: RegisterData) => {
+    // Just call the API – callers (register page / auth modal) handle
+    // post-registration UX (success screen, tab switch, redirect to login).
     await authService.register(data);
-    // After registration, user can login
-    router.push('/');
   };
 
   const logout = () => {

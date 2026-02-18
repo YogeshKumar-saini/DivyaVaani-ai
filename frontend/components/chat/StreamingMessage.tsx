@@ -29,7 +29,7 @@ export function StreamingMessage({
       <div className="px-4 lg:px-8">
         {/* Bot message bubble with streaming content */}
         <div className="flex items-start gap-3 mb-4">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <div className="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center">
             <span className="text-white text-sm font-semibold">🕉️</span>
           </div>
 

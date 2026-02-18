@@ -40,9 +40,8 @@ export function NewsletterSection() {
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/10 via-white/10 to-purple-950/10 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[120px] animate-pulse-slow" />
+      {/* Ambient glow only – no opaque overlay */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] rounded-full blur-[120px] pointer-events-none opacity-35" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, rgba(147,51,234,0.1) 40%, transparent 70%)' }} />
 
       <div className="container relative z-10 mx-auto max-w-5xl px-4">
         <motion.div
@@ -53,13 +52,13 @@ export function NewsletterSection() {
           className="relative"
         >
           {/* Main Card */}
-          <div className="relative bg-gradient-to-br from-indigo-100/10 to-purple-100/10 backdrop-blur-xl rounded-[2.5rem] border border-indigo-200/20 overflow-hidden shadow-2xl">
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/10 pointer-events-none" />
+          <div className="relative bg-white/4 backdrop-blur-2xl rounded-[2.5rem] border border-white/12 overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.4)]">
+            {/* Subtle inner glow */}
+            <div className="absolute inset-0 bg-linear-to-br from-cyan-400/6 via-transparent to-amber-300/6 pointer-events-none" />
 
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+            {/* Decorative corner orbs */}
+            <div className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl opacity-40" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }} />
+            <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full blur-3xl opacity-40" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 70%)' }} />
 
             <div className="relative z-10 p-8 md:p-12 lg:p-16">
               <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -88,7 +87,7 @@ export function NewsletterSection() {
                   >
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
                       Journey of{' '}
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-300">
+                      <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-300 via-amber-200 to-orange-300">
                         Enlightenment
                       </span>
                     </h2>
@@ -180,7 +179,7 @@ export function NewsletterSection() {
                         <Button
                           type="submit"
                           disabled={isSubmitting || !email}
-                          className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                          className="w-full h-12 bg-linear-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
                           {isSubmitting ? (
                             <span className="flex items-center justify-center">
@@ -226,7 +225,7 @@ export function NewsletterSection() {
           </div>
 
           {/* Decorative Border Glow */}
-          <div className="absolute -inset-px rounded-[2.5rem] bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 pointer-events-none" />
+          <div className="absolute -inset-px rounded-[2.5rem] bg-linear-to-r from-orange-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 pointer-events-none" />
         </motion.div>
 
         {/* Trust Indicators */}

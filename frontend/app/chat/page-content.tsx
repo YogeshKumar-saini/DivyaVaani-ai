@@ -1,19 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { textService } from '@/lib/api/text-service';
 import { conversationService } from '@/lib/api/conversation-service';
 import { useAuth } from '@/lib/context/auth-provider';
-import { LanguageDetector } from '@/components/LanguageSelector';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatMessages } from '@/components/chat/ChatMessage';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { LoadingState, WelcomeScreen } from '@/components/chat/LoadingStates';
-import { Menu, MessageSquarePlus, Sparkles, Gauge, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ChatLayout } from '@/components/chat/ChatLayout';
 import { GrainOverlay } from '@/components/ui/GrainOverlay';
-import { motion, AnimatePresence } from 'framer-motion';
+import { GuestLimitModal } from '@/components/chat/GuestLimitModal';
+import { GuestMessageBanner } from '@/components/chat/GuestMessageBanner';
+import { useGuestChatLimit } from '@/lib/hooks/useGuestChatLimit';
+import { AnimatePresence, motion } from 'framer-motion';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Context {
   idx: number;
@@ -40,31 +42,137 @@ interface Message {
   processing_time?: number;
 }
 
-const quickPrompts = [
-  'How do I stay calm during uncertainty?',
-  'What is detached action in daily work?',
-  'How can I improve focus in meditation?',
-];
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ChatPageContent() {
   const { user } = useAuth();
+  const isLoggedIn = !!user;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [initialLoad, setInitialLoad] = useState(true);
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(undefined);
+  const [isSyncing, setIsSyncing] = useState(false);
+  // Guard: prevent double-sync if both onAuthSuccess + user?.id effect fire simultaneously
+  const isSyncingRef = useRef(false);
 
+  // Guest limit system
+  const {
+    guestCount,
+    remainingMessages,
+    isLimitReached,
+    isNearLimit,
+    showLimitModal,
+    isHydrated,
+    checkLimit,
+    incrementCount,
+    saveGuestMessages,
+    loadGuestMessages,
+    clearGuestData,
+    dismissModal,
+    openModal,
+  } = useGuestChatLimit(isLoggedIn);
+
+  // ── Scroll to bottom on new messages ───────────────────────────────────────
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => { scrollToBottom(); }, [messages, isLoading]);
 
+  // ── Save guest messages to localStorage whenever they change ───────────────
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (!isLoggedIn && messages.length > 0) {
+      saveGuestMessages(
+        messages.map((m) => ({
+          id: m.id,
+          type: m.type,
+          content: m.content,
+          timestamp: m.timestamp.toISOString(),
+        }))
+      );
+    }
+  }, [messages, isLoggedIn, saveGuestMessages]);
 
+  // ── Sync guest messages after login ───────────────────────────────────────
+  const syncGuestMessagesAfterLogin = useCallback(async () => {
+    // Prevent concurrent double-sync (onAuthSuccess + user?.id effect both fire)
+    if (isSyncingRef.current) return;
+
+    const guestMsgs = loadGuestMessages();
+    if (!guestMsgs || guestMsgs.length === 0) {
+      clearGuestData();
+      return;
+    }
+
+    // NOTE: JWT sub field = email (not user ID). We MUST use user?.id from auth state.
+    // If user state isn't set yet (called from onAuthSuccess before React re-renders),
+    // return WITHOUT setting the guard so the user?.id useEffect can retry correctly.
+    if (!user?.id) return;
+
+    isSyncingRef.current = true;
+    setIsSyncing(true);
+    try {
+      // Find first user message to use as title
+      const firstUserMsg = guestMsgs.find((m) => m.type === 'user');
+      const title = firstUserMsg
+        ? firstUserMsg.content.slice(0, 60) + (firstUserMsg.content.length > 60 ? '...' : '')
+        : 'Imported Guest Conversation';
+
+      // Create a new conversation under the authenticated user's UUID
+      const newConv = await conversationService.createConversation(user.id, {
+        title,
+        language: detectedLanguage,
+      });
+
+      // Persist each message in order
+      for (const msg of guestMsgs) {
+        try {
+          await conversationService.addMessage(newConv.id, {
+            role: msg.type === 'user' ? 'user' : 'assistant',
+            content: msg.content,
+          });
+        } catch {
+          // Silently skip individual message failures
+        }
+      }
+
+      // Restore the conversation in the UI
+      setCurrentConversationId(newConv.id);
+
+      // Restore messages with proper Date objects
+      const restored: Message[] = guestMsgs.map((m) => ({
+        id: m.id,
+        type: m.type,
+        content: m.content,
+        timestamp: new Date(m.timestamp),
+      }));
+      setMessages(restored);
+      setInitialLoad(false);
+    } catch (err) {
+      console.error('Failed to sync guest messages:', err);
+    } finally {
+      isSyncingRef.current = false;
+      setIsSyncing(false);
+      clearGuestData(); // Always clear after attempting sync
+    }
+  }, [loadGuestMessages, clearGuestData, detectedLanguage, user?.id]);
+
+  // ── Auto-sync when user logs in while on the chat page ────────────────────
+  const prevUserRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    const wasGuest = prevUserRef.current === null;
+    const justLoggedIn = wasGuest && currentUserId !== null;
+
+    if (justLoggedIn) {
+      syncGuestMessagesAfterLogin();
+    }
+    prevUserRef.current = currentUserId;
+  }, [user?.id, syncGuestMessagesAfterLogin]);
+
+  // ── Load a conversation from sidebar ──────────────────────────────────────
   const handleSelectConversation = async (id: string) => {
     setCurrentConversationId(id);
     setInitialLoad(false);
@@ -99,9 +207,16 @@ export default function ChatPageContent() {
     setTimeout(() => askQuestion(question), 100);
   };
 
+  // ── Core ask question logic ────────────────────────────────────────────────
   const askQuestion = async (questionInput?: string) => {
     const questionToAsk = questionInput || input;
     if (!questionToAsk.trim()) return;
+
+    // ── Guest limit gate ──────────────────────────────────────────────────
+    if (!isLoggedIn) {
+      const allowed = checkLimit();
+      if (!allowed) return; // Modal is shown by checkLimit
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -116,6 +231,7 @@ export default function ChatPageContent() {
     setIsLoading(true);
 
     try {
+      // ── Persist conversation for logged-in users ──────────────────────
       let conversationId = currentConversationId;
 
       if (!conversationId && user) {
@@ -142,6 +258,7 @@ export default function ChatPageContent() {
         }
       }
 
+      // ── Actual AI request ─────────────────────────────────────────────
       const response = await textService.askQuestion(questionToAsk);
 
       const botMessage: Message = {
@@ -159,6 +276,11 @@ export default function ChatPageContent() {
       setMessages((prev) => [...prev, botMessage]);
       if (response.language) setDetectedLanguage(response.language);
 
+      // ── Count this as a successful guest message ──────────────────────
+      if (!isLoggedIn) {
+        incrementCount();
+      }
+
       if (conversationId && user) {
         try {
           conversationService.addMessage(conversationId, {
@@ -174,6 +296,7 @@ export default function ChatPageContent() {
       }
     } catch (error) {
       console.error(error);
+      // ── Network/server errors do NOT count toward the guest limit ─────
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
@@ -190,107 +313,170 @@ export default function ChatPageContent() {
     console.log('Feedback:', messageId, rating);
   };
 
+  // ── Determine if input should be disabled ─────────────────────────────────
+  const isInputDisabled = isLoading || (!isLoggedIn && isHydrated && isLimitReached);
+
+  // ── Handle input submit with limit check ──────────────────────────────────
+  const handleSubmit = () => {
+    if (!isLoggedIn && isLimitReached) {
+      openModal();
+      return;
+    }
+    askQuestion();
+  };
+
   return (
-    <div className="min-h-screen pt-24 pb-6 px-3 sm:px-4 relative overflow-hidden">
+    <div className="h-full w-full relative bg-transparent overflow-hidden pt-16">
       <GrainOverlay />
-      <div className="mx-auto max-w-[1600px] h-[calc(100vh-7.5rem)] rounded-3xl border border-white/10 bg-black/20 backdrop-blur-3xl overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-        <div className="flex h-full relative z-10">
-          <ChatSidebar
-            isOpen={isSidebarOpen}
-            onOpenChange={setIsSidebarOpen}
-            currentConversationId={currentConversationId}
-            onSelectConversation={handleSelectConversation}
-            onNewChat={handleNewChat}
-            isCollapsed={isSidebarCollapsed}
-            onCollapseChange={setIsSidebarCollapsed}
-          />
 
-          <div
-            className={cn(
-              'relative z-10 flex flex-col h-full w-full transition-all duration-300',
-              isSidebarCollapsed ? 'md:pl-[80px]' : 'md:pl-[320px]'
-            )}
+      {/* ── Guest Limit Modal ───────────────────────────────────────────────── */}
+      <GuestLimitModal
+        isOpen={showLimitModal}
+        onClose={dismissModal}
+        guestCount={guestCount}
+        onAuthSuccess={syncGuestMessagesAfterLogin}
+      />
+
+      {/* ── Sync overlay ───────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isSyncing && (
+          <motion.div
+            key="sync-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm"
           >
-            <div className="border-b border-white/10 bg-black/20 backdrop-blur-md px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden text-white/80 hover:bg-white/10 hover:text-white"
-                  >
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNewChat}
-                    className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-                  >
-                    <MessageSquarePlus className="h-4 w-4 mr-2" />
-                    New Chat
-                  </Button>
-                </div>
-
-                <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5">
-                  <LanguageDetector currentDetectedLanguage={detectedLanguage} disabled />
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900/90 border border-violet-500/20 rounded-2xl px-8 py-6 flex flex-col items-center gap-4 shadow-2xl"
+            >
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 rounded-2xl bg-violet-500/30 blur-xl animate-pulse" />
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/30 to-indigo-600/20 border border-white/12 flex items-center justify-center">
+                  <span className="text-xl font-serif text-white">ॐ</span>
                 </div>
               </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-300">
-                  <Sparkles className="h-3.5 w-3.5" /> Wisdom Mode
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
-                  <Gauge className="h-3.5 w-3.5" /> High Accuracy
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Safety Filters On
-                </span>
+              <div className="text-center">
+                <div className="text-[15px] font-semibold text-white">Syncing your conversation…</div>
+                <div className="text-[12px] text-white/40 mt-1">Importing your guest messages to your account</div>
               </div>
-            </div>
-
-            <div className="border-b border-white/5 bg-black/10 px-4 py-3 overflow-x-auto">
-              <div className="flex gap-2 min-w-max">
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => handleExampleQuestion(prompt)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all hover:scale-105"
-                  >
-                    {prompt}
-                  </button>
-                ))}
+              <div className="w-48 h-1 rounded-full bg-white/5 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                  style={{ width: '50%' }}
+                />
               </div>
-            </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="flex-1 overflow-y-auto scrollbar-thin py-6 relative">
-              {initialLoad && messages.length === 0 ? (
-                <WelcomeScreen onExampleClick={handleExampleQuestion} className="text-white" />
-              ) : (
-                <div className="px-2 sm:px-4">
-                  <ChatMessages messages={messages} onFeedback={handleFeedback} />
-                </div>
+      <ChatLayout
+        isSidebarOpen={isSidebarOpen}
+        onSidebarToggle={setIsSidebarOpen}
+        sidebarContent={
+          <ChatSidebar
+            embedded
+            currentConversationId={currentConversationId}
+            onSelectConversation={(id) => {
+              handleSelectConversation(id);
+              setIsSidebarOpen(false);
+            }}
+            onNewChat={() => {
+              handleNewChat();
+              setIsSidebarOpen(false);
+            }}
+          />
+        }
+      >
+        {/* ── Main Scrollable Area ─────────────────────────────────────────── */}
+        <div className="flex-1 w-full overflow-y-auto scrollbar-custom relative">
+          <div className="min-h-full flex flex-col pb-4 px-3 md:px-6 pt-14 md:pt-3">
+
+            {/* Welcome screen */}
+            <AnimatePresence>
+              {initialLoad && messages.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col items-center justify-center"
+                >
+                  <WelcomeScreen
+                    onExampleClick={handleExampleQuestion}
+                    className="text-white max-w-2xl mx-auto"
+                  />
+                </motion.div>
               )}
-              {isLoading && <LoadingState isTyping className="px-6 mt-4 text-white/60" />}
+            </AnimatePresence>
+
+            {/* Messages area */}
+            <div className="flex-1 pt-4 max-w-3xl mx-auto w-full">
+              <ChatMessages messages={messages} onFeedback={handleFeedback} />
+              {isLoading && (
+                <LoadingState
+                  isTyping
+                  message="Seeking wisdom from ancient teachings..."
+                  className="mt-2"
+                />
+              )}
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="border-t border-white/10 bg-black/20 backdrop-blur-md p-3 sm:p-4">
-              <ChatInput
-                input={input}
-                setInput={setInput}
-                isLoading={isLoading}
-                onSubmit={() => askQuestion()}
-                placeholder="Ask for guidance, clarity, or practical steps..."
-              />
-            </div>
+            {/* Guest banner - shown inline after messages */}
+            {!isLoggedIn && isHydrated && (
+              <div className="max-w-3xl mx-auto w-full mt-3 mb-1">
+                <GuestMessageBanner
+                  remainingMessages={remainingMessages}
+                  isNearLimit={isNearLimit}
+                  isLimitReached={isLimitReached}
+                  onUpgradeClick={openModal}
+                />
+              </div>
+            )}
           </div>
         </div>
-      </div>
+
+        {/* ── Input Area ───────────────────────────────────────────────────── */}
+        <div className="shrink-0 w-full z-30 px-3 md:px-6 pb-5 pt-2">
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            isLoading={isInputDisabled}
+            onSubmit={handleSubmit}
+            placeholder={
+              !isLoggedIn && isHydrated && isLimitReached
+                ? 'Sign up to continue chatting...'
+                : 'Ask the universe anything...'
+            }
+          />
+
+          {/* Guest message counter pill - shown in input area when not at/near limit */}
+          {!isLoggedIn && isHydrated && !isNearLimit && !isLimitReached && guestCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center mt-2"
+            >
+              <button
+                onClick={openModal}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/4 border border-white/6 hover:bg-white/7 hover:border-white/10 transition-all duration-200 group"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-400/60 group-hover:bg-violet-400 transition-colors" />
+                <span className="text-[11px] text-white/25 group-hover:text-white/45 transition-colors">
+                  {remainingMessages} of {10} free messages left
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </div>
+      </ChatLayout>
     </div>
   );
 }

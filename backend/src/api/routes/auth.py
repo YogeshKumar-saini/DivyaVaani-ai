@@ -89,6 +89,10 @@ async def google_login(
             db.add(user)
             db.commit()
             db.refresh(user)
+
+            # Send welcome email for new Google-authenticated users
+            from src.utils.email import send_welcome_email
+            await send_welcome_email(user.email, user.full_name)
         else:
             # Update existing user's Google ID if not set
             if not user.google_id:
@@ -122,7 +126,7 @@ async def register(
     user_in: UserCreate,
     db: Session = Depends(get_db)
 ) -> Any:
-    """Create new user."""
+    """Create new user and send a welcome email."""
     try:
         user = db.query(models.User).filter(models.User.email == user_in.email).first()
         if user:
@@ -142,6 +146,11 @@ async def register(
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+
+        # Send welcome email (non-blocking – failures are logged, not raised)
+        from src.utils.email import send_welcome_email
+        await send_welcome_email(db_user.email, db_user.full_name)
+
         return db_user
     except HTTPException:
         raise
@@ -218,7 +227,7 @@ async def reset_password(
     request: PasswordResetConfirm,
     db: Session = Depends(get_db)
 ):
-    """Reset password using token."""
+    """Reset password using token and notify user via email."""
     user = db.query(models.User).filter(
         models.User.reset_pass_token == request.token,
         models.User.reset_pass_token_expire > datetime.utcnow()
@@ -231,6 +240,10 @@ async def reset_password(
     user.reset_pass_token = None
     user.reset_pass_token_expire = None
     db.commit()
+
+    # Notify user that their password was changed
+    from src.utils.email import send_password_changed_email
+    await send_password_changed_email(user.email, user.full_name)
     
     return {"message": "Password updated successfully"}
 
@@ -257,12 +270,16 @@ async def update_password(
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Update current user password."""
+    """Update current user password and send confirmation email."""
     if not verify_password(password_update.old_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect old password")
         
     current_user.password_hash = get_password_hash(password_update.new_password)
     current_user.updated_at = datetime.utcnow()
     db.commit()
+
+    # Notify user that their password was changed
+    from src.utils.email import send_password_changed_email
+    await send_password_changed_email(current_user.email, current_user.full_name)
     
     return {"message": "Password updated successfully"}

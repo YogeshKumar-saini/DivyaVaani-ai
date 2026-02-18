@@ -3,80 +3,106 @@
 import { useState } from 'react';
 import { VoiceChat } from '@/components/voice/VoiceChat';
 import { VoiceSidebar } from '@/components/voice/VoiceSidebar';
-import { Settings, Mic, Volume2, Shield, Sparkles } from 'lucide-react';
+import { Settings, Mic, Volume2, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { GrainOverlay } from '@/components/ui/GrainOverlay';
-import { motion } from 'framer-motion';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const quickTips = [
-  { icon: Mic, text: 'Speak naturally in your preferred language.' },
-  { icon: Volume2, text: 'Use clear pauses for better transcription quality.' },
-  { icon: Shield, text: 'Avoid sharing sensitive personal data in voice prompts.' },
+const voiceFeatures = [
+  { icon: Mic, label: 'Multi-language', desc: 'Speak in Hindi, English, Sanskrit & more' },
+  { icon: Volume2, label: 'AI Voice Response', desc: 'Hear answers in natural, clear speech' },
+  { icon: Info, label: 'Scripture-based', desc: 'Responses grounded in ancient wisdom' },
 ];
 
 export default function VoicePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showTip, setShowTip] = useState(true);
 
   return (
-    <div className="min-h-screen pt-24 pb-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <GrainOverlay />
+    <div className="h-full w-full relative overflow-hidden flex flex-col bg-transparent pt-16">
 
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none" />
+      {/* Ambient background orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-amber-300/10 blur-[90px]" />
+      </div>
 
-      <motion.div
-        className="mx-auto max-w-7xl space-y-6 relative z-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <section className="rounded-3xl border border-white/10 bg-black/20 p-5 md:p-6 backdrop-blur-2xl relative overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300/80 font-semibold">Voice Studio</p>
-              <h1 className="text-2xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70 mt-1">Speak with DivyaVaani</h1>
-              <p className="mt-2 text-sm text-white/60 font-light max-w-2xl">Real-time voice guidance with intelligent responses and smooth playback.</p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-                <Sparkles className="h-3.5 w-3.5" />
-                Premium Voice Mode
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setSidebarOpen(true)}
-                className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </div>
+      {/* Top bar - voice mode header */}
+      <header className="relative z-40 flex items-center justify-between px-6 pt-3 pb-2 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-300 to-amber-200 flex items-center justify-center ring-1 ring-white/20 shadow-lg shadow-cyan-900/30">
+            <span className="text-slate-950 text-sm font-bold">ॐ</span>
           </div>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 relative z-10">
-            {quickTips.map((tip, i) => (
-              <div key={i} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/70 flex items-center gap-3 hover:bg-white/5 transition-colors">
-                <div className="p-1.5 rounded-full bg-white/5">
-                  <tip.icon className="h-4 w-4 text-cyan-200" />
-                </div>
-                <span>{tip.text}</span>
-              </div>
-            ))}
+          <div>
+            <h1 className="text-white font-semibold text-sm tracking-wide">Voice Mode</h1>
+            <p className="text-white/30 text-[11px]">Speak · Listen · Discover</p>
           </div>
-        </section>
-
-        <div className="rounded-3xl border border-white/10 bg-black/20 backdrop-blur-3xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.5)] h-[calc(100vh-21rem)] min-h-[500px] relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-          <VoiceChat />
         </div>
-      </motion.div>
 
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(true)}
+          className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-9 w-9"
+          aria-label="Open voice settings"
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </header>
+
+      {/* Tip banner */}
+      <AnimatePresence>
+        {showTip && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative z-30 mx-6 mt-2 shrink-0"
+          >
+            <div className="flex items-center gap-3 rounded-xl bg-cyan-300/10 border border-cyan-300/25 px-4 py-2.5 text-[12px] text-cyan-100/80">
+              <Info size={13} className="shrink-0 text-cyan-200" />
+              <span className="flex-1">Tap the orb to begin speaking. Ask about dharma, karma, moksha or any spiritual topic.</span>
+              <button
+                onClick={() => setShowTip(false)}
+                className="ml-auto text-white/30 hover:text-white/60 shrink-0 transition-colors"
+                aria-label="Dismiss tip"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Voice Area */}
+      <main className="flex-1 relative z-10 flex flex-col overflow-hidden min-h-0">
+        <VoiceChat />
+      </main>
+
+      {/* Feature pills - bottom decoration */}
+      <div className="relative z-20 flex justify-center gap-2 sm:gap-3 px-6 pb-4 shrink-0 flex-wrap">
+        {voiceFeatures.map(({ icon: Icon, label }) => (
+          <div
+            key={label}
+            className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/50"
+          >
+            <Icon size={11} className="text-cyan-200/60" />
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Settings Panel - using VoiceSidebar component */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="right" className="w-[420px] max-w-[95vw] bg-black/80 border-l border-white/10 backdrop-blur-2xl z-[100] text-white">
-          <VoiceSidebar onClose={() => setSidebarOpen(false)} />
+        <SheetContent
+          side="right"
+          className="w-full sm:w-[380px] bg-slate-950/98 border-l border-white/10 backdrop-blur-2xl text-white p-0 overflow-hidden"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Voice Settings</SheetTitle>
+          </SheetHeader>
+          <VoiceSidebar onClose={() => setSidebarOpen(false)} isPanel />
         </SheetContent>
       </Sheet>
     </div>

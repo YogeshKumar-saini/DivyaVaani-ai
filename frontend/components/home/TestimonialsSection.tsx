@@ -8,8 +8,8 @@ import { TESTIMONIALS } from "@/lib/utils/constants";
 export function TestimonialsSection() {
   return (
     <section className="relative py-16 md:py-32 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/10 via-white/10 to-purple-950/10 pointer-events-none" />
+      {/* Ambient glow – transparent so scroll background shows */}
+      <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] rounded-full blur-[160px] pointer-events-none opacity-30" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)' }} />
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <motion.div

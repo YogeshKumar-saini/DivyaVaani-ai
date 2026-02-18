@@ -56,16 +56,50 @@ class Settings(BaseModel):
     rate_limit_requests: int = Field(default=100, ge=1)
     rate_limit_window: int = Field(default=60, ge=1)
 
-    # Email Settings
-    mail_username: str = Field(default_factory=lambda: os.getenv("MAIL_USERNAME"))
-    mail_password: str = Field(default_factory=lambda: os.getenv("MAIL_PASSWORD"))
-    mail_from: str = Field(default_factory=lambda: os.getenv("MAIL_FROM"))
-    mail_port: int = Field(default_factory=lambda: int(os.getenv("MAIL_PORT", 587)))
-    mail_server: str = Field(default_factory=lambda: os.getenv("MAIL_SERVER"))
-    mail_starttls: bool = Field(default=True)
-    mail_ssl_tls: bool = Field(default=False)
-    use_credentials: bool = Field(default=True)
-    validate_certs: bool = Field(default=True)
+    # Email Settings  (reads SMTP_* first, falls back to MAIL_* for compatibility)
+    mail_username: Optional[str] = Field(
+        default_factory=lambda: os.getenv("SMTP_USER") or os.getenv("MAIL_USERNAME")
+    )
+    mail_password: Optional[str] = Field(
+        default_factory=lambda: os.getenv("SMTP_PASS") or os.getenv("MAIL_PASSWORD")
+    )
+    mail_from: Optional[str] = Field(
+        default_factory=lambda: (
+            os.getenv("EMAIL_FROM") or os.getenv("MAIL_FROM")
+        )
+    )
+    mail_port: int = Field(
+        default_factory=lambda: int(
+            os.getenv("SMTP_PORT") or os.getenv("MAIL_PORT") or 587
+        )
+    )
+    mail_server: Optional[str] = Field(
+        default_factory=lambda: os.getenv("SMTP_HOST") or os.getenv("MAIL_SERVER")
+    )
+    mail_starttls: bool = Field(
+        default_factory=lambda: (
+            os.getenv("MAIL_STARTTLS", "true").lower() == "true"
+        )
+    )
+    mail_ssl_tls: bool = Field(
+        default_factory=lambda: (
+            os.getenv("MAIL_SSL_TLS", "false").lower() == "true"
+        )
+    )
+    use_credentials: bool = Field(
+        default_factory=lambda: (
+            os.getenv("USE_CREDENTIALS", "true").lower() == "true"
+        )
+    )
+    validate_certs: bool = Field(
+        default_factory=lambda: (
+            os.getenv("VALIDATE_CERTS", "true").lower() == "true"
+        )
+    )
+    # Derived: sender display name for emails
+    email_from_name: str = Field(
+        default_factory=lambda: os.getenv("EMAIL_FROM_NAME", "Kirata")
+    )
 
     # Caching
     cache_ttl: int = Field(default=3600, ge=60)

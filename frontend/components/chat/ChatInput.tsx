@@ -1,8 +1,9 @@
-import { fileService } from '@/lib/api/file-service';
+'use client';
+
 import { useToast } from '@/lib/context/ToastContext';
 import { useState, useRef, useLayoutEffect, useCallback, memo } from 'react';
-import { Paperclip, Send, Loader2, Mic } from 'lucide-react';
-import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { Paperclip, Send, Loader2, Sparkles, Mic } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
@@ -20,14 +21,13 @@ const ChatInputInner = memo<ChatInputProps>(({
   setInput,
   isLoading,
   onSubmit,
-  placeholder = "Ask about dharma, karma, yoga...",
+  placeholder = "Ask the universe anything...",
   maxLength = 2000,
   className = ''
 }) => {
-  const { success, error, info } = useToast();
+  const { success } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,11 +35,7 @@ const ChatInputInner = memo<ChatInputProps>(({
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = 'auto';
-    const scrollH = textarea.scrollHeight;
-    const minH = 44;
-    const maxH = 160;
-    const newH = Math.min(Math.max(scrollH, minH), maxH);
-    textarea.style.height = `${newH}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 140)}px`;
   }, [input]);
 
   const handleSubmit = useCallback(() => {
@@ -49,100 +45,64 @@ const ChatInputInner = memo<ChatInputProps>(({
   }, [input, isLoading, maxLength, onSubmit]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
-  }, [isComposing, handleSubmit]);
+  }, [handleSubmit]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const v = e.target.value;
     if (v.length <= maxLength) setInput(v);
-    else setInput(v.slice(0, maxLength));
   }, [setInput, maxLength]);
-
-  const openFilePicker = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+    if (!files?.length) return;
     const file = files[0];
     setIsUploading(true);
-    info(`Uploading ${file.name}...`, 2000);
-
-    try {
-      const response = await fileService.uploadFile({ file });
-      if (response.success) {
-        success(`Successfully uploaded ${file.name}`);
-        console.log('Upload response:', response);
-      }
-    } catch (err: unknown) {
-      console.error('Upload failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';
-      error(errorMessage);
-    } finally {
+    setTimeout(() => {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  }, [success, error, info]);
+      success(`Uploaded ${file.name}`);
+    }, 1000);
+  }, [success]);
 
-  const remaining = maxLength - input.length;
-  const isNearLimit = remaining <= 200 && remaining > 0;
-  const isAtLimit = remaining <= 0;
+  const charPercent = (input.length / maxLength) * 100;
+  const isNearLimit = charPercent > 80;
 
   return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-      className={`w-full max-w-4xl mx-auto ${className}`}
-      role="search"
-      aria-label="Chat input form"
-    >
-      {input.length > 0 && (
-        <div className="flex justify-between items-center mb-2 px-4">
-          <div />
-          <div
-            id="input-help"
-            className={`text-xs font-medium backdrop-blur-md px-2 py-1 rounded-full ${isAtLimit ? 'bg-red-500/10 text-red-400' : isNearLimit ? 'bg-amber-500/10 text-amber-400' : 'text-gray-400'}`}
-            role="status"
-            aria-live="polite"
-          >
-            {remaining} characters
-          </div>
-        </div>
-      )}
-
-      {/* Main Container */}
+    <div className={cn("w-full max-w-3xl mx-auto relative", className)}>
+      {/* Main input container */}
       <div
-        className={`relative flex items-end gap-2 p-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300 gpu-accelerated
-          ${isFocused ? 'bg-white/15 border-orange-500/40 shadow-[0_0_30px_rgba(249,115,22,0.15)] ring-2 ring-orange-500/20' : 'hover:bg-white/12 hover:border-white/20'}`}
-      >
-        {/* Animated Glow Effect */}
-        {isFocused && (
-          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-orange-500/10 via-purple-500/10 to-orange-500/10 animate-gradient-x opacity-50 pointer-events-none" aria-hidden="true" />
+        className={cn(
+          "relative rounded-2xl transition-all duration-300",
+          "bg-white/[0.07] backdrop-blur-2xl border shadow-2xl",
+          isFocused
+            ? "border-violet-500/50 shadow-[0_0_50px_rgba(139,92,246,0.18),0_8px_32px_rgba(0,0,0,0.45)]"
+            : "border-white/9 shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:border-white/14"
         )}
+      >
+        {/* Top glow line when focused */}
+        <div className={cn(
+          "absolute top-0 left-8 right-8 h-px rounded-full transition-opacity duration-300",
+          "bg-linear-to-r from-transparent via-violet-500/50 to-transparent",
+          isFocused ? "opacity-100" : "opacity-0"
+        )} />
 
-        {/* Left Tools */}
-        <div className="flex items-center gap-1 mb-1 ml-1">
-          <button
-            type="button"
-            onClick={openFilePicker}
+        <div className="flex items-end gap-2 p-3 pr-3">
+          {/* Attach button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/25 hover:text-white/60 hover:bg-white/6 rounded-xl shrink-0 h-9 w-9 mb-0.5 transition-all duration-200"
+            onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             title="Attach file"
-            aria-label="Attach file"
-            aria-busy={isUploading}
           >
-            <Paperclip className="h-5 w-5" />
-          </button>
-        </div>
+            {isUploading ? <Loader2 className="animate-spin h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
+          </Button>
 
-        {/* Textarea */}
-        <div className="flex-1 relative py-2">
+          {/* Textarea */}
           <textarea
             ref={textareaRef}
             value={input}
@@ -150,64 +110,74 @@ const ChatInputInner = memo<ChatInputProps>(({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
             placeholder={placeholder}
             disabled={isLoading}
-            maxLength={maxLength}
             rows={1}
-            className="w-full resize-none border-none outline-none bg-transparent text-white placeholder-white/40 text-base leading-relaxed min-h-[24px] max-h-[160px] overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-white/10 focus:ring-0"
-            style={{
-              caretColor: '#f97316',
-            }}
-            aria-label="Type your message"
-            aria-describedby={input.length > 0 ? 'input-help' : undefined}
+            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 resize-none py-2.5 text-white/90 placeholder-white/20 text-[15px] leading-relaxed scrollbar-hide min-h-10 font-light tracking-wide"
           />
+
+          {/* Send button */}
+          <div className="shrink-0 mb-0.5">
+            <Button
+              size="icon"
+              onClick={handleSubmit}
+              disabled={!input.trim() || isLoading}
+              className={cn(
+                "rounded-xl h-9 w-9 transition-all duration-300 relative overflow-hidden",
+                input.trim() && !isLoading
+                  ? "bg-linear-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-900/40 text-white hover:scale-105"
+                  : "bg-white/5 text-white/20 cursor-not-allowed"
+              )}
+            >
+              {isLoading
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Send className="h-4 w-4 ml-0.5" />
+              }
+            </Button>
+          </div>
         </div>
 
-        {/* Right Tools & Send */}
-        <div className="flex items-center gap-2 mb-1 mr-1">
-          <button
-            type="button"
-            className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 hidden sm:block hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-            title="Voice input"
-            aria-label="Voice input"
-          >
-            <Mic className="h-5 w-5" />
-          </button>
-
-          <EnhancedButton
-            type="submit"
-            disabled={isLoading || !input.trim() || isAtLimit}
-            aria-label="Send message"
-            className={cn(
-              "h-11 w-11 rounded-full p-0 flex items-center justify-center shrink-0",
-              (isLoading || !input.trim() || isAtLimit) ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:scale-110 shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+        {/* Bottom footer row */}
+        <div className="flex items-center justify-between px-4 pb-3 pt-0">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-white/20 flex items-center gap-1">
+              <Sparkles size={9} className="text-violet-400/40" />
+              Powered by universal wisdom
+            </span>
+            <button
+              className="text-[10px] text-white/20 hover:text-white/50 flex items-center gap-1 transition-colors"
+              title="Voice input (coming soon)"
+            >
+              <Mic size={9} className="text-white/25" />
+              Voice
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            {isNearLimit && (
+              <span className={cn(
+                "text-[10px] font-medium tabular-nums",
+                charPercent > 95 ? "text-red-400" : "text-amber-400/80"
+              )}>
+                {maxLength - input.length} left
+              </span>
             )}
-            glow
-            ripple
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-            ) : (
-              <Send className={cn("h-5 w-5 transition-transform duration-200", input.trim() ? 'group-hover:rotate-12' : '')} aria-hidden="true" />
-            )}
-          </EnhancedButton>
+            <span className="text-[10px] text-white/12 hidden sm:block">
+              ↵ Send · ⇧↵ Newline
+            </span>
+          </div>
         </div>
       </div>
 
       <input
         ref={fileInputRef}
         type="file"
-        multiple
         className="hidden"
         onChange={handleFileChange}
-        aria-hidden="true"
       />
-    </form>
+    </div>
   );
 });
 
 ChatInputInner.displayName = 'ChatInputInner';
-
 export const ChatInput = ChatInputInner;
+

@@ -55,9 +55,8 @@ function AnimatedCounter({ value, duration = 2 }: { value: string; duration?: nu
 export function StatsSection() {
   return (
     <section className="relative py-24 md:py-40 overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/20 via-purple-950/10 to-indigo-950/20 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-indigo-500/15 rounded-full blur-[180px] animate-pulse-slow" />
+      {/* Subtle ambient glow – transparent so scroll background shows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[180px] pointer-events-none opacity-40" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, rgba(147,51,234,0.12) 50%, transparent 70%)' }} />
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         {/* Grid of Stats */}
@@ -74,22 +73,22 @@ export function StatsSection() {
                 transition={{ delay: idx * 0.1, duration: 0.6, type: 'spring', bounce: 0.4 }}
                 className="relative group"
               >
-                <div className="relative h-full bg-gradient-to-br from-indigo-200/15 via-white/10 to-purple-200/15 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-indigo-200/25 transition-all duration-500 hover:border-orange-400/50 hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(249,115,22,0.2)] overflow-hidden">
+                <div className="relative h-full bg-linear-to-br from-indigo-200/15 via-white/10 to-purple-200/15 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-indigo-200/25 transition-all duration-500 hover:border-orange-400/50 hover:-translate-y-3 hover:shadow-[0_20px_60px_rgba(249,115,22,0.2)] overflow-hidden">
                   {/* Animated background shimmer */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/10 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-orange-500/10 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
                   </div>
                   
                   {/* Icon */}
                   {Icon && (
-                    <div className="relative mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 via-purple-500/15 to-red-600/20 border border-orange-400/30 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-orange-500/30">
+                    <div className="relative mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-orange-500/20 via-purple-500/15 to-red-600/20 border border-orange-400/30 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-orange-500/30">
                       <Icon className="h-7 w-7 text-orange-400 group-hover:text-orange-300 transition-colors" />
                     </div>
                   )}
 
                   {/* Value */}
                   <div className="relative mb-3">
-                    <div className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-orange-300 via-white to-orange-300 group-hover:from-orange-200 group-hover:via-white group-hover:to-orange-200 transition-all duration-500 animate-gradient-x">
+                    <div className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-linear-to-br from-orange-300 via-white to-orange-300 group-hover:from-orange-200 group-hover:via-white group-hover:to-orange-200 transition-all duration-500 animate-gradient-x">
                       <AnimatedCounter value={stat.value} />
                     </div>
                   </div>
@@ -105,10 +104,10 @@ export function StatsSection() {
                   </div>
 
                   {/* Hover Glow Effect */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-orange-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <div className="absolute inset-0 rounded-3xl bg-linear-to-tr from-orange-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                   {/* Border Glow */}
-                  <div className="absolute -inset-px rounded-3xl bg-gradient-to-b from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <div className="absolute -inset-px rounded-3xl bg-linear-to-b from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 </div>
               </motion.div>
             );
@@ -121,7 +120,7 @@ export function StatsSection() {
           whileInView={{ scaleX: 1, opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="mt-16 md:mt-24 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent"
+          className="mt-16 md:mt-24 h-px bg-linear-to-r from-transparent via-orange-500/30 to-transparent"
         />
       </div>
     </section>

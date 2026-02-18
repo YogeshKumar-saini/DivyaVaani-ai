@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -16,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User as UserIcon, Settings, Sparkles, ChevronRight } from 'lucide-react';
+import { LogOut, User as UserIcon, ChevronRight, LayoutDashboard } from 'lucide-react';
 import { AuthModal } from '@/components/auth/auth-modal';
 
 interface HeaderProps {
@@ -34,132 +36,143 @@ export const Header = React.memo(({ items }: HeaderProps) => {
   const { user, logout, loading } = useAuth();
   const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 20);
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setScrolled(latest > 24);
   });
-
-  const handleLogin = () => setIsAuthModalOpen(true);
-  const handleLogout = () => logout();
 
   return (
     <>
       <motion.header
-        className={cn(
-          'fixed top-0 z-50 w-full transition-all duration-500 ease-in-out',
-          scrolled
-            ? 'bg-background/40 backdrop-blur-xl border-b border-white/10 py-3 shadow-lg'
-            : 'bg-transparent py-5 border-b border-transparent'
-        )}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+        className={cn('fixed top-0 z-50 w-full transition-all duration-500', scrolled ? 'py-2' : 'py-4')}
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.1 }}
       >
-        <div className="container mx-auto flex items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-6">
+        <div
+          className={cn(
+            'absolute inset-0 transition-all duration-500',
+            scrolled
+              ? 'border-b border-white/10 bg-slate-950/72 backdrop-blur-2xl shadow-[0_18px_42px_rgba(2,6,23,0.45)]'
+              : 'bg-transparent border-b border-transparent'
+          )}
+        />
+
+        <div className="section-shell relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <MobileSidebar items={items} />
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative h-10 w-10 overflow-hidden rounded-xl ring-1 ring-white/20 group-hover:ring-primary/50 transition-all duration-500 shadow-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-sm">
+            <Link href="/" className="group flex items-center gap-3">
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/15 bg-white/10 shadow-lg shadow-cyan-950/60">
                 <Image
                   src="/images/logo.png"
                   alt="DivyaVaani"
                   width={40}
                   height={40}
-                  className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="eager"
                   priority
                 />
               </div>
               <div className="hidden sm:block">
-                <span className="block font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors duration-300">
-                  DivyaVaani
-                </span>
-                <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground group-hover:text-primary/70 transition-colors duration-300">
-                  Universal Wisdom
-                </span>
+                <span className="block text-[15px] font-bold leading-none text-white">DivyaVaani</span>
+                <span className="block pt-1 text-[9px] uppercase tracking-[0.26em] text-cyan-100/65">Universal Wisdom</span>
               </div>
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1 bg-white/5 backdrop-blur-3xl border border-white/10 p-1.5 rounded-full shadow-2xl">
+          <nav className="hidden md:flex items-center gap-1 rounded-full border border-white/12 bg-white/6 p-1 backdrop-blur-xl">
             {items.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 relative group',
-                    isActive ? 'text-white' : 'text-muted-foreground hover:text-white'
+                    'relative rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors',
+                    isActive ? 'text-slate-950' : 'text-slate-100/70 hover:text-white'
                   )}
                 >
                   <span className="relative z-10">{item.title}</span>
-                  {isActive && (
-                    <motion.div
+                  {isActive ? (
+                    <motion.span
                       layoutId="nav-pill"
-                      className="absolute inset-0 bg-primary/80 rounded-full shadow-[0_0_20px_rgba(124,58,237,0.3)]"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-300 to-amber-200"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.45 }}
                     />
-                  )}
-                  {!isActive && (
-                    <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  ) : (
+                    <span className="absolute inset-0 rounded-full transition-colors hover:bg-white/8" />
                   )}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2">
             {loading ? (
-              <div className="h-9 w-24 animate-pulse rounded-full bg-white/10" />
+              <div className="h-9 w-24 animate-pulse rounded-full bg-white/12" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-11 w-11 rounded-full p-0 overflow-hidden ring-2 ring-white/10 hover:ring-primary/50 transition-all duration-300">
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full p-0 overflow-hidden border border-white/15 bg-white/6 hover:bg-white/12"
+                  >
                     <Avatar className="h-full w-full">
                       <AvatarImage src={user.avatar_url} alt={user.full_name || 'User'} />
-                      <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                      <AvatarFallback className="bg-cyan-500/20 text-cyan-100 font-bold text-sm">
                         {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-60 bg-black/90 backdrop-blur-xl border-white/10 text-white" align="end">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.full_name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
+                <DropdownMenuContent
+                  className="w-56 rounded-2xl border-white/10 bg-slate-900/95 text-white backdrop-blur-xl"
+                  align="end"
+                  sideOffset={10}
+                >
+                  <DropdownMenuLabel className="px-4 py-3">
+                    <p className="text-sm font-semibold text-white">{user.full_name}</p>
+                    <p className="truncate pt-0.5 text-[11px] text-white/55">{user.email}</p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuItem onClick={() => router.push('/profile')} className="focus:bg-white/10 focus:text-white cursor-pointer">
-                    <UserIcon className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem
+                    onClick={() => router.push('/profile')}
+                    className="mx-1 my-0.5 rounded-xl text-white/75 focus:bg-white/10 focus:text-white"
+                  >
+                    <UserIcon className="mr-2.5 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/settings')} className="focus:bg-white/10 focus:text-white cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/analytics')}
+                    className="mx-1 my-0.5 rounded-xl text-white/75 focus:bg-white/10 focus:text-white"
+                  >
+                    <LayoutDashboard className="mr-2.5 h-4 w-4 text-cyan-300" />
+                    <span>Analytics</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-950/30 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem
+                    onClick={() => logout()}
+                    className="mx-1 my-0.5 rounded-xl text-red-300/90 focus:bg-red-950/35 focus:text-red-200"
+                  >
+                    <LogOut className="mr-2.5 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
-                  onClick={handleLogin}
-                  className="hidden sm:flex text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5"
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="hidden sm:flex h-9 rounded-full px-4 text-[13px] font-medium text-white/75 hover:bg-white/8 hover:text-white"
                 >
                   Sign In
                 </Button>
                 <Button
-                  onClick={handleLogin}
-                  className="rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.2)] font-semibold px-6"
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="h-9 rounded-full border border-cyan-200/40 bg-gradient-to-r from-cyan-300 to-amber-200 px-5 text-[13px] font-semibold text-slate-950 hover:brightness-105"
                 >
-                  Get Started <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  Get Started
+                  <ChevronRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
               </div>
             )}

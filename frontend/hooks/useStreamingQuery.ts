@@ -6,8 +6,23 @@ import { useState, useCallback, useRef } from 'react';
 
 export interface StreamEvent {
   type: 'start' | 'thinking' | 'token' | 'metadata' | 'source' | 'done' | 'error';
-  data?: any;
+  data?: Record<string, unknown>;
   token?: string;
+}
+
+export interface StreamSource {
+  id?: string;
+  text?: string;
+  score?: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface StreamMetadata {
+  language?: string;
+  model?: string;
+  sources_count?: number;
+  processing_time?: number;
+  [key: string]: unknown;
 }
 
 export interface StreamOptions {
@@ -15,8 +30,8 @@ export interface StreamOptions {
   userId?: string;
   preferredLanguage?: string;
   onToken?: (token: string) => void;
-  onMetadata?: (metadata: any) => void;
-  onSource?: (source: any) => void;
+  onMetadata?: (metadata: StreamMetadata) => void;
+  onSource?: (source: StreamSource) => void;
   onComplete?: () => void;
   onError?: (error: string) => void;
 }
@@ -24,8 +39,8 @@ export interface StreamOptions {
 export function useStreamingQuery() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [answer, setAnswer] = useState('');
-  const [sources, setSources] = useState<any[]>([]);
-  const [metadata, setMetadata] = useState<any>(null);
+  const [sources, setSources] = useState<StreamSource[]>([]);
+  const [metadata, setMetadata] = useState<StreamMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -80,7 +95,7 @@ export function useStreamingQuery() {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -95,53 +110,57 @@ export function useStreamingQuery() {
 
           if (eventMatch && dataMatch) {
             const eventType = eventMatch[1];
-            const eventData = JSON.parse(dataMatch[1]);
+            const eventData = JSON.parse(dataMatch[1]) as Record<string, unknown>;
 
             switch (eventType) {
               case 'start':
-                // Query processing started
                 break;
 
               case 'thinking':
-                // Retrieving context
                 break;
 
-              case 'token':
-                const token = eventData.token;
+              case 'token': {
+                const token = eventData.token as string;
                 setAnswer(prev => prev + token);
                 onToken?.(token);
                 break;
+              }
 
-              case 'metadata':
-                setMetadata(eventData);
-                onMetadata?.(eventData);
+              case 'metadata': {
+                const meta = eventData as StreamMetadata;
+                setMetadata(meta);
+                onMetadata?.(meta);
                 break;
+              }
 
-              case 'source':
-                setSources(prev => [...prev, eventData]);
-                onSource?.(eventData);
+              case 'source': {
+                const src = eventData as StreamSource;
+                setSources(prev => [...prev, src]);
+                onSource?.(src);
                 break;
+              }
 
               case 'done':
                 setIsStreaming(false);
                 onComplete?.();
                 break;
 
-              case 'error':
-                const errorMsg = eventData.error || 'An error occurred';
+              case 'error': {
+                const errorMsg = (eventData.error as string) || 'An error occurred';
                 setError(errorMsg);
                 setIsStreaming(false);
                 onErrorCallback?.(errorMsg);
                 break;
+              }
             }
           }
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
         console.log('Stream aborted');
       } else {
-        const errorMsg = err.message || 'Failed to stream response';
+        const errorMsg = err instanceof Error ? err.message : 'Failed to stream response';
         setError(errorMsg);
         onErrorCallback?.(errorMsg);
       }

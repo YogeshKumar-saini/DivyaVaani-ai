@@ -2,341 +2,542 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/context/auth-provider";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { EnhancedInput } from "@/components/ui/enhanced-input";
-import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { Label } from "@/components/ui/label";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
+  Dialog,
+  DialogContent,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  KeyRound,
+  Sparkles,
+} from "lucide-react";
 import { authService } from "@/lib/api/auth-service";
 
 interface AuthModalProps {
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    defaultTab?: "login" | "register";
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultTab?: "login" | "register";
 }
 
-export function AuthModal({ isOpen, onOpenChange, defaultTab = "login" }: AuthModalProps) {
-    const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
-    const [isForgotPassword, setIsForgotPassword] = useState(false);
-    const { login, googleLogin, register } = useAuth();
+function FloatingInput({
+  id,
+  type = "text",
+  label,
+  placeholder,
+  value,
+  onChange,
+  required,
+  icon: Icon,
+  rightElement,
+}: {
+  id: string;
+  type?: string;
+  label: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+  icon?: React.ElementType;
+  rightElement?: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label
+        htmlFor={id}
+        className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35"
+      >
+        {Icon && <Icon className="h-3 w-3" />}
+        {label}
+      </Label>
+      <div className="relative">
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={onChange}
+          required={required}
+          placeholder={placeholder}
+          className="h-11 w-full rounded-xl border border-white/8 bg-white/4 px-4 text-[14px] text-white placeholder:text-white/20 focus:border-violet-400/40 focus:bg-white/7 focus:outline-none transition-all duration-200 pr-10"
+        />
+        {rightElement && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {rightElement}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-    // Form States
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
+export function AuthModal({
+  isOpen,
+  onOpenChange,
+  defaultTab = "login",
+}: AuthModalProps) {
+  const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const { login, googleLogin, register } = useAuth();
 
-    const resetForm = () => {
-        setEmail("");
-        setPassword("");
-        setFullName("");
-        setError("");
-        setSuccessMessage("");
-        setIsLoading(false);
-        setIsForgotPassword(false);
-    };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError("");
-        try {
-            await login({ email, password });
-            onOpenChange(false);
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Login failed");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setFullName("");
+    setError("");
+    setSuccessMessage("");
+    setIsLoading(false);
+    setIsForgotPassword(false);
+    setShowPassword(false);
+  };
 
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError("");
-        try {
-            await register({ email, password, full_name: fullName });
-            setActiveTab("login");
-            setSuccessMessage("Account created! Please log in.");
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Registration failed");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      await login({ email, password });
+      onOpenChange(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleForgotPassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError("");
-        setSuccessMessage("");
-        try {
-            await authService.forgotPassword(email);
-            setSuccessMessage("Reset link sent! Check your email.");
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Failed to send reset link");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      await register({ email, password, full_name: fullName });
+      setSuccessMessage("Account created! You can now sign in.");
+      setActiveTab("login");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => {
-            if (!open) resetForm();
-            onOpenChange(open);
-        }}>
-            <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden bg-black/40 backdrop-blur-3xl border-white/10 text-white shadow-2xl rounded-3xl">
-                <GrainOverlay />
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-orange-500/20 pointer-events-none" />
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+    try {
+      await authService.forgotPassword(email);
+      setSuccessMessage("Reset link sent! Check your email inbox.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to send reset link.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                {/* Animated Orbs */}
-                <div className="absolute -top-20 -left-20 w-60 h-60 bg-indigo-500/30 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
-                <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-orange-500/30 rounded-full blur-3xl animate-pulse-slow pointer-events-none" style={{ animationDelay: '2s' }} />
+  const switchTab = (tab: "login" | "register") => {
+    setActiveTab(tab);
+    setError("");
+    setSuccessMessage("");
+  };
 
-                <div className="relative p-8 z-10">
-                    <DialogHeader className="mb-8 text-center space-y-3">
-                        <DialogTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70 tracking-tight">
-                            {isForgotPassword ? "Reset Password" : (activeTab === "login" ? "Welcome Back" : "Join DivyaVaani")}
-                        </DialogTitle>
-                        <DialogDescription className="text-white/60 text-base font-medium">
-                            {isForgotPassword
-                                ? "Enter your email to receive a reset link"
-                                : (activeTab === "login" ? "Enter your credentials to access your account" : "Start your journey with us today")}
-                        </DialogDescription>
-                    </DialogHeader>
+  const heading = isForgotPassword
+    ? "Reset Password"
+    : activeTab === "login"
+    ? "Welcome Back"
+    : "Create Account";
 
-                    <AnimatePresence mode="wait">
-                        {isForgotPassword ? (
-                            <motion.div
-                                key="forgot-password"
-                                initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                            >
-                                <form onSubmit={handleForgotPassword} className="space-y-6">
-                                    <EnhancedInput
-                                        id="fp-email"
-                                        type="email"
-                                        label="Email Address"
-                                        placeholder="m@example.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        className="pl-4"
-                                    />
+  const subheading = isForgotPassword
+    ? "Enter your email and we'll send a reset link"
+    : activeTab === "login"
+    ? "Sign in to continue your spiritual journey"
+    : "Begin your path with ancient wisdom & AI";
 
-                                    {error && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="text-sm text-red-300 bg-red-500/10 p-3 rounded-xl border border-red-500/20"
-                                        >
-                                            {error}
-                                        </motion.div>
-                                    )}
-                                    {successMessage && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="text-sm text-green-300 bg-green-500/10 p-3 rounded-xl border border-green-500/20 flex items-center gap-2"
-                                        >
-                                            <CheckCircle2 className="h-4 w-4" /> {successMessage}
-                                        </motion.div>
-                                    )}
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) resetForm();
+        onOpenChange(open);
+      }}
+    >
+      <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden bg-transparent border-0 shadow-none [&>button]:text-white/40 [&>button]:hover:text-white/70 [&>button]:z-50">
+        {/* Glass card */}
+        <div className="relative rounded-3xl border border-white/10 bg-slate-950/85 backdrop-blur-3xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.04)] overflow-hidden">
 
-                                    <EnhancedButton
-                                        type="submit"
-                                        className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-0 h-12 rounded-xl font-semibold shadow-lg shadow-orange-500/20"
-                                        disabled={isLoading}
-                                        glow
-                                        ripple
-                                    >
-                                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Send Reset Link"}
-                                    </EnhancedButton>
+          {/* Top shimmer line */}
+          <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-violet-400/60 to-transparent" />
+          <div className="absolute top-0 inset-x-[15%] h-0.5 bg-linear-to-r from-transparent via-white/20 to-transparent blur-sm" />
 
-                                    <div className="text-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsForgotPassword(false)}
-                                            className="text-sm text-white/50 hover:text-white transition-colors font-medium"
-                                        >
-                                            Back to Login
-                                        </button>
-                                    </div>
-                                </form>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="auth-tabs"
-                                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                            >
-                                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")} className="w-full">
-                                    <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/5 border border-white/10 rounded-xl p-1">
-                                        <TabsTrigger
-                                            value="login"
-                                            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 rounded-lg transition-all duration-300"
-                                        >
-                                            Login
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="register"
-                                            className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 rounded-lg transition-all duration-300"
-                                        >
-                                            Sign Up
-                                        </TabsTrigger>
-                                    </TabsList>
+          {/* Ambient glows */}
+          <div className="absolute -top-28 left-1/2 -translate-x-1/2 w-80 h-64 bg-violet-700/20 blur-[90px] pointer-events-none rounded-full" />
+          <div className="absolute -bottom-20 -right-16 w-56 h-56 bg-indigo-600/15 blur-[70px] pointer-events-none rounded-full" />
+          <div className="absolute top-1/2 -left-12 w-32 h-64 bg-cyan-600/8 blur-[60px] pointer-events-none" />
 
-                                    <TabsContent value="login" className="mt-0">
-                                        <form onSubmit={handleLogin} className="space-y-5">
-                                            <EnhancedInput
-                                                id="email"
-                                                type="email"
-                                                label="Email"
-                                                placeholder="m@example.com"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                required
-                                            />
+          {/* Grain texture */}
+          <div
+            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+              backgroundSize: '160px 160px',
+            }}
+          />
 
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <Label htmlFor="password" className="text-white/80 hidden">Password</Label>
-                                                </div>
-                                                <EnhancedInput
-                                                    id="password"
-                                                    type="password"
-                                                    label="Password"
-                                                    value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
-                                                    required
-                                                />
-                                                <div className="flex justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsForgotPassword(true)}
-                                                        className="text-xs text-orange-400 hover:text-orange-300 transition-colors font-medium"
-                                                    >
-                                                        Forgot password?
-                                                    </button>
-                                                </div>
-                                            </div>
+          <div className="relative z-10 p-8">
 
-                                            {error && <div className="text-sm text-red-300 bg-red-500/10 p-3 rounded-xl border border-red-500/20">{error}</div>}
-                                            {successMessage && <div className="text-sm text-green-300 bg-green-500/10 p-3 rounded-xl border border-green-500/20 flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {successMessage}</div>}
-
-                                            <EnhancedButton
-                                                type="submit"
-                                                className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-0 h-12 rounded-xl font-semibold shadow-lg shadow-orange-500/20"
-                                                disabled={isLoading}
-                                                glow
-                                                ripple
-                                                magneticEffect
-                                            >
-                                                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
-                                                    <span className="flex items-center justify-center w-full">Login <ArrowRight className="ml-2 h-4 w-4" /></span>
-                                                )}
-                                            </EnhancedButton>
-                                        </form>
-                                    </TabsContent>
-
-                                    <TabsContent value="register" className="mt-0">
-                                        <form onSubmit={handleRegister} className="space-y-4">
-                                            <EnhancedInput
-                                                id="fullName"
-                                                label="Full Name"
-                                                placeholder="John Doe"
-                                                value={fullName}
-                                                onChange={(e) => setFullName(e.target.value)}
-                                                required
-                                            />
-                                            <EnhancedInput
-                                                id="reg-email"
-                                                type="email"
-                                                label="Email"
-                                                placeholder="m@example.com"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                required
-                                            />
-                                            <EnhancedInput
-                                                id="reg-password"
-                                                type="password"
-                                                label="Password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                required
-                                            />
-
-                                            {error && <div className="text-sm text-red-300 bg-red-500/10 p-3 rounded-xl border border-red-500/20">{error}</div>}
-
-                                            <EnhancedButton
-                                                type="submit"
-                                                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white border-0 h-12 rounded-xl font-semibold shadow-lg shadow-purple-500/20"
-                                                disabled={isLoading}
-                                                glow
-                                                ripple
-                                            >
-                                                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Create Account"}
-                                            </EnhancedButton>
-                                        </form>
-                                    </TabsContent>
-                                </Tabs>
-
-                                <div className="relative my-8">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-white/10" />
-                                    </div>
-                                    <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-black/50 backdrop-blur-md px-4 text-white/40 rounded-full border border-white/5">Or continue with</span>
-                                    </div>
-                                </div>
-
-                                <div className="w-full flex justify-center">
-                                    <div style={{ width: '100%' }} className="transform hover:scale-[1.02] transition-transform duration-300">
-                                        <GoogleLogin
-                                            onSuccess={async (credentialResponse) => {
-                                                if (credentialResponse.credential) {
-                                                    try {
-                                                        await googleLogin(credentialResponse.credential)
-                                                        onOpenChange(false);
-                                                    } catch (e) {
-                                                        console.error("Google login failed", e);
-                                                        setError("Google login failed");
-                                                    }
-                                                }
-                                            }}
-                                            onError={() => {
-                                                console.log('Login Failed');
-                                                setError("Google login failed");
-                                            }}
-                                            theme="filled_black"
-                                            shape="pill"
-                                            size="large"
-                                            width="380" // Matched to container padding
-                                        />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+            {/* Header */}
+            <div className="mb-7 text-center">
+              {/* Animated logo orb */}
+              <div className="flex justify-center mb-5">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-2xl bg-violet-500/30 blur-xl animate-pulse" />
+                  <div className="relative w-14 h-14 rounded-2xl bg-linear-to-br from-violet-500/30 via-indigo-500/20 to-cyan-500/10 border border-white/12 flex items-center justify-center shadow-xl shadow-violet-900/40">
+                    <span className="text-2xl font-serif text-white drop-shadow-lg">ॐ</span>
+                  </div>
+                  {/* Sparkle dot */}
+                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-linear-to-br from-cyan-300 to-violet-400 flex items-center justify-center shadow-lg shadow-violet-900/50">
+                    <Sparkles className="h-2 w-2 text-white" />
+                  </div>
                 </div>
-            </DialogContent>
-        </Dialog>
-    );
+              </div>
+
+              <h2 className="text-[22px] font-bold text-white tracking-tight leading-tight">
+                {heading}
+              </h2>
+              <p className="mt-1.5 text-[13px] text-white/35 font-light">
+                {subheading}
+              </p>
+            </div>
+
+            {/* Tab toggle (only for non-forgot-password) */}
+            {!isForgotPassword && (
+              <div className="relative mb-7 flex rounded-xl border border-white/7 bg-white/3 p-1 gap-1">
+                {/* Sliding pill indicator */}
+                <motion.div
+                  layoutId="tab-pill"
+                  className="absolute top-1 bottom-1 rounded-lg bg-linear-to-r from-violet-600/50 to-indigo-600/40 border border-violet-400/20 shadow-lg shadow-violet-900/30"
+                  style={{
+                    width: "calc(50% - 6px)",
+                    left: activeTab === "login" ? "4px" : "calc(50% + 2px)",
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+                {(["login", "register"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => switchTab(tab)}
+                    className={`relative z-10 flex-1 py-2 text-[13px] font-semibold rounded-lg transition-colors duration-200 ${
+                      activeTab === tab ? "text-white" : "text-white/35 hover:text-white/60"
+                    }`}
+                  >
+                    {tab === "login" ? "Sign In" : "Sign Up"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Form area */}
+            <AnimatePresence mode="wait">
+
+              {/* ── Forgot Password ── */}
+              {isForgotPassword && (
+                <motion.form
+                  key="forgot"
+                  initial={{ opacity: 0, x: -16, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: 16, filter: "blur(8px)" }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  onSubmit={handleForgotPassword}
+                  className="space-y-5"
+                >
+                  <FloatingInput
+                    id="fp-email"
+                    type="email"
+                    label="Email Address"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    icon={Mail}
+                  />
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-[13px] text-red-300"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                  {successMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3 text-[13px] text-emerald-300"
+                    >
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      {successMessage}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-11 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-[14px] flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Reset Link"}
+                  </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => { setIsForgotPassword(false); setError(""); setSuccessMessage(""); }}
+                      className="text-[13px] text-white/35 hover:text-white/70 transition-colors font-medium"
+                    >
+                      ← Back to Sign In
+                    </button>
+                  </div>
+                </motion.form>
+              )}
+
+              {/* ── Login ── */}
+              {!isForgotPassword && activeTab === "login" && (
+                <motion.form
+                  key="login"
+                  initial={{ opacity: 0, x: -16, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: 16, filter: "blur(8px)" }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  onSubmit={handleLogin}
+                  className="space-y-4"
+                >
+                  <FloatingInput
+                    id="login-email"
+                    type="email"
+                    label="Email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    icon={Mail}
+                  />
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
+                        <Lock className="h-3 w-3" /> Password
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => { setIsForgotPassword(true); setError(""); setSuccessMessage(""); }}
+                        className="text-[11px] text-violet-400/80 hover:text-violet-300 transition-colors font-medium"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        placeholder="Enter your password"
+                        className="h-11 w-full rounded-xl border border-white/8 bg-white/4 px-4 pr-10 text-[14px] text-white placeholder:text-white/20 focus:border-violet-400/40 focus:bg-white/7 focus:outline-none transition-all duration-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-[13px] text-red-300"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                  {successMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3 text-[13px] text-emerald-300"
+                    >
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      {successMessage}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="group w-full h-11 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-[14px] flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        Sign In
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </motion.form>
+              )}
+
+              {/* ── Register ── */}
+              {!isForgotPassword && activeTab === "register" && (
+                <motion.form
+                  key="register"
+                  initial={{ opacity: 0, x: 16, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: -16, filter: "blur(8px)" }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  onSubmit={handleRegister}
+                  className="space-y-4"
+                >
+                  <FloatingInput
+                    id="reg-name"
+                    label="Full Name"
+                    placeholder="Arjun Sharma"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    icon={User}
+                  />
+                  <FloatingInput
+                    id="reg-email"
+                    type="email"
+                    label="Email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    icon={Mail}
+                  />
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
+                      <KeyRound className="h-3 w-3" /> Password
+                    </Label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={8}
+                        placeholder="Min. 8 characters"
+                        className="h-11 w-full rounded-xl border border-white/8 bg-white/4 px-4 pr-10 text-[14px] text-white placeholder:text-white/20 focus:border-violet-400/40 focus:bg-white/7 focus:outline-none transition-all duration-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-[13px] text-red-300"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-11 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-[14px] flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                  </button>
+                </motion.form>
+              )}
+            </AnimatePresence>
+
+            {/* Google OAuth section — only for login/register */}
+            {!isForgotPassword && (
+              <>
+                {/* Divider */}
+                <div className="relative my-6 flex items-center">
+                  <div className="flex-1 border-t border-white/8" />
+                  <span className="mx-4 shrink-0 rounded-full border border-white/8 bg-white/3 px-3 py-1 text-[11px] uppercase tracking-widest text-white/25">
+                    or continue with
+                  </span>
+                  <div className="flex-1 border-t border-white/8" />
+                </div>
+
+                {/* Google button wrapper */}
+                <div className="w-full overflow-hidden rounded-xl border border-white/8 bg-white/3 hover:bg-white/5 hover:border-white/12 transition-all duration-200">
+                  <div className="flex justify-center py-0.5">
+                    <GoogleLogin
+                      onSuccess={async (credentialResponse) => {
+                        if (credentialResponse.credential) {
+                          try {
+                            await googleLogin(credentialResponse.credential);
+                            onOpenChange(false);
+                          } catch (e) {
+                            console.error("Google login failed", e);
+                            setError("Google authentication failed. Please try again.");
+                          }
+                        }
+                      }}
+                      onError={() => {
+                        setError("Google authentication failed. Please try again.");
+                      }}
+                      theme="filled_black"
+                      shape="rectangular"
+                      size="large"
+                      width="400"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer text */}
+                <p className="mt-5 text-center text-[11px] text-white/20 leading-relaxed">
+                  By continuing, you agree to our{" "}
+                  <a href="/terms" className="text-white/35 hover:text-white/60 underline underline-offset-2 transition-colors">
+                    Terms
+                  </a>{" "}
+                  &{" "}
+                  <a href="/privacy" className="text-white/35 hover:text-white/60 underline underline-offset-2 transition-colors">
+                    Privacy Policy
+                  </a>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

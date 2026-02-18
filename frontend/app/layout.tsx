@@ -8,20 +8,24 @@ import { AppProvider } from '@/lib/context/AppContext';
 import { ToastProvider } from '@/lib/context/ToastContext';
 import { ToastContainer } from '@/components/shared/ToastContainer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { ThemeProvider } from '@/components/theme-provider';
+import { Footer } from '@/components/layout/Footer';
 import { ROUTES } from '@/lib/utils/constants';
 import { AuthProvider } from '@/lib/context/auth-provider';
+import { ThemeProvider } from '@/components/theme-provider';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-manrope',
+  display: 'swap',
 });
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
+  display: 'swap',
 });
 
 const navItems = [
@@ -39,6 +43,9 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password';
+  const isFullscreen = pathname === '/chat' || pathname === '/voice';
+  const showFooter = !isAuthPage && !isFullscreen;
 
   return (
     <html lang="en" className={`${manrope.variable} ${playfair.variable}`} suppressHydrationWarning>
@@ -51,7 +58,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body
-        className={`font-sans antialiased min-h-screen relative overflow-x-hidden text-foreground`}
+        className="font-sans antialiased min-h-screen relative overflow-x-hidden text-foreground"
       >
         <BackgroundController>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
@@ -66,16 +73,27 @@ export default function RootLayout({
                 >
                   <AuthProvider>
                     <AppProvider>
+                      {/* Render Header Globally */}
                       <Header items={navItems} />
-                      <main className={isHome ? '' : 'premium-main'}>{children}</main>
-                      {!isHome && (
-                        <footer className="premium-footer">
-                          <div className="container mx-auto px-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-300">
-                            <span>DivyaVaani AI • Universal Spiritual Guidance</span>
-                            <span className="text-cyan-100/80">Calm UI. Fast responses. Respectful wisdom.</span>
-                          </div>
-                        </footer>
+
+                      {/* AppSidebar removed to prevent double sidebar issue */}
+
+                      <main
+                        className={cn(
+                          "relative z-10 transition-all duration-300",
+                          isFullscreen ? "h-screen overflow-hidden" : "",
+                          !isHome && !isFullscreen && "pt-20 min-h-[calc(100vh-80px)]"
+                        )}
+                      >
+                        {children}
+                      </main>
+
+                      {showFooter && (
+                        <div className="relative z-10">
+                          <Footer />
+                        </div>
                       )}
+
                       <ToastContainer />
                     </AppProvider>
                   </AuthProvider>

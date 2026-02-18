@@ -7,6 +7,10 @@ import { conversationService, Conversation, Message, MessageCreate } from '@/lib
 
 export { type Conversation, type Message };
 
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : 'An unexpected error occurred';
+}
+
 export function useConversationHistory(userId: string = 'default') {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
@@ -21,8 +25,8 @@ export function useConversationHistory(userId: string = 'default') {
     try {
       const data = await conversationService.getConversations(userId, limit);
       setConversations(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -38,8 +42,8 @@ export function useConversationHistory(userId: string = 'default') {
       setConversations(prev => [conversation, ...prev]);
       setMessages([]);
       return conversation;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
       return null;
     } finally {
       setLoading(false);
@@ -54,8 +58,8 @@ export function useConversationHistory(userId: string = 'default') {
       const data = await conversationService.getConversation(conversationId, true);
       setCurrentConversation(data);
       setMessages(data.messages || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -85,8 +89,8 @@ export function useConversationHistory(userId: string = 'default') {
       const message = await conversationService.addMessage(conversationId, messageData);
       setMessages(prev => [...prev, message]);
       return message;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
       return null;
     }
   }, []);
@@ -100,8 +104,8 @@ export function useConversationHistory(userId: string = 'default') {
         setCurrentConversation(null);
         setMessages([]);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     }
   }, [currentConversation]);
 
@@ -112,8 +116,8 @@ export function useConversationHistory(userId: string = 'default') {
     try {
       const data = await conversationService.searchConversations(userId, query);
       setConversations(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

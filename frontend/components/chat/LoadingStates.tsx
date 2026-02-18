@@ -1,6 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Loader2, Brain, Heart } from 'lucide-react';
-import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { Sparkles, Flame, Wind, Star, BookOpen } from 'lucide-react';
 
 interface LoadingStateProps {
   isTyping?: boolean;
@@ -9,58 +11,45 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({
-  isTyping = false,
   message = "Contemplating your question...",
   className = ''
 }: LoadingStateProps) {
-  const messages = [
-    "Contemplating your question...",
-    "Consulting the ancient wisdom...",
-    "Seeking guidance from the Gita...",
-    "Channeling spiritual insights...",
-    "Finding the right verse...",
-    "Harmonizing with cosmic truth..."
-  ];
-
-  const animatedMessage = isTyping ? messages[Math.floor(Date.now() / 2000) % messages.length] : message;
-
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {/* Animated Avatar */}
-      <div className="flex-shrink-0 relative">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg ring-2 ring-white/10 animate-pulse">
-          <Brain className="h-5 w-5 text-white" />
+    <div className={`flex items-start gap-3 mb-6 ${className}`}>
+      {/* Avatar with pulse ring */}
+      <div className="relative shrink-0">
+        <div className="absolute inset-0 rounded-2xl bg-violet-500/30 animate-ping opacity-50 scale-110" />
+        <div className="relative w-9 h-9 rounded-2xl bg-linear-to-br from-violet-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-violet-900/40 ring-1 ring-white/15">
+          <span className="text-white text-[13px] font-bold leading-none">ॐ</span>
         </div>
-
-        {/* Pulsing background effect with gradient */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-500 to-red-600 animate-ping opacity-20"></div>
-        <div className="absolute inset-0 rounded-full bg-orange-500/30 animate-pulse blur-md"></div>
       </div>
 
-      {/* Loading Content */}
-      <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl rounded-tl-none px-5 py-4 shadow-xl">
+      {/* Bubble */}
+      <div className="bg-white/5 backdrop-blur-2xl border border-violet-500/20 rounded-2xl rounded-tl-sm px-5 py-4 shadow-xl">
         <div className="flex items-center gap-3">
-          {/* Typing Animation with gradient */}
-          <div className="flex items-center gap-1">
-            <div className="flex space-x-1.5">
-              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }}></div>
-            </div>
+          {/* Animated dots */}
+          <div className="flex items-center gap-1.5">
+            {[0, 1, 2].map(i => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 rounded-full bg-violet-400"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+              />
+            ))}
           </div>
-
-          {/* Loading Text */}
-          <span className="text-sm text-white/80 font-medium">
-            {animatedMessage}
+          <span className="text-[13px] text-white/45 font-light italic">
+            {message}
           </span>
-
-          {/* Subtle loader */}
-          <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
         </div>
-
-        {/* Progress indicator with gradient */}
-        <div className="mt-3 w-full bg-white/5 rounded-full h-1 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 h-1 rounded-full animate-shimmer" style={{ width: '100%', backgroundSize: '200% 100%' }}></div>
+        {/* Shimmer bar */}
+        <div className="mt-3 h-0.5 w-full rounded-full overflow-hidden bg-white/5">
+          <motion.div
+            className="h-full rounded-full bg-linear-to-r from-transparent via-violet-500/60 to-transparent"
+            animate={{ x: ["-100%", "200%"] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+            style={{ width: "50%" }}
+          />
         </div>
       </div>
     </div>
@@ -72,18 +61,11 @@ interface TypingIndicatorProps {
   className?: string;
 }
 
-export function TypingIndicator({ users = ['AI'], className = '' }: TypingIndicatorProps) {
+export function TypingIndicator({ users = ['DivyaVaani'], className = '' }: TypingIndicatorProps) {
   return (
-    <div className={`flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 ${className}`}>
-      <div className="flex items-center gap-1">
-        <Heart className="h-3 w-3 text-red-400 animate-pulse" />
-        <span>{users.join(', ')} {users.length === 1 ? 'is' : 'are'} typing</span>
-      </div>
-      <div className="flex space-x-1">
-        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
-        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
-      </div>
+    <div className={`flex items-center gap-2 text-xs text-white/30 ${className}`}>
+      <span className="animate-pulse">●</span>
+      <span>{users.join(', ')} {users.length === 1 ? 'is' : 'are'} typing...</span>
     </div>
   );
 }
@@ -95,82 +77,89 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenProps) {
   const exampleQuestions = [
-    "What is the nature of dharma?",
-    "How should one handle difficult decisions?",
-    "What does the Gita teach about selfless action?",
-    "How can I find inner peace?",
-    "What is the path to self-realization?"
+    { text: "What is the nature of dharma and how do I follow it?", icon: Flame, tag: "Dharma" },
+    { text: "How should one handle difficult decisions with equanimity?", icon: Wind, tag: "Equanimity" },
+    { text: "What does the Gita teach about selfless action (Karma Yoga)?", icon: Sparkles, tag: "Karma Yoga" },
+    { text: "How can I find inner peace amid chaos?", icon: Star, tag: "Inner Peace" },
+    { text: "What is the path to self-realization according to Vedanta?", icon: BookOpen, tag: "Vedanta" },
+    { text: "How do I overcome fear and attachment?", icon: Flame, tag: "Liberation" },
   ];
 
+  const containerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.07 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 18 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] } }
+  };
+
   return (
-    <div className={`flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 ${className}`}>
-      <div className="text-center max-w-2xl space-y-8">
-        {/* Main Logo/Avatar */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 blur-3xl rounded-full"></div>
-          <div className="relative flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 shadow-2xl animate-pulse">
-              {/* <Sparkles className="h-10 w-10 text-white" /> */}
-              <Image
-                src="/images/logo.png"
-                alt="DivyaVaani Logo"
-                width={80}
-                height={80}
-                className="h-full w-full object-cover rounded-full p-1"
-              />
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className={`flex-1 flex items-center justify-center px-4 py-8 ${className}`}
+    >
+      <div className="w-full max-w-2xl space-y-8">
+        {/* Hero */}
+        <motion.div variants={itemVariants} className="text-center">
+          <div className="relative inline-block mb-6">
+            <div className="absolute inset-0 rounded-full bg-violet-600/20 blur-3xl scale-150" />
+            <div className="absolute inset-0 rounded-full bg-indigo-600/15 blur-2xl scale-125 animate-pulse" />
+            <div className="relative w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-2xl shadow-violet-900/40 flex items-center justify-center ring-1 ring-white/10">
+              <span className="text-white text-3xl font-serif leading-none">ॐ</span>
             </div>
           </div>
-        </div>
-
-        {/* Welcome Text */}
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Welcome to DivyaVaani AI
+          <h1 className="text-3xl md:text-4xl font-serif font-bold bg-clip-text text-transparent bg-linear-to-r from-white via-white/90 to-white/60 mb-3">
+            Namaste, Seeker
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg mx-auto">
-            Your spiritual companion enlightened by the eternal wisdom of the Bhagavad Gita.
-            Ask deep questions about dharma, karma, moksha, and the path to self-realization.
+          <p className="text-white/40 text-[15px] font-light leading-relaxed max-w-md mx-auto">
+            Receive guidance from the eternal wisdom of the Bhagavad Gita and universal spiritual traditions.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Example Questions */}
+        {/* Divider */}
+        <motion.div variants={itemVariants} className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-linear-to-r from-transparent to-white/10" />
+          <span className="text-white/20 text-[10px] uppercase tracking-[0.3em] font-medium">Explore Questions</span>
+          <div className="h-px flex-1 bg-linear-to-l from-transparent to-white/10" />
+        </motion.div>
+
+        {/* Question grid */}
         {onExampleClick && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Try asking about
-            </h3>
-            <div className="grid gap-3 max-w-xl mx-auto">
-              {exampleQuestions.map((question, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onExampleClick(question)}
-                  className="group relative p-4 text-left text-sm text-gray-700 dark:text-gray-300 bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/15 dark:hover:bg-white/10 hover:border-orange-500/40 dark:hover:border-orange-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-                >
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <span className="relative z-10">&ldquo;{question}&rdquo;</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {exampleQuestions.map(({ text, icon: Icon, tag }, idx) => (
+              <motion.button
+                key={idx}
+                onClick={() => onExampleClick(text)}
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="group flex items-start gap-3.5 w-full text-left px-4 py-3.5 rounded-2xl bg-white/3 hover:bg-white/7 border border-white/6 hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-linear-to-br from-violet-600/0 to-indigo-600/0 group-hover:from-violet-600/5 group-hover:to-indigo-600/4 transition-all duration-300" />
+                <div className="relative shrink-0 w-8 h-8 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center group-hover:bg-violet-500/12 group-hover:border-violet-500/25 transition-all duration-300 mt-0.5">
+                  <Icon size={14} className="text-white/25 group-hover:text-violet-300 transition-colors" />
+                </div>
+                <div className="relative flex-1 min-w-0">
+                  <div className="text-[10px] font-semibold text-violet-400/50 uppercase tracking-wider mb-1 group-hover:text-violet-400/80 transition-colors">{tag}</div>
+                  <span className="text-[13px] text-white/50 group-hover:text-white/80 font-light leading-snug transition-colors line-clamp-2">
+                    {text}
+                  </span>
+                </div>
+              </motion.button>
+            ))}
+          </motion.div>
         )}
 
-        {/* Features */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-500 dark:text-gray-400">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-            <span>Ancient Wisdom</span>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-            <span>Spiritual Guidance</span>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-            <span>Modern Interface</span>
-          </div>
-        </div>
+        {/* Hint */}
+        <motion.div variants={itemVariants} className="text-center">
+          <p className="text-[11px] text-white/15 tracking-widest uppercase">
+            ↑ Choose a question or type below
+          </p>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
