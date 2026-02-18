@@ -527,7 +527,6 @@ export function AuthModal({
                       width="400"
                       text="continue_with"
                       logo_alignment="left"
-                      locale="en"
                     />
                   </div>
                 </div>

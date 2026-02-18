@@ -249,7 +249,6 @@ export default function RegisterPage() {
                   width="380"
                   text="continue_with"
                   logo_alignment="left"
-                  locale="en"
                 />
               </div>
             </div>
