@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,7 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShieldCheck, BadgeCheck, Clock3 } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, Clock3, LogOut, User, Lock, Mail, Camera } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { GrainOverlay } from '@/components/ui/GrainOverlay';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { user, token, logout } = useAuth();
@@ -18,15 +22,11 @@ export default function ProfilePage() {
 
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [profileMessage, setProfileMessage] = useState('');
-  const [profileError, setProfileError] = useState('');
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
   useEffect(() => {
@@ -43,18 +43,16 @@ export default function ProfilePage() {
     if (!token) return;
 
     setIsProfileLoading(true);
-    setProfileMessage('');
-    setProfileError('');
 
     try {
       await authService.updateProfile(token, {
         full_name: fullName,
         avatar_url: avatarUrl,
       });
-      setProfileMessage('Profile updated successfully.');
+      toast.success('Profile updated successfully');
       window.location.reload();
     } catch (err: unknown) {
-      setProfileError(err instanceof Error ? err.message : 'Failed to update profile');
+      toast.error(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setIsProfileLoading(false);
     }
@@ -65,25 +63,23 @@ export default function ProfilePage() {
     if (!token) return;
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
+      toast.error('New passwords do not match');
       return;
     }
 
     setIsPasswordLoading(true);
-    setPasswordMessage('');
-    setPasswordError('');
 
     try {
       await authService.updatePassword(token, {
         old_password: oldPassword,
         new_password: newPassword,
       });
-      setPasswordMessage('Password updated successfully.');
+      toast.success('Password updated successfully');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: unknown) {
-      setPasswordError(err instanceof Error ? err.message : 'Failed to update password');
+      toast.error(err instanceof Error ? err.message : 'Failed to update password');
     } finally {
       setIsPasswordLoading(false);
     }
@@ -92,114 +88,175 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-3xl border border-cyan-200/20 bg-slate-900/55 p-8 backdrop-blur-xl">
-          <h1 className="text-4xl text-slate-50" style={{ fontFamily: 'var(--font-playfair)' }}>Account Settings</h1>
-          <p className="mt-2 text-slate-300">Manage your profile, security, and account hygiene.</p>
+    <div className="min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <GrainOverlay />
 
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-cyan-200/15 bg-slate-900/70 p-3 text-sm text-slate-200 flex items-center gap-2">
-              <BadgeCheck className="h-4 w-4 text-cyan-200" /> Profile completion: Active
-            </div>
-            <div className="rounded-xl border border-cyan-200/15 bg-slate-900/70 p-3 text-sm text-slate-200 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-cyan-200" /> Security posture: Good
-            </div>
-            <div className="rounded-xl border border-cyan-200/15 bg-slate-900/70 p-3 text-sm text-slate-200 flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-cyan-200" /> Last updated: just now
+      {/* Background gradients */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
+
+      <motion.div
+        className="mx-auto max-w-6xl space-y-8 relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <section className="rounded-3xl border border-white/10 bg-black/20 p-8 md:p-10 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/70">Account Settings</h1>
+            <p className="mt-2 text-white/60 text-lg font-light">Manage your profile, security, and account hygiene.</p>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { icon: BadgeCheck, text: "Profile completion: Active", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+                { icon: ShieldCheck, text: "Security posture: Good", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+                { icon: Clock3, text: "Last updated: just now", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" }
+              ].map((item, i) => (
+                <div key={i} className={`rounded-xl border ${item.bg} p-4 text-sm text-white/80 flex items-center gap-3 backdrop-blur-sm`}>
+                  <item.icon className={`h-5 w-5 ${item.color}`} />
+                  {item.text}
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="md:col-span-1 border-cyan-200/15 bg-slate-900/55 backdrop-blur-xl">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <Avatar className="h-24 w-24 mb-4 ring-2 ring-cyan-200/25">
-                <AvatarImage src={user.avatar_url} />
-                <AvatarFallback className="bg-cyan-300/20 text-slate-100 text-2xl">
-                  {user.full_name?.charAt(0) || user.email.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <h2 className="font-semibold text-lg text-center text-slate-100">{user.full_name || 'User'}</h2>
-              <p className="text-sm text-slate-300 text-center mb-4 break-all">{user.email}</p>
-              <Button variant="outline" className="w-full border-cyan-200/30 text-slate-100 hover:bg-cyan-300/10" onClick={logout}>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <Card className="lg:col-span-1 border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl h-fit">
+            <CardContent className="pt-8 pb-8 flex flex-col items-center">
+              <div className="relative group cursor-pointer">
+                <Avatar className="h-32 w-32 mb-6 ring-4 ring-white/10 shadow-2xl group-hover:ring-primary/50 transition-all duration-500">
+                  <AvatarImage src={user.avatar_url} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-bold">
+                    {user.full_name?.charAt(0) || user.email.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-2 -right-2 p-2 bg-black/80 rounded-full border border-white/20 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-4 w-4" />
+                </div>
+              </div>
+
+              <h2 className="font-bold text-xl text-center text-white mb-1">{user.full_name || 'User'}</h2>
+              <p className="text-sm text-white/50 text-center mb-6 break-all font-mono bg-white/5 px-2 py-1 rounded-md border border-white/5">{user.email}</p>
+
+              <Button
+                variant="outline"
+                className="w-full bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 font-medium h-10 transition-all"
+                onClick={logout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
             </CardContent>
           </Card>
 
-          <div className="md:col-span-3">
+          <div className="lg:col-span-3">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="mb-4 bg-slate-900/60 border border-cyan-200/20">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="password">Password</TabsTrigger>
+              <TabsList className="mb-6 bg-black/20 border border-white/10 p-1 w-full sm:w-auto h-12 rounded-xl backdrop-blur-md">
+                <TabsTrigger value="profile" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 h-10 px-6 rounded-lg transition-all">Profile Details</TabsTrigger>
+                <TabsTrigger value="password" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/50 h-10 px-6 rounded-lg transition-all">Security</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="profile">
-                <Card className="border-cyan-200/15 bg-slate-900/55 backdrop-blur-xl">
+              <TabsContent value="profile" className="mt-0">
+                <Card className="border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl">
                   <CardHeader>
-                    <CardTitle className="text-slate-100">Profile Information</CardTitle>
-                    <CardDescription className="text-slate-300">Update your personal details</CardDescription>
+                    <CardTitle className="text-white flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Profile Information</CardTitle>
+                    <CardDescription className="text-white/50">Update your personal details visible to others.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                    <form onSubmit={handleProfileUpdate} className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-slate-200">Email</Label>
-                        <Input id="email" value={user.email} disabled className="bg-slate-800/60 border-cyan-200/20 text-slate-300" />
+                        <Label htmlFor="email" className="text-white/80">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                          <Input id="email" value={user.email} disabled className="pl-10 bg-white/5 border-white/10 text-white/50 cursor-not-allowed selection:bg-white/20" />
+                        </div>
                       </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-slate-200">Full Name</Label>
-                        <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-slate-800/60 border-cyan-200/20 text-slate-100" />
+                        <Label htmlFor="fullName" className="text-white/80">Full Name</Label>
+                        <Input
+                          id="fullName"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-white/20 transition-all h-11"
+                        />
                       </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="avatarUrl" className="text-slate-200">Avatar URL</Label>
+                        <Label htmlFor="avatarUrl" className="text-white/80">Avatar URL</Label>
                         <Input
                           id="avatarUrl"
                           value={avatarUrl}
                           onChange={(e) => setAvatarUrl(e.target.value)}
                           placeholder="https://example.com/avatar.jpg"
-                          className="bg-slate-800/60 border-cyan-200/20 text-slate-100"
+                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-white/20 transition-all h-11"
                         />
+                        <p className="text-xs text-white/40">Link to an image file (PNG, JPG) for your profile picture.</p>
                       </div>
 
-                      {profileError && <p className="text-sm text-rose-200">{profileError}</p>}
-                      {profileMessage && <p className="text-sm text-emerald-200">{profileMessage}</p>}
-
-                      <Button type="submit" disabled={isProfileLoading} className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-                        {isProfileLoading ? 'Saving...' : 'Save Changes'}
-                      </Button>
+                      <div className="flex justify-end pt-4">
+                        <Button type="submit" disabled={isProfileLoading} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-11 px-8 rounded-xl font-semibold">
+                          {isProfileLoading ? 'Saving Changes...' : 'Save Changes'}
+                        </Button>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="password">
-                <Card className="border-cyan-200/15 bg-slate-900/55 backdrop-blur-xl">
+              <TabsContent value="password" className="mt-0">
+                <Card className="border-white/10 bg-black/20 backdrop-blur-2xl shadow-xl">
                   <CardHeader>
-                    <CardTitle className="text-slate-100">Change Password</CardTitle>
-                    <CardDescription className="text-slate-300">Set a stronger password for your account</CardDescription>
+                    <CardTitle className="text-white flex items-center gap-2"><Lock className="h-5 w-5 text-primary" /> Change Password</CardTitle>
+                    <CardDescription className="text-white/50">Ensure your account uses a strong, unique password.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="oldPassword" className="text-slate-200">Current Password</Label>
-                        <Input id="oldPassword" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required className="bg-slate-800/60 border-cyan-200/20 text-slate-100" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword" className="text-slate-200">New Password</Label>
-                        <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={8} className="bg-slate-800/60 border-cyan-200/20 text-slate-100" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword" className="text-slate-200">Confirm New Password</Label>
-                        <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} className="bg-slate-800/60 border-cyan-200/20 text-slate-100" />
+                        <Label htmlFor="oldPassword" className="text-white/80">Current Password</Label>
+                        <Input
+                          id="oldPassword"
+                          type="password"
+                          value={oldPassword}
+                          onChange={(e) => setOldPassword(e.target.value)}
+                          required
+                          className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
+                        />
                       </div>
 
-                      {passwordError && <p className="text-sm text-rose-200">{passwordError}</p>}
-                      {passwordMessage && <p className="text-sm text-emerald-200">{passwordMessage}</p>}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword" className="text-white/80">New Password</Label>
+                          <Input
+                            id="newPassword"
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword" className="text-white/80">Confirm New Password</Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            className="bg-white/5 border-white/10 text-white focus:bg-white/10 h-11"
+                          />
+                        </div>
+                      </div>
 
-                      <Button type="submit" disabled={isPasswordLoading} className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-                        {isPasswordLoading ? 'Updating...' : 'Update Password'}
-                      </Button>
+                      <div className="flex justify-end pt-4">
+                        <Button type="submit" disabled={isPasswordLoading} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-11 px-8 rounded-xl font-semibold">
+                          {isPasswordLoading ? 'Updating...' : 'Update Password'}
+                        </Button>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
@@ -207,7 +264,7 @@ export default function ProfilePage() {
             </Tabs>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { Manrope, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/header';
+import { BackgroundController } from '@/components/ui/background-controller';
 import { AppProvider } from '@/lib/context/AppContext';
 import { ToastProvider } from '@/lib/context/ToastContext';
 import { ToastContainer } from '@/components/shared/ToastContainer';
@@ -50,45 +51,39 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body
-        className={`font-sans antialiased min-h-screen relative overflow-x-hidden text-foreground ${
-          isHome ? 'bg-gradient-to-br from-indigo-100 via-white to-purple-100' : 'app-shell'
-        }`}
+        className={`font-sans antialiased min-h-screen relative overflow-x-hidden text-foreground`}
       >
-        {!isHome && (
-          <div aria-hidden className="premium-orb premium-orb-a" />
-        )}
-        {!isHome && (
-          <div aria-hidden className="premium-orb premium-orb-b" />
-        )}
+        <BackgroundController>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
 
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <ErrorBoundary>
-            <ToastProvider>
-              <GoogleOAuthProvider
-                clientId={
-                  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-                  '8832500585-r2p759jqaka789gr0v2l3dnahs2rpc8c.apps.googleusercontent.com'
-                }
-              >
-                <AuthProvider>
-                  <AppProvider>
-                    <Header items={navItems} />
-                    <main className={isHome ? '' : 'premium-main'}>{children}</main>
-                    {!isHome && (
-                      <footer className="premium-footer">
-                        <div className="container mx-auto px-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-300">
-                          <span>DivyaVaani AI • Universal Spiritual Guidance</span>
-                          <span className="text-cyan-100/80">Calm UI. Fast responses. Respectful wisdom.</span>
-                        </div>
-                      </footer>
-                    )}
-                    <ToastContainer />
-                  </AppProvider>
-                </AuthProvider>
-              </GoogleOAuthProvider>
-            </ToastProvider>
-          </ErrorBoundary>
-        </ThemeProvider>
+            <ErrorBoundary>
+              <ToastProvider>
+                <GoogleOAuthProvider
+                  clientId={
+                    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+                    '8832500585-r2p759jqaka789gr0v2l3dnahs2rpc8c.apps.googleusercontent.com'
+                  }
+                >
+                  <AuthProvider>
+                    <AppProvider>
+                      <Header items={navItems} />
+                      <main className={isHome ? '' : 'premium-main'}>{children}</main>
+                      {!isHome && (
+                        <footer className="premium-footer">
+                          <div className="container mx-auto px-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-300">
+                            <span>DivyaVaani AI • Universal Spiritual Guidance</span>
+                            <span className="text-cyan-100/80">Calm UI. Fast responses. Respectful wisdom.</span>
+                          </div>
+                        </footer>
+                      )}
+                      <ToastContainer />
+                    </AppProvider>
+                  </AuthProvider>
+                </GoogleOAuthProvider>
+              </ToastProvider>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </BackgroundController>
       </body>
     </html>
   );

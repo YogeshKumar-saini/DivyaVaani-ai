@@ -9,44 +9,30 @@ import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { StatsSection } from "@/components/home/StatsSection";
 import { LanguagesSection } from "@/components/home/LanguagesSection";
 import { NewsletterSection } from "@/components/home/NewsletterSection";
-import { AuroraBackground } from "@/components/ui/AuroraBackground";
-import { GrainOverlay } from "@/components/ui/GrainOverlay";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { CursorGlow } from "@/components/ui/cursor-glow";
-import { ScrollBackground } from "@/components/home/ScrollBackground";
 
 export default function HomePage() {
   return (
-    <div className="dark min-h-screen flex flex-col relative text-foreground">
-      <ScrollBackground />
+    <div className="min-h-screen flex flex-col relative text-foreground overflow-x-hidden">
       <ScrollProgress />
       <CursorGlow />
-      <GrainOverlay />
 
-      {/* Hero with its own video background */}
+      {/* Hero Section */}
       <HeroSection />
 
-      {/* Main Content Areas with Aurora Background */}
-      <AuroraBackground
-        className="flex-1 w-full min-h-0 h-full relative"
-        showRadialGradient={false}
-        transparent
-      >
-        <div className="w-full relative z-10">
-          {/* Additional Decorative Gradients */}
-          <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-black to-transparent z-20" />
+      {/* Main Content */}
+      <div className="relative z-10 space-y-24 pb-24">
+        <FeaturesSection />
+        <HowItWorks />
+        <StatsSection />
+        <LanguagesSection />
+        <TestimonialsSection />
+        <SampleQuestions />
+        <NewsletterSection />
+      </div>
 
-          <FeaturesSection />
-          <HowItWorks />
-          <StatsSection />
-          <LanguagesSection />
-          <TestimonialsSection />
-          <SampleQuestions />
-          <NewsletterSection />
-        </div>
-      </AuroraBackground>
-
-      {/* Footer with enhanced background */}
+      {/* Footer */}
       <div className="relative z-10">
         <Footer />
       </div>

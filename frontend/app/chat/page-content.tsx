@@ -12,6 +12,8 @@ import { LoadingState, WelcomeScreen } from '@/components/chat/LoadingStates';
 import { Menu, MessageSquarePlus, Sparkles, Gauge, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { GrainOverlay } from '@/components/ui/GrainOverlay';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Context {
   idx: number;
@@ -189,9 +191,11 @@ export default function ChatPageContent() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-6 px-3 sm:px-4">
-      <div className="mx-auto max-w-[1600px] h-[calc(100vh-7.5rem)] rounded-3xl border border-cyan-200/20 bg-slate-900/55 backdrop-blur-xl overflow-hidden">
-        <div className="flex h-full">
+    <div className="min-h-screen pt-24 pb-6 px-3 sm:px-4 relative overflow-hidden">
+      <GrainOverlay />
+      <div className="mx-auto max-w-[1600px] h-[calc(100vh-7.5rem)] rounded-3xl border border-white/10 bg-black/20 backdrop-blur-3xl overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+        <div className="flex h-full relative z-10">
           <ChatSidebar
             isOpen={isSidebarOpen}
             onOpenChange={setIsSidebarOpen}
@@ -208,14 +212,14 @@ export default function ChatPageContent() {
               isSidebarCollapsed ? 'md:pl-[80px]' : 'md:pl-[320px]'
             )}
           >
-            <div className="border-b border-cyan-200/15 bg-slate-950/35 px-4 py-3">
+            <div className="border-b border-white/10 bg-black/20 backdrop-blur-md px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden text-slate-200 hover:bg-cyan-300/15"
+                    className="md:hidden text-white/80 hover:bg-white/10 hover:text-white"
                   >
                     <Menu className="h-5 w-5" />
                   </Button>
@@ -223,39 +227,39 @@ export default function ChatPageContent() {
                     variant="outline"
                     size="sm"
                     onClick={handleNewChat}
-                    className="border-cyan-200/25 bg-cyan-300/10 text-slate-100 hover:bg-cyan-300/20"
+                    className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
                   >
                     <MessageSquarePlus className="h-4 w-4 mr-2" />
                     New Chat
                   </Button>
                 </div>
 
-                <div className="rounded-full border border-cyan-200/20 bg-slate-900/70 px-3 py-1.5">
+                <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5">
                   <LanguageDetector currentDetectedLanguage={detectedLanguage} disabled />
                 </div>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-200/20 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-300">
                   <Sparkles className="h-3.5 w-3.5" /> Wisdom Mode
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-200/20 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
                   <Gauge className="h-3.5 w-3.5" /> High Accuracy
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-200/20 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
                   <ShieldCheck className="h-3.5 w-3.5" /> Safety Filters On
                 </span>
               </div>
             </div>
 
-            <div className="border-b border-cyan-200/10 bg-slate-950/25 px-4 py-3 overflow-x-auto">
+            <div className="border-b border-white/5 bg-black/10 px-4 py-3 overflow-x-auto">
               <div className="flex gap-2 min-w-max">
                 {quickPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     onClick={() => handleExampleQuestion(prompt)}
-                    className="rounded-full border border-cyan-200/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-slate-100 hover:bg-cyan-300/20 transition-colors"
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all hover:scale-105"
                   >
                     {prompt}
                   </button>
@@ -263,19 +267,19 @@ export default function ChatPageContent() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto scrollbar-thin py-6">
+            <div className="flex-1 overflow-y-auto scrollbar-thin py-6 relative">
               {initialLoad && messages.length === 0 ? (
-                <WelcomeScreen onExampleClick={handleExampleQuestion} className="text-slate-100" />
+                <WelcomeScreen onExampleClick={handleExampleQuestion} className="text-white" />
               ) : (
                 <div className="px-2 sm:px-4">
                   <ChatMessages messages={messages} onFeedback={handleFeedback} />
                 </div>
               )}
-              {isLoading && <LoadingState isTyping className="px-6 mt-4" />}
+              {isLoading && <LoadingState isTyping className="px-6 mt-4 text-white/60" />}
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="border-t border-cyan-200/15 bg-slate-950/35 p-3 sm:p-4">
+            <div className="border-t border-white/10 bg-black/20 backdrop-blur-md p-3 sm:p-4">
               <ChatInput
                 input={input}
                 setInput={setInput}

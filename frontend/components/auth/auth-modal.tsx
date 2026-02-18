@@ -97,7 +97,7 @@ export function AuthModal({ isOpen, onOpenChange, defaultTab = "login" }: AuthMo
             if (!open) resetForm();
             onOpenChange(open);
         }}>
-            <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden bg-black/60 backdrop-blur-2xl border-white/10 text-white shadow-2xl rounded-3xl">
+            <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden bg-black/40 backdrop-blur-3xl border-white/10 text-white shadow-2xl rounded-3xl">
                 <GrainOverlay />
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-orange-500/20 pointer-events-none" />
 

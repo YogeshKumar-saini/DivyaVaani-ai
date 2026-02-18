@@ -4,9 +4,8 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { MobileSidebar } from './sidebar';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useOptimizedScroll } from '@/lib/design-system/performance-utils';
 import { useAuth } from '@/lib/context/auth-provider';
 import {
   DropdownMenu,
@@ -17,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User as UserIcon, Settings, Sparkles } from 'lucide-react';
+import { LogOut, User as UserIcon, Settings, Sparkles, ChevronRight } from 'lucide-react';
 import { AuthModal } from '@/components/auth/auth-modal';
 
 interface HeaderProps {
@@ -33,12 +32,11 @@ export const Header = React.memo(({ items }: HeaderProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, loading } = useAuth();
-  const isHome = pathname === '/';
+  const { scrollY } = useScroll();
 
-  useOptimizedScroll((scrollY) => {
-    const shouldBeScrolled = scrollY > 40;
-    setScrolled((prev) => (prev !== shouldBeScrolled ? shouldBeScrolled : prev));
-  }, []);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 20);
+  });
 
   const handleLogin = () => setIsAuthModalOpen(true);
   const handleLogout = () => logout();
@@ -47,24 +45,20 @@ export const Header = React.memo(({ items }: HeaderProps) => {
     <>
       <motion.header
         className={cn(
-          'fixed top-0 z-50 w-full transition-all duration-500 ease-in-out gpu-accelerated',
-          isHome
-            ? scrolled
-              ? 'bg-gradient-to-r from-indigo-950/80 via-white/5 to-purple-950/80 backdrop-blur-2xl border-b border-indigo-200/20 py-3 shadow-2xl'
-              : 'bg-transparent border-transparent py-5'
-            : scrolled
-              ? 'bg-[#040d24]/88 border-b border-cyan-200/20 backdrop-blur-xl py-3 shadow-[0_24px_50px_rgba(0,0,0,0.5)]'
-              : 'bg-[#07122d]/62 border-b border-cyan-200/10 backdrop-blur-lg py-4'
+          'fixed top-0 z-50 w-full transition-all duration-500 ease-in-out',
+          scrolled
+            ? 'bg-background/40 backdrop-blur-xl border-b border-white/10 py-3 shadow-lg'
+            : 'bg-transparent py-5 border-b border-transparent'
         )}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 110, damping: 22 }}
+        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       >
         <div className="container mx-auto flex items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-6">
             <MobileSidebar items={items} />
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/20 group-hover:ring-cyan-300 transition-all duration-500 shadow-xl bg-cyan-300/10">
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl ring-1 ring-white/20 group-hover:ring-primary/50 transition-all duration-500 shadow-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-sm">
                 <Image
                   src="/images/logo.png"
                   alt="DivyaVaani"
@@ -76,22 +70,17 @@ export const Header = React.memo(({ items }: HeaderProps) => {
                 />
               </div>
               <div className="hidden sm:block">
-                <span className={cn('block font-bold text-xl tracking-tight', isHome && !scrolled ? 'text-white' : 'text-slate-100')}>
+                <span className="block font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors duration-300">
                   DivyaVaani
                 </span>
-                {!isHome && <span className="text-[11px] tracking-[0.18em] uppercase text-cyan-200/75">Spiritual Intelligence</span>}
+                <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground group-hover:text-primary/70 transition-colors duration-300">
+                  Universal Wisdom
+                </span>
               </div>
             </Link>
           </div>
 
-          <nav
-            className={cn(
-              'hidden md:flex items-center space-x-2 p-1.5 rounded-full transition-all duration-500 gpu-accelerated border',
-              isHome && !scrolled
-                ? 'bg-indigo-950/30 border-indigo-300/20 backdrop-blur-lg'
-                : 'bg-slate-900/40 border-cyan-200/20 backdrop-blur-lg'
-            )}
-          >
+          <nav className="hidden md:flex items-center gap-1 bg-white/5 backdrop-blur-3xl border border-white/10 p-1.5 rounded-full shadow-2xl">
             {items.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -99,101 +88,80 @@ export const Header = React.memo(({ items }: HeaderProps) => {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-6 py-2 text-sm font-semibold rounded-full transition-all duration-300 relative group overflow-hidden',
-                    isHome && !scrolled ? 'text-white/80 hover:text-white' : 'text-slate-300 hover:text-white',
-                    isActive && 'text-white'
+                    'px-5 py-2 text-sm font-medium rounded-full transition-all duration-300 relative group',
+                    isActive ? 'text-white' : 'text-muted-foreground hover:text-white'
                   )}
                 >
                   <span className="relative z-10">{item.title}</span>
                   {isActive && (
-                    <motion.span
-                      layoutId="nav-active"
-                      className={cn(
-                        'absolute inset-0 rounded-full -z-0',
-                        isHome && !scrolled ? 'bg-white/20' : 'bg-cyan-400/20 border border-cyan-300/20'
-                      )}
+                    <motion.div
+                      layoutId="nav-pill"
+                      className="absolute inset-0 bg-primary/80 rounded-full shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <span
-                    className={cn(
-                      'absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100 -z-0 rounded-full',
-                      isHome && !scrolled ? 'bg-white/10' : 'bg-cyan-300/10'
-                    )}
-                  />
+                  {!isActive && (
+                    <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                 </Link>
               );
             })}
           </nav>
 
           <div className="flex items-center space-x-4">
-            {!isHome && (
-              <div className="hidden lg:flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
-                <Sparkles className="h-3.5 w-3.5" />
-                Universal Wisdom AI
-              </div>
-            )}
-
             {loading ? (
-              <div className="h-9 w-20 animate-pulse rounded-full bg-white/10" />
+              <div className="h-9 w-24 animate-pulse rounded-full bg-white/10" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10 ring-2 ring-cyan-200/20 hover:ring-cyan-300 transition-all">
+                  <Button variant="ghost" className="relative h-11 w-11 rounded-full p-0 overflow-hidden ring-2 ring-white/10 hover:ring-primary/50 transition-all duration-300">
+                    <Avatar className="h-full w-full">
                       <AvatarImage src={user.avatar_url} alt={user.full_name || 'User'} />
-                      <AvatarFallback className="bg-cyan-400/20 text-cyan-100 font-bold">
+                      <AvatarFallback className="bg-primary/20 text-primary font-bold">
                         {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
+                <DropdownMenuContent className="w-60 bg-black/90 backdrop-blur-xl border-white/10 text-white" align="end">
+                  <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{user.full_name}</p>
                       <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={() => router.push('/profile')} className="focus:bg-white/10 focus:text-white cursor-pointer">
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/settings')}>
+                  <DropdownMenuItem onClick={() => router.push('/settings')} className="focus:bg-white/10 focus:text-white cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-950/30 cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
+              <div className="flex items-center gap-3">
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={handleLogin}
-                  className={cn(
-                    'hidden md:flex font-medium transition-colors cursor-pointer',
-                    isHome && !scrolled ? 'text-white hover:bg-white/10' : 'text-slate-200 hover:bg-slate-200/10'
-                  )}
+                  className="hidden sm:flex text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5"
                 >
-                  Login
+                  Sign In
                 </Button>
                 <Button
                   onClick={handleLogin}
-                  className={cn(
-                    'rounded-full hover:scale-105 transition-all duration-300 shadow-xl font-bold px-6 gpu-accelerated cursor-pointer',
-                    isHome && !scrolled ? 'bg-white text-black hover:bg-gray-100' : 'bg-cyan-400 hover:bg-cyan-300 text-slate-950'
-                  )}
-                  size="sm"
+                  className="rounded-full bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.2)] font-semibold px-6"
                 >
-                  Get Started
+                  Get Started <ChevronRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
