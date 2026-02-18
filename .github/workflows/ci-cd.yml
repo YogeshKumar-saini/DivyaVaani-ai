@@ -44,8 +44,9 @@ jobs:
         tags: ${{ steps.login-ecr.outputs.registry }}/divyavaani-frontend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        build-args: |
-          NEXT_PUBLIC_API_BASE_URL=http://${{ secrets.SERVER_HOST }}:8000
+        # No NEXT_PUBLIC_API_BASE_URL build-arg: client.ts uses the /api proxy
+        # path in the browser, so no HTTP backend URL is ever baked into the
+        # client bundle. BACKEND_URL is set at runtime in docker-compose.prod.yml.
 
     - name: Get ECR Login Password
       id: ecr-password

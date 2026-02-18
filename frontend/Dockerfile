@@ -22,9 +22,9 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# If utilizing a public API base URL at build time
-ARG NEXT_PUBLIC_API_BASE_URL
-ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+# NEXT_PUBLIC_API_BASE_URL is intentionally NOT passed as a build-arg.
+# client.ts routes all browser requests through the /api proxy path, so no
+# plain-HTTP backend URL is ever baked into the client bundle (mixed-content fix).
 
 RUN npm run build
 

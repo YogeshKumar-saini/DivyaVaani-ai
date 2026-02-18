@@ -47,6 +47,9 @@ async function proxyRequest(
       method: req.method,
       headers: forwardedHeaders,
       body,
+      // Always follow redirects server-side so the browser never receives a
+      // Location: http://... header that would trigger a mixed-content block.
+      redirect: 'follow',
       // Required so ReadableStream body is forwarded without buffering
       // @ts-expect-error — Node 18+ fetch supports this flag
       duplex: 'half',

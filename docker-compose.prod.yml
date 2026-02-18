@@ -18,6 +18,10 @@ services:
     image: ${ECR_REGISTRY}/divyavaani-frontend:latest
     ports:
       - "3000:3000"
+    environment:
+      # Use the internal Docker service name so the Next.js proxy never
+      # exposes a plain-HTTP EC2 URL to browsers (mixed-content fix).
+      - BACKEND_URL=http://backend:8000
     restart: always
     depends_on:
       - backend

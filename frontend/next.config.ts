@@ -20,8 +20,13 @@ const BACKEND_URL =
   "http://54.84.227.171:8000";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  outputFileTracingRoot: __dirname,
+  // "standalone" is for self-hosted Docker deployments only.
+  // On Vercel this setting interferes with serverless route handlers (API proxy).
+  // Keep it only when NOT running on Vercel.
+  ...(process.env.VERCEL ? {} : {
+    output: "standalone",
+    outputFileTracingRoot: __dirname,
+  }),
   turbopack: {
     root: __dirname,
   },
