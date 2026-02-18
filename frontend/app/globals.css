@@ -243,6 +243,24 @@
     background: rgba(56, 189, 248, 0.5);
   }
 
+  /* Premium modal scrollbar — ultra-thin, violet, fully transparent track */
+  .scrollbar-modal::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-modal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-modal::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.28);
+    border-radius: 999px;
+  }
+
+  .scrollbar-modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.52);
+  }
+
   .stat-card {
     @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_rgba(2,6,23,0.35)] transition-all duration-300 hover:border-cyan-300/30 hover:bg-white/7 hover:shadow-[0_24px_65px_rgba(14,116,144,0.25)] relative overflow-hidden p-6;
   }
