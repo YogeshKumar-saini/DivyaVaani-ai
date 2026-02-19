@@ -1,7 +1,7 @@
 """Storage package for database operations."""
 
 from .database import Base, engine, SessionLocal, get_db, get_db_context, init_db, check_db_connection
-from .models import Conversation, Message, ConversationSummary, User
+from .models import Conversation, Message, ConversationSummary, DailySummary, User
 
 __all__ = [
     "Base",
@@ -14,5 +14,6 @@ __all__ = [
     "Conversation",
     "Message",
     "ConversationSummary",
+    "DailySummary",
     "User",
 ]

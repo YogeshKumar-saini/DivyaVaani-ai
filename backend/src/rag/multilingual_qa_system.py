@@ -167,12 +167,12 @@ class MultilingualQASystem:
         if self.gemini_api_key:
             os.environ["GOOGLE_API_KEY"] = self.gemini_api_key
 
-    def _generate_question_hash(self, question: str, language: str, user_id: str) -> str:
+    def _generate_question_hash(self, question: str, language: str, user_id: str, conversation_history: Optional[str] = None) -> str:
         """Generate a unique hash for question caching."""
-        content = f"{question.lower().strip()}_{language}_{user_id}"
+        content = f"{question.lower().strip()}_{language}_{user_id}_{conversation_history or ''}"
         return hashlib.sha256(content.encode()).hexdigest()
     
-    def ask(self, question: str, user_id: str = "default", preferred_language: str = "en") -> Dict[str, Any]:
+    def ask(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None) -> Dict[str, Any]:
         """Refactored Q&A method using modular components."""
         start_time = datetime.now()
 
@@ -191,7 +191,7 @@ class MultilingualQASystem:
             log.info(f"Using language: {language}")
 
             # Generate question hash
-            question_hash = self._generate_question_hash(question, language, user_id)
+            question_hash = self._generate_question_hash(question, language, user_id, conversation_history)
 
             # Check cache using modular component
             cached_response = self.cache_manager.get(question_hash)
@@ -204,8 +204,12 @@ class MultilingualQASystem:
             # Retrieve contexts
             contexts = self.retriever.retrieve(question, top_k=7)
 
-            # Handle no contexts found
-            if not contexts:
+            # Handle no contexts - BUT check if we have history first
+            # If we have history/memory, we might still want to try answering (conversational)
+            memory_context = self.memory_manager.get_context()
+            has_history = bool(conversation_history or memory_context)
+
+            if not contexts and not has_history:
                 fallback_answer = self.language_processor.get_fallback_response(question.lower(), language)
                 processing_time = (datetime.now() - start_time).total_seconds()
 
@@ -223,14 +227,17 @@ class MultilingualQASystem:
                 self.analytics_tracker.track_query(language, processing_time, 0.3, question, user_id)
                 return fallback_response.to_dict()
 
-            # Get memory context
-            memory_context = self.memory_manager.get_context()
+            # Retrieve memory context if we haven't already (in case contexts specific path triggered)
+            if not memory_context:
+                memory_context = self.memory_manager.get_context()
 
             # Get language-specific prompt and context
             prompt_template, context_text = self.prompt_manager.get_prompt(language, contexts, question)
 
             # Include memory context
-            if memory_context:
+            if conversation_history:
+                context_text = f"PREVIOUS CONVERSATION HISTORY:\n{conversation_history}\n\nRELEVANT SCRIPTURES & CONTEXT:\n{context_text}"
+            elif memory_context:
                 context_text += memory_context
 
             # Generate answer with fallback logic
@@ -344,7 +351,7 @@ class MultilingualQASystem:
             )
             return error_response.to_dict()
 
-    async def ask_stream(self, question: str, user_id: str = "default", preferred_language: str = "en"):
+    async def ask_stream(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None):
         """Stream Q&A response token-by-token for better UX.
         
         Yields chunks in the format:
@@ -393,8 +400,12 @@ class MultilingualQASystem:
                         }
                     }
 
+            # Get memory context
+            memory_context = self.memory_manager.get_context()
+            has_history = bool(conversation_history or memory_context)
+
             # Handle no contexts
-            if not contexts:
+            if not contexts and not has_history:
                 fallback_answer = self.language_processor.get_fallback_response(question.lower(), language)
                 # Stream fallback answer word by word
                 words = fallback_answer.split()
@@ -405,13 +416,12 @@ class MultilingualQASystem:
                     }
                     await asyncio.sleep(0.02)  # Small delay for streaming effect
                 return
-
-            # Get memory context
-            memory_context = self.memory_manager.get_context()
             
             # Get prompt
             prompt_template, context_text = self.prompt_manager.get_prompt(language, contexts, question)
-            if memory_context:
+            if conversation_history:
+                context_text = f"PREVIOUS CONVERSATION HISTORY:\n{conversation_history}\n\nRELEVANT SCRIPTURES & CONTEXT:\n{context_text}"
+            elif memory_context:
                 context_text += memory_context
 
             # Generate streaming answer

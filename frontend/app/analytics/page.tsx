@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { analyticsService } from '@/lib/api/analytics-service';
@@ -8,6 +8,8 @@ import { formatNumber } from '@/lib/utils/formatting';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ImportDataDialog } from '@/components/analytics/ImportDataDialog';
+import ChatInsights from '@/components/analytics/ChatInsights';
+import { useAuth } from '@/lib/context/auth-provider';
 import {
   TrendingUp, Users, Zap, Clock, Activity, Cpu, HardDrive,
   Server, Database, Sparkles, BarChart3, RefreshCw, CheckCircle2,
@@ -38,12 +40,14 @@ const cardVariants = {
 };
 
 export default function AnalyticsPage() {
+  const { user } = useAuth();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [healthStatus, setHealthStatus] = useState<'healthy' | 'degraded' | 'unknown'>('unknown');
+  const [activeTab, setActiveTab] = useState<'system' | 'insights'>('system');
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -187,63 +191,63 @@ export default function AnalyticsPage() {
   const maxQueryCount = popularQuestions[0]?.[1] || 1;
 
   return (
-    <div className="min-h-screen py-4 pb-10 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen py-3 sm:py-4 pb-8 sm:pb-10 px-3 sm:px-4 md:px-6 lg:px-8 relative">
 
-      {/* Ambient background */}
-      <div className="fixed top-0 right-0 w-[600px] h-[500px] bg-cyan-900/6 blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-sky-900/5 blur-[100px] pointer-events-none" />
+      {/* Ambient background - responsive sizing */}
+      <div className="fixed top-0 right-0 w-[300px] sm:w-[400px] md:w-[600px] h-[250px] sm:h-[400px] md:h-[500px] bg-cyan-900/6 blur-[80px] sm:blur-[100px] md:blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[200px] sm:w-[300px] md:w-[400px] h-[200px] sm:h-[300px] md:h-[400px] bg-sky-900/5 blur-[60px] sm:blur-[80px] md:blur-[100px] pointer-events-none" />
 
-      <div className="mx-auto max-w-7xl space-y-6 relative z-10">
+      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6 relative z-10">
 
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="rounded-2xl bg-white/3 border border-white/7 p-6 md:p-8 relative overflow-hidden"
+          className="rounded-xl sm:rounded-2xl bg-white/3 border border-white/7 p-4 sm:p-6 md:p-8 relative overflow-hidden"
         >
           <div className="absolute inset-0 bg-linear-to-br from-cyan-600/5 via-transparent to-transparent pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-500/30 to-transparent" />
 
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1 text-[11px] font-semibold tracking-[0.15em] uppercase text-white/50 mb-4">
-                <BarChart3 className="h-3 w-3 text-cyan-400" />
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-white/8 bg-white/4 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] uppercase text-white/50 mb-2 sm:mb-4">
+                <BarChart3 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-cyan-400" />
                 Observability
               </div>
-              <h1 className="text-3xl md:text-4xl font-serif font-bold bg-clip-text text-transparent bg-linear-to-br from-white via-white/90 to-white/60 leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold bg-clip-text text-transparent bg-linear-to-br from-white via-white/90 to-white/60 leading-tight">
                 Analytics Dashboard
               </h1>
-              <p className="mt-2 text-white/40 font-light">
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-white/40 font-light">
                 Real-time system health and engagement telemetry
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 onClick={handleManualRefresh}
                 disabled={isRefreshing}
-                className="flex items-center gap-1.5 text-[12px] text-white/40 hover:text-white/65 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/8"
+                className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-[12px] text-white/40 hover:text-white/65 transition-colors px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/8"
               >
                 <RefreshCw size={12} className={`text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : `Updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : `Updated ${lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}</span>
+                <span className="sm:hidden">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
 
               <Badge
-                className={`px-3 py-1 text-[11px] border ${
-                  healthStatus === 'healthy'
+                className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] border ${healthStatus === 'healthy'
                     ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
                     : healthStatus === 'degraded'
-                    ? 'bg-red-500/10 text-red-300 border-red-500/20'
-                    : 'bg-white/5 text-white/40 border-white/10'
-                }`}
+                      ? 'bg-red-500/10 text-red-300 border-red-500/20'
+                      : 'bg-white/5 text-white/40 border-white/10'
+                  }`}
               >
                 {healthStatus === 'healthy' ? (
-                  <><CheckCircle2 size={11} className="mr-1.5" /> System Healthy</>
+                  <><CheckCircle2 size={11} className="mr-1 sm:mr-1.5" /> <span className="hidden sm:inline">System</span> Healthy</>
                 ) : healthStatus === 'degraded' ? (
-                  <><AlertCircle size={11} className="mr-1.5" /> Degraded</>
+                  <><AlertCircle size={11} className="mr-1 sm:mr-1.5" /> Degraded</>
                 ) : (
-                  <><Info size={11} className="mr-1.5" /> Checking...</>
+                  <><Info size={11} className="mr-1 sm:mr-1.5" /> Checking...</>
                 )}
               </Badge>
 
@@ -253,242 +257,285 @@ export default function AnalyticsPage() {
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {statCards.map((card, i) => (
-            <motion.div
-              key={card.label}
-              custom={i}
-              variants={cardVariants}
-              initial="hidden"
-              animate="visible"
-              className={`rounded-2xl border ${card.border} bg-white/2 relative overflow-hidden group p-5 hover:bg-white/4 transition-colors duration-300`}
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-1 bg-white/4 border border-white/6 rounded-lg sm:rounded-xl p-1 overflow-x-auto">
+          {[
+            { key: 'system' as const, label: 'System Metrics', shortLabel: 'System', icon: <Server size={14} className="shrink-0" /> },
+            { key: 'insights' as const, label: 'Chat Insights', shortLabel: 'Insights', icon: <Sparkles size={14} className="shrink-0" /> },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.key
+                  ? 'bg-white/8 text-white shadow-sm border border-white/10'
+                  : 'text-white/40 hover:text-white/65 hover:bg-white/4'
+                }`}
             >
-              <div className={`absolute inset-0 bg-linear-to-br ${card.bgGlow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
-              <div className="relative flex items-start justify-between mb-5">
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/6">
-                  <card.icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-                <div className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
-                  card.trendUp ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400' : 'border-red-500/20 bg-red-500/8 text-red-400'
-                }`}>
-                  <ArrowUpRight size={10} />
-                  <span>{card.trend}</span>
-                </div>
-              </div>
-
-              <div className="relative">
-                <p className="text-[10px] text-white/35 uppercase tracking-wider font-semibold">{card.label}</p>
-                <p className="text-[28px] font-bold text-white mt-1 tracking-tight leading-none">{card.value}</p>
-                <p className="text-[11px] text-white/25 mt-1.5 font-light">{card.subtext}</p>
-              </div>
-            </motion.div>
+              {tab.icon}
+              <span className="sm:hidden">{tab.shortLabel}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
           ))}
         </div>
 
-        {/* Middle Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-
-          {/* System Metrics */}
+        {/* Chat Insights Tab */}
+        {activeTab === 'insights' ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.3 }}
-            className="xl:col-span-2 rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
+            transition={{ duration: 0.3 }}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/6">
-              <h2 className="text-white font-semibold flex items-center gap-2 text-[15px]">
-                <Activity className="h-4 w-4 text-sky-400" />
-                System Metrics
-              </h2>
-              <Badge variant="outline" className="border-white/10 text-white/35 bg-white/3 text-[10px]">
-                Auto-refresh 30s
-              </Badge>
-            </div>
-            <div className="p-5">
-              {metrics && Object.keys(metrics.metrics).length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.entries(metrics.metrics).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 p-4 transition-colors group"
-                    >
-                      <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/8 transition-colors shrink-0">
-                        {getMetricIcon(key)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold truncate">
-                          {key.replace(/_/g, ' ')}
-                        </p>
-                        <p className="text-[15px] font-mono text-white/85 mt-0.5 truncate">
-                          {formatMetricValue(value, key)}
-                        </p>
-                      </div>
+            {user?.id ? (
+              <ChatInsights userId={user.id} />
+            ) : (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/4 border border-white/6 flex items-center justify-center">
+                  <Sparkles size={24} className="text-white/20" />
+                </div>
+                <p className="text-white/50 text-sm mb-1">Sign in to view Chat Insights</p>
+                <p className="text-white/25 text-xs">Your personalized chat summaries and analytics will appear here</p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {statCards.map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  custom={i}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className={`rounded-xl sm:rounded-2xl border ${card.border} bg-white/2 relative overflow-hidden group p-3 sm:p-4 md:p-5 hover:bg-white/4 transition-colors duration-300`}
+                >
+                  <div className={`absolute inset-0 bg-linear-to-br ${card.bgGlow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                  <div className="relative flex items-start justify-between mb-3 sm:mb-4 md:mb-5">
+                    <div className="p-1.5 sm:p-2 md:p-2.5 rounded-lg sm:rounded-xl bg-white/5 border border-white/6">
+                      <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-white/20">
-                  <Server className="h-10 w-10 mb-3 opacity-30" />
-                  <p className="text-sm">System metrics unavailable</p>
-                  <p className="text-xs mt-1 text-white/15">Metrics may be disabled in configuration</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Top Questions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.35 }}
-            className="rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-400" />
-                <h2 className="text-white font-semibold text-[15px]">Top Questions</h2>
-              </div>
-              {popularQuestions.length > 0 && (
-                <Badge variant="outline" className="border-amber-500/20 text-amber-400/60 bg-amber-500/5 text-[10px]">
-                  {popularQuestions.length} queries
-                </Badge>
-              )}
-            </div>
-            <div className="p-4">
-              {popularQuestions.length > 0 ? (
-                <div className="space-y-2">
-                  {popularQuestions.map(([q, count], i) => (
-                    <div
-                      key={q}
-                      className="group flex items-start gap-3 rounded-xl border border-white/5 hover:border-white/9 bg-white/2 hover:bg-white/5 px-4 py-3 transition-all"
-                    >
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[10px] text-amber-300 font-bold mt-0.5">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] text-white/65 leading-snug font-light line-clamp-2">{q}</p>
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-linear-to-r from-amber-500/60 to-amber-400/40 transition-all duration-700"
-                              style={{ width: `${(count / maxQueryCount) * 100}%` }}
-                            />
-                          </div>
-                          <p className="text-[10px] text-white/25 shrink-0">{count}×</p>
-                        </div>
-                      </div>
+                    <div className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full border ${card.trendUp ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400' : 'border-red-500/20 bg-red-500/8 text-red-400'
+                      }`}>
+                      <ArrowUpRight size={10} className="hidden sm:block" />
+                      <span>{card.trend}</span>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-white/20">
-                  <MessageSquare className="h-8 w-8 mb-2 opacity-30" />
-                  <p className="text-sm">No query data yet</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Bottom Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-
-          {/* Feedback CTA Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.4 }}
-            className="xl:col-span-2 rounded-2xl border border-cyan-500/15 bg-white/2 overflow-hidden relative"
-          >
-            <div className="absolute inset-0 bg-linear-to-br from-cyan-600/5 via-transparent to-sky-600/4 pointer-events-none" />
-            <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-500/25 to-transparent" />
-
-            <div className="relative p-8 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-                  <MessageSquare className="h-5 w-5 text-cyan-400" />
-                </div>
-                <div>
-                  <h2 className="text-[16px] font-semibold text-white mb-1">Share Your Feedback</h2>
-                  <p className="text-[13px] text-white/40 font-light leading-relaxed max-w-sm">
-                    Help us improve DivyaVaani. Report bugs, request features, or rate answer accuracy — all feedback is saved to our database.
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {['Bug Report', 'Feature Request', 'Accuracy', 'Performance'].map((tag) => (
-                      <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full border border-white/8 bg-white/4 text-white/35">
-                        {tag}
-                      </span>
-                    ))}
                   </div>
-                </div>
-              </div>
-              <div className="shrink-0">
-                <FeedbackFormDialog onSubmit={loadAnalytics} />
-              </div>
-            </div>
-          </motion.div>
 
-          {/* Ops Notes */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.45 }}
-            className="rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
-          >
-            <div className="flex items-center gap-2 px-5 py-4 border-b border-white/6">
-              <Server className="h-4 w-4 text-sky-400" />
-              <h2 className="text-white font-semibold text-[15px]">Operations</h2>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="rounded-xl border border-white/7 bg-white/2 p-4">
-                <span className="block text-[10px] uppercase tracking-wider text-white/30 mb-1.5">Config</span>
-                <span className="text-[13px] text-white/55 font-light">Refresh interval: 30 seconds</span>
-              </div>
-              <div className="rounded-xl border border-white/7 bg-white/2 p-4">
-                <span className="block text-[10px] uppercase tracking-wider text-white/30 mb-1.5">Cache Target</span>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-1000 ${hitRate > 70 ? 'bg-linear-to-r from-emerald-500 to-cyan-500' : 'bg-linear-to-r from-amber-500 to-orange-500'}`}
-                      style={{ width: `${Math.min(hitRate, 100)}%` }}
-                    />
+                  <div className="relative">
+                    <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-wider font-semibold">{card.label}</p>
+                    <p className="text-xl sm:text-2xl md:text-[28px] font-bold text-white mt-0.5 sm:mt-1 tracking-tight leading-none">{card.value}</p>
+                    <p className="text-[10px] sm:text-[11px] text-white/25 mt-1 sm:mt-1.5 font-light">{card.subtext}</p>
                   </div>
-                  <span className={`text-[12px] font-mono shrink-0 ${hitRate > 70 ? 'text-emerald-400' : 'text-amber-400'}`}>{hitRate}%</span>
-                </div>
-                <div className="flex justify-between text-[11px] mt-1.5">
-                  <span className="text-white/25">Hits: {analytics?.cache_hits || 0}</span>
-                  <span className="text-white/25">Misses: {analytics?.cache_misses || 0}</span>
-                </div>
-              </div>
+                </motion.div>
+              ))}
+            </div>
 
-              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="block text-[10px] uppercase tracking-wider text-cyan-300/50 mb-1">Pro Tip</span>
-                    <span className="text-[12px] text-cyan-200/55 font-light leading-relaxed">
-                      Use import to backfill historical insights for richer analytics context.
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* Middle Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
 
-              <Button
-                onClick={handleManualRefresh}
-                disabled={isRefreshing}
-                variant="outline"
-                className="w-full border-white/8 bg-white/3 text-white/50 hover:bg-white/8 hover:text-white/80 text-[13px] gap-2 transition-all"
+              {/* System Metrics */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.3 }}
+                className="lg:col-span-2 rounded-xl sm:rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh All Data'}
-              </Button>
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/6">
+                  <h2 className="text-white font-semibold flex items-center gap-1.5 sm:gap-2 text-[13px] sm:text-[15px]">
+                    <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400" />
+                    System Metrics
+                  </h2>
+                  <Badge variant="outline" className="border-white/10 text-white/35 bg-white/3 text-[9px] sm:text-[10px]">
+                    Auto-refresh 30s
+                  </Badge>
+                </div>
+                <div className="p-3 sm:p-5">
+                  {metrics && Object.keys(metrics.metrics).length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {Object.entries(metrics.metrics).map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl border border-white/5 bg-white/2 hover:bg-white/5 p-3 sm:p-4 transition-colors group"
+                        >
+                          <div className="p-1.5 sm:p-2 rounded-lg bg-white/5 group-hover:bg-white/8 transition-colors shrink-0">
+                            {getMetricIcon(key)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/30 font-semibold truncate">
+                              {key.replace(/_/g, ' ')}
+                            </p>
+                            <p className="text-[13px] sm:text-[15px] font-mono text-white/85 mt-0.5 truncate">
+                              {formatMetricValue(value, key)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-white/20">
+                      <Server className="h-8 w-8 sm:h-10 sm:w-10 mb-2 sm:mb-3 opacity-30" />
+                      <p className="text-xs sm:text-sm">System metrics unavailable</p>
+                      <p className="text-[10px] sm:text-xs mt-1 text-white/15">Metrics may be disabled in configuration</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Top Questions */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.35 }}
+                className="rounded-xl sm:rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-white/6">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
+                    <h2 className="text-white font-semibold text-[13px] sm:text-[15px]">Top Questions</h2>
+                  </div>
+                  {popularQuestions.length > 0 && (
+                    <Badge variant="outline" className="border-amber-500/20 text-amber-400/60 bg-amber-500/5 text-[9px] sm:text-[10px]">
+                      {popularQuestions.length} queries
+                    </Badge>
+                  )}
+                </div>
+                <div className="p-3 sm:p-4">
+                  {popularQuestions.length > 0 ? (
+                    <div className="space-y-1.5 sm:space-y-2">
+                      {popularQuestions.map(([q, count], i) => (
+                        <div
+                          key={q}
+                          className="group flex items-start gap-2 sm:gap-3 rounded-lg sm:rounded-xl border border-white/5 hover:border-white/9 bg-white/2 hover:bg-white/5 px-3 sm:px-4 py-2 sm:py-3 transition-all"
+                        >
+                          <span className="shrink-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[9px] sm:text-[10px] text-amber-300 font-bold mt-0.5">
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] sm:text-[12px] text-white/65 leading-snug font-light line-clamp-2">{q}</p>
+                            <div className="mt-1 sm:mt-1.5 flex items-center gap-1.5 sm:gap-2">
+                              <div className="flex-1 h-0.5 sm:h-1 rounded-full bg-white/5 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-linear-to-r from-amber-500/60 to-amber-400/40 transition-all duration-700"
+                                  style={{ width: `${(count / maxQueryCount) * 100}%` }}
+                                />
+                              </div>
+                              <p className="text-[9px] sm:text-[10px] text-white/25 shrink-0">{count}×</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-white/20">
+                      <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 mb-2 opacity-30" />
+                      <p className="text-xs sm:text-sm">No query data yet</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
+
+            {/* Bottom Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+
+              {/* Feedback CTA Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.4 }}
+                className="lg:col-span-2 rounded-xl sm:rounded-2xl border border-cyan-500/15 bg-white/2 overflow-hidden relative"
+              >
+                <div className="absolute inset-0 bg-linear-to-br from-cyan-600/5 via-transparent to-sky-600/4 pointer-events-none" />
+                <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-500/25 to-transparent" />
+
+                <div className="relative p-4 sm:p-6 md:p-8 flex flex-col md:flex-row gap-4 sm:gap-6 items-start md:items-center justify-between">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-[14px] sm:text-[16px] font-semibold text-white mb-1">Share Your Feedback</h2>
+                      <p className="text-[12px] sm:text-[13px] text-white/40 font-light leading-relaxed max-w-full sm:max-w-sm">
+                        Help us improve DivyaVaani. Report bugs, request features, or rate answer accuracy.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
+                        {['Bug Report', 'Feature Request', 'Accuracy', 'Performance'].map((tag) => (
+                          <span key={tag} className="text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-white/8 bg-white/4 text-white/35">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="shrink-0 w-full sm:w-auto">
+                    <FeedbackFormDialog onSubmit={loadAnalytics} />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Ops Notes */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.45 }}
+                className="rounded-xl sm:rounded-2xl bg-white/2 border border-white/7 overflow-hidden"
+              >
+                <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-white/6">
+                  <Server className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400" />
+                  <h2 className="text-white font-semibold text-[13px] sm:text-[15px]">Operations</h2>
+                </div>
+                <div className="p-3 sm:p-5 space-y-2 sm:space-y-3">
+                  <div className="rounded-lg sm:rounded-xl border border-white/7 bg-white/2 p-3 sm:p-4">
+                    <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-white/30 mb-1 sm:mb-1.5">Config</span>
+                    <span className="text-[12px] sm:text-[13px] text-white/55 font-light">Refresh interval: 30 seconds</span>
+                  </div>
+                  <div className="rounded-lg sm:rounded-xl border border-white/7 bg-white/2 p-3 sm:p-4">
+                    <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-white/30 mb-1 sm:mb-1.5">Cache Target</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-1.5">
+                      <div className="flex-1 h-1 sm:h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${hitRate > 70 ? 'bg-linear-to-r from-emerald-500 to-cyan-500' : 'bg-linear-to-r from-amber-500 to-orange-500'}`}
+                          style={{ width: `${Math.min(hitRate, 100)}%` }}
+                        />
+                      </div>
+                      <span className={`text-[11px] sm:text-[12px] font-mono shrink-0 ${hitRate > 70 ? 'text-emerald-400' : 'text-amber-400'}`}>{hitRate}%</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] sm:text-[11px] mt-1 sm:mt-1.5">
+                      <span className="text-white/25">Hits: {analytics?.cache_hits || 0}</span>
+                      <span className="text-white/25">Misses: {analytics?.cache_misses || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg sm:rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 sm:p-4">
+                    <div className="flex items-start gap-2 sm:gap-2.5">
+                      <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider text-cyan-300/50 mb-0.5 sm:mb-1">Pro Tip</span>
+                        <span className="text-[11px] sm:text-[12px] text-cyan-200/55 font-light leading-relaxed">
+                          Use import to backfill historical insights.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleManualRefresh}
+                    disabled={isRefreshing}
+                    variant="outline"
+                    className="w-full border-white/8 bg-white/3 text-white/50 hover:bg-white/8 hover:text-white/80 text-[12px] sm:text-[13px] gap-1.5 sm:gap-2 transition-all"
+                  >
+                    <RefreshCw className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh All Data'}
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
-

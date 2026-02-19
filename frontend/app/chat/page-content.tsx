@@ -68,6 +68,12 @@ export default function ChatPageContent() {
   const [isSyncing, setIsSyncing] = useState(false);
   // Guard: prevent double-sync if both onAuthSuccess + user?.id effect fire simultaneously
   const isSyncingRef = useRef(false);
+  // Conversation continuation indicator
+  const [isResumingConversation, setIsResumingConversation] = useState(false);
+  // Suggested questions for personalized welcome
+  const [suggestedQuestions, setSuggestedQuestions] = useState<{ text: string; tag: string }[]>([]);
+  // Conversation title for active chat
+  const [conversationTitle, setConversationTitle] = useState<string | undefined>(undefined);
 
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -106,6 +112,19 @@ export default function ChatPageContent() {
       );
     }
   }, [messages, isLoggedIn, saveGuestMessages]);
+
+  // ── Fetch personalized suggested questions on mount ──────────────────────────
+  useEffect(() => {
+    if (user?.id) {
+      conversationService.getSuggestedQuestions(user.id)
+        .then((data) => {
+          if (data.questions && data.questions.length > 0) {
+            setSuggestedQuestions(data.questions);
+          }
+        })
+        .catch(() => { /* Silently fall back to defaults */ });
+    }
+  }, [user?.id]);
 
   // ── TTS Handler ───────────────────────────────────────────────────────────
   // ── TTS Handler ───────────────────────────────────────────────────────────
@@ -200,8 +219,10 @@ export default function ChatPageContent() {
     setCurrentConversationId(id);
     setInitialLoad(false);
     setIsLoading(true);
+    setIsResumingConversation(true);
     try {
       const conv = await conversationService.getConversation(id);
+      setConversationTitle(conv.title || undefined);
       const uiMessages: Message[] = conv.messages.map((msg) => ({
         id: msg.id,
         type: msg.role === 'user' ? 'user' : 'bot',
@@ -209,7 +230,7 @@ export default function ChatPageContent() {
         timestamp: new Date(msg.created_at),
         confidence_score: msg.confidence_score,
         processing_time: msg.processing_time,
-        sources: msg.sources ? msg.sources.map(s => ({ verse: s, score: 1, text: s })) : [], // Shim for old format
+        sources: msg.sources ? msg.sources.map(s => ({ verse: s, score: 1, text: s })) : [],
       }));
       setMessages(uiMessages);
     } catch (error) {
@@ -223,6 +244,8 @@ export default function ChatPageContent() {
     setCurrentConversationId(undefined);
     setMessages([]);
     setInitialLoad(true);
+    setIsResumingConversation(false);
+    setConversationTitle(undefined);
   };
 
   const handleExampleQuestion = (question: string) => {
@@ -295,6 +318,36 @@ export default function ChatPageContent() {
         }
       }
 
+      // ── Build conversation context (STM/LTM) ────────────────────────
+      let conversationHistory = '';
+      if (conversationId && user) {
+        try {
+          const ctx = await conversationService.getConversationContext(conversationId, 5);
+          // Build STM context string from recent messages
+          if (ctx.stm.messages.length > 0) {
+            conversationHistory = ctx.stm.messages
+              .map(m => `${m.role}: ${m.content}`)
+              .join('\n');
+          }
+          // Prepend LTM summary if available
+          if (ctx.ltm.summary) {
+            conversationHistory = `[Conversation Summary: ${ctx.ltm.summary}]\n${conversationHistory}`;
+          }
+        } catch {
+          // Fallback: build from local messages
+          const recentMsgs = messages.slice(-10);
+          conversationHistory = recentMsgs
+            .map(m => `${m.type === 'user' ? 'user' : 'assistant'}: ${m.content}`)
+            .join('\n');
+        }
+      } else if (messages.length > 0) {
+        // For guests or new conversations, use local messages
+        const recentMsgs = messages.slice(-6);
+        conversationHistory = recentMsgs
+          .map(m => `${m.type === 'user' ? 'user' : 'assistant'}: ${m.content}`)
+          .join('\n');
+      }
+
       // ── Stream Response ─────────────────────────────────────────────
       let fullAnswer = '';
       const sources: Source[] = [];
@@ -302,7 +355,7 @@ export default function ChatPageContent() {
       let processingTime = 0;
       let followUpQuestions: string[] = [];
 
-      for await (const event of textService.streamQuestion(questionToAsk, user?.id, selectedLanguage)) {
+      for await (const event of textService.streamQuestion(questionToAsk, user?.id, selectedLanguage, conversationHistory)) {
         switch (event.type) {
           case 'token':
             fullAnswer += event.data.token;
@@ -554,7 +607,35 @@ export default function ChatPageContent() {
                   <WelcomeScreen
                     onExampleClick={handleExampleQuestion}
                     className="text-white max-w-2xl mx-auto"
+                    userName={user?.full_name}
+                    avatarUrl={user?.avatar_url}
+                    suggestedQuestions={suggestedQuestions}
                   />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Conversation title + continuation indicator */}
+            <AnimatePresence>
+              {!initialLoad && conversationTitle && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="max-w-3xl mx-auto w-full mb-2"
+                >
+                  <div className="flex items-center gap-3 px-1 py-2">
+                    <div className="h-px flex-1 bg-white/6" />
+                    <span className="text-[11px] font-medium text-white/25 uppercase tracking-wider truncate max-w-[200px]">
+                      {conversationTitle}
+                    </span>
+                    {isResumingConversation && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 font-medium">
+                        Continuing
+                      </span>
+                    )}
+                    <div className="h-px flex-1 bg-white/6" />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

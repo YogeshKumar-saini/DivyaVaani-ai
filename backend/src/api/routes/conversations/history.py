@@ -240,3 +240,268 @@ async def search_conversations(
     except Exception as e:
         log.error(f"Failed to search conversations: {e}")
         raise HTTPException(status_code=500, detail="Failed to search conversations")
+
+
+# ==================== Smart Suggested Questions ====================
+
+# Topic-to-question mapping for personalized suggestions
+TOPIC_QUESTIONS = {
+    "dharma": [
+        {"text": "How can I better understand my dharmic duty in daily life?", "tag": "Dharma"},
+        {"text": "What are the different types of dharma mentioned in scriptures?", "tag": "Dharma"},
+    ],
+    "karma": [
+        {"text": "How does the law of karma apply to modern decision-making?", "tag": "Karma"},
+        {"text": "Can you explain nishkama karma and its practical application?", "tag": "Karma"},
+    ],
+    "meditation": [
+        {"text": "What meditation technique does the Gita recommend for beginners?", "tag": "Meditation"},
+        {"text": "How to deepen my meditation practice according to Yoga Sutras?", "tag": "Meditation"},
+    ],
+    "peace": [
+        {"text": "What does the Gita say about finding peace in adversity?", "tag": "Inner Peace"},
+        {"text": "How to cultivate equanimity in relationships?", "tag": "Inner Peace"},
+    ],
+    "devotion": [
+        {"text": "What is the role of bhakti in spiritual liberation?", "tag": "Bhakti"},
+        {"text": "How can I practice devotion in everyday actions?", "tag": "Bhakti"},
+    ],
+    "wisdom": [
+        {"text": "What is the difference between knowledge and wisdom in Vedanta?", "tag": "Jnana"},
+        {"text": "How does self-inquiry lead to liberation?", "tag": "Jnana"},
+    ],
+    "liberation": [
+        {"text": "What are the paths to moksha described in the Gita?", "tag": "Liberation"},
+        {"text": "How to overcome attachment to material desires?", "tag": "Liberation"},
+    ],
+    "yoga": [
+        {"text": "What is the significance of the different yoga paths?", "tag": "Yoga"},
+        {"text": "How does Karma Yoga differ from Bhakti Yoga?", "tag": "Yoga"},
+    ],
+    "mind": [
+        {"text": "How to control the restless mind according to Krishna?", "tag": "Mind"},
+        {"text": "What techniques help overcome negative thought patterns?", "tag": "Mind"},
+    ],
+    "duty": [
+        {"text": "How to fulfill responsibilities without attachment to results?", "tag": "Duty"},
+        {"text": "What does the Gita say about conflict between personal desires and duty?", "tag": "Duty"},
+    ],
+}
+
+DEFAULT_QUESTIONS = [
+    {"text": "What is the nature of dharma and how do I follow it?", "tag": "Dharma"},
+    {"text": "How should one handle difficult decisions with equanimity?", "tag": "Equanimity"},
+    {"text": "What does the Gita teach about selfless action (Karma Yoga)?", "tag": "Karma Yoga"},
+    {"text": "How can I find inner peace amid chaos?", "tag": "Inner Peace"},
+    {"text": "What is the path to self-realization according to Vedanta?", "tag": "Vedanta"},
+    {"text": "How do I overcome fear and attachment?", "tag": "Liberation"},
+]
+
+
+@router.get("/users/{user_id}/suggested-questions")
+async def get_suggested_questions(
+    user_id: str,
+    db: Session = Depends(get_db)
+):
+    """Get personalized daily questions based on user's chat behavior."""
+    import hashlib
+    from datetime import date
+
+    try:
+        repo = ConversationRepository(db)
+        user_topics = repo.get_user_topic_distribution(user_id)
+
+        if not user_topics:
+            return {"questions": DEFAULT_QUESTIONS, "personalized": False}
+
+        # Build question pool from user's topics
+        question_pool = []
+        for topic in user_topics:
+            topic_lower = topic.lower()
+            for key, questions in TOPIC_QUESTIONS.items():
+                if key in topic_lower or topic_lower in key:
+                    question_pool.extend(questions)
+
+        # Add some default questions for diversity
+        question_pool.extend(DEFAULT_QUESTIONS)
+
+        # Remove duplicates by text
+        seen = set()
+        unique_questions = []
+        for q in question_pool:
+            if q["text"] not in seen:
+                seen.add(q["text"])
+                unique_questions.append(q)
+
+        # Use daily seed for deterministic daily rotation
+        daily_seed = hashlib.md5(
+            f"{user_id}:{date.today().isoformat()}".encode()
+        ).hexdigest()
+        seed_int = int(daily_seed[:8], 16)
+
+        import random
+        rng = random.Random(seed_int)
+        rng.shuffle(unique_questions)
+
+        return {
+            "questions": unique_questions[:6],
+            "personalized": True
+        }
+    except Exception as e:
+        log.error(f"Failed to get suggested questions: {e}")
+        return {"questions": DEFAULT_QUESTIONS, "personalized": False}
+
+
+# ==================== Daily Summaries ====================
+
+class DailySummaryResponse(BaseModel):
+    """Daily summary response."""
+    id: str
+    user_id: str
+    date: str
+    summary_text: str
+    topics: List[str]
+    conversation_count: int
+    message_count: int
+    mood: Optional[str]
+    created_at: str
+    updated_at: str
+
+
+@router.get("/users/{user_id}/daily-summaries", response_model=List[DailySummaryResponse])
+async def get_daily_summaries(
+    user_id: str,
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    db: Session = Depends(get_db)
+):
+    """Get daily chat summaries for a user within a date range."""
+    try:
+        repo = ConversationRepository(db)
+        summaries = repo.get_daily_summaries(user_id, start_date, end_date)
+        return [DailySummaryResponse(**s.to_dict()) for s in summaries]
+    except Exception as e:
+        log.error(f"Failed to get daily summaries: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve daily summaries")
+
+
+@router.post("/users/{user_id}/generate-daily-summary")
+async def generate_daily_summary(
+    user_id: str,
+    date: str = Query(..., description="Date to generate summary for YYYY-MM-DD"),
+    db: Session = Depends(get_db)
+):
+    """Generate a daily summary from conversations on a given date."""
+    try:
+        repo = ConversationRepository(db)
+        conversations = repo.get_conversations_for_date(user_id, date)
+
+        if not conversations:
+            return {"message": "No conversations found for this date", "generated": False}
+
+        # Collect all messages from the day's conversations
+        all_topics = []
+        total_messages = 0
+        conversation_texts = []
+
+        for conv in conversations:
+            messages = repo.get_conversation_messages(conv.id)
+            total_messages += len(messages)
+            if conv.tags:
+                all_topics.extend(conv.tags)
+
+            conv_text = f"Conversation: {conv.title or 'Untitled'}\n"
+            for msg in messages[:10]:  # Cap messages per conversation for summary
+                conv_text += f"  {msg.role}: {msg.content[:200]}\n"
+            conversation_texts.append(conv_text)
+
+        # Build a simple summary from conversation content
+        unique_topics = list(set(all_topics))
+        topics_str = ", ".join(unique_topics[:5]) if unique_topics else "general spiritual guidance"
+
+        summary_text = (
+            f"On this day, you had {len(conversations)} spiritual conversation(s) "
+            f"covering {total_messages} messages. "
+            f"Topics explored include: {topics_str}. "
+        )
+
+        # Add conversation highlights
+        for conv in conversations[:3]:
+            if conv.title and conv.title != "New Conversation":
+                summary_text += f'You explored "{conv.title[:80]}". '
+
+        # Determine mood from topics
+        mood_map = {
+            "peace": "contemplative", "meditation": "contemplative",
+            "karma": "seeking", "dharma": "seeking",
+            "liberation": "transcendent", "devotion": "devotional",
+        }
+        mood = "reflective"
+        for topic in unique_topics:
+            for key, m in mood_map.items():
+                if key in topic.lower():
+                    mood = m
+                    break
+
+        daily_summary = repo.create_daily_summary(
+            user_id=user_id,
+            date=date,
+            summary_text=summary_text.strip(),
+            topics=unique_topics[:10],
+            conversation_count=len(conversations),
+            message_count=total_messages,
+            mood=mood
+        )
+
+        return {
+            "message": "Daily summary generated successfully",
+            "generated": True,
+            "summary": DailySummaryResponse(**daily_summary.to_dict())
+        }
+    except Exception as e:
+        log.error(f"Failed to generate daily summary: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate daily summary")
+
+
+# ==================== Conversation Context (LTM/STM) ====================
+
+@router.get("/{conversation_id}/context")
+async def get_conversation_context(
+    conversation_id: str,
+    message_count: int = Query(5, ge=1, le=20, description="Number of recent messages for STM"),
+    db: Session = Depends(get_db)
+):
+    """Get conversation context for memory: recent messages (STM) + summary (LTM)."""
+    try:
+        repo = ConversationRepository(db)
+        conversation = repo.get_conversation(conversation_id)
+
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+        # STM: Get last N messages
+        recent_messages = repo.get_recent_messages(conversation_id, count=message_count)
+        recent_messages.reverse()  # Chronological order
+
+        # LTM: Get conversation summary
+        summary = repo.get_summary(conversation_id)
+
+        return {
+            "conversation_id": conversation_id,
+            "title": conversation.title,
+            "stm": {
+                "messages": [
+                    {"role": msg.role, "content": msg.content}
+                    for msg in recent_messages
+                ]
+            },
+            "ltm": {
+                "summary": summary.summary if summary else None,
+                "key_topics": summary.key_topics if summary else [],
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"Failed to get conversation context: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get conversation context")

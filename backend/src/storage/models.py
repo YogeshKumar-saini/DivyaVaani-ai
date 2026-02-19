@@ -121,6 +121,41 @@ class ConversationSummary(Base):
         }
 
 
+class DailySummary(Base):
+    """Auto-generated daily chat summary per user."""
+    __tablename__ = "daily_summaries"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(255), nullable=False, index=True)
+    date = Column(String(10), nullable=False)  # YYYY-MM-DD format
+    summary_text = Column(Text, nullable=False)
+    topics = Column(JSON, default=list)  # ["dharma", "meditation", ...]
+    conversation_count = Column(Integer, default=0)
+    message_count = Column(Integer, default=0)
+    mood = Column(String(50), nullable=True)  # Overall sentiment: "reflective", "seeking", etc.
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index('idx_daily_user_date', 'user_id', 'date', unique=True),
+    )
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "date": self.date,
+            "summary_text": self.summary_text,
+            "topics": self.topics or [],
+            "conversation_count": self.conversation_count,
+            "message_count": self.message_count,
+            "mood": self.mood,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
 class User(Base):
     """User account model - matches existing database schema."""
     __tablename__ = "users"

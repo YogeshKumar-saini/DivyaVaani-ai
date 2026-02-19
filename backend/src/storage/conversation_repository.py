@@ -232,3 +232,91 @@ class ConversationRepository:
             "avg_confidence": round(float(avg_confidence), 3),
             "recent_conversations_7d": recent_conversations
         }
+
+    # ==================== Daily Summary Operations ====================
+
+    def get_daily_summaries(
+        self,
+        user_id: str,
+        start_date: str,
+        end_date: str
+    ) -> List[Any]:
+        """Get daily summaries for a user within a date range."""
+        from src.storage.models import DailySummary
+        return self.db.query(DailySummary).filter(
+            DailySummary.user_id == user_id,
+            DailySummary.date >= start_date,
+            DailySummary.date <= end_date
+        ).order_by(desc(DailySummary.date)).all()
+
+    def create_daily_summary(
+        self,
+        user_id: str,
+        date: str,
+        summary_text: str,
+        topics: List[str],
+        conversation_count: int,
+        message_count: int,
+        mood: Optional[str] = None
+    ) -> Any:
+        """Create or update a daily summary."""
+        from src.storage.models import DailySummary
+        existing = self.db.query(DailySummary).filter(
+            DailySummary.user_id == user_id,
+            DailySummary.date == date
+        ).first()
+
+        if existing:
+            existing.summary_text = summary_text
+            existing.topics = topics
+            existing.conversation_count = conversation_count
+            existing.message_count = message_count
+            existing.mood = mood
+            existing.updated_at = datetime.utcnow()
+            self.db.commit()
+            self.db.refresh(existing)
+            return existing
+        else:
+            summary = DailySummary(
+                user_id=user_id,
+                date=date,
+                summary_text=summary_text,
+                topics=topics,
+                conversation_count=conversation_count,
+                message_count=message_count,
+                mood=mood
+            )
+            self.db.add(summary)
+            self.db.commit()
+            self.db.refresh(summary)
+            return summary
+
+    def get_conversations_for_date(
+        self,
+        user_id: str,
+        date: str
+    ) -> List[Conversation]:
+        """Get all conversations for a user on a specific date."""
+        from sqlalchemy import cast, Date as SqlDate
+        return self.db.query(Conversation).filter(
+            Conversation.user_id == user_id,
+            func.date(Conversation.created_at) == date
+        ).order_by(Conversation.created_at).all()
+
+    def get_user_topic_distribution(self, user_id: str, limit: int = 20) -> List[str]:
+        """Extract popular topics/tags from user's recent conversations for suggestion engine."""
+        conversations = self.db.query(Conversation).filter(
+            Conversation.user_id == user_id,
+            Conversation.tags.isnot(None)
+        ).order_by(desc(Conversation.updated_at)).limit(limit).all()
+
+        topic_counts: Dict[str, int] = {}
+        for conv in conversations:
+            if conv.tags:
+                for tag in conv.tags:
+                    topic_counts[tag] = topic_counts.get(tag, 0) + 1
+
+        # Return topics sorted by frequency
+        sorted_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)
+        return [t[0] for t in sorted_topics]
+

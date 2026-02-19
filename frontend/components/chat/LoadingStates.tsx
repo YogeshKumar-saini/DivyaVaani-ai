@@ -70,20 +70,37 @@ export function TypingIndicator({ users = ['DivyaVaani'], className = '' }: Typi
   );
 }
 
+interface SuggestedQuestion {
+  text: string;
+  tag: string;
+}
+
 interface WelcomeScreenProps {
   onExampleClick?: (question: string) => void;
   className?: string;
+  userName?: string;
+  avatarUrl?: string;
+  suggestedQuestions?: SuggestedQuestion[];
 }
 
-export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenProps) {
-  const exampleQuestions = [
-    { text: "What is the nature of dharma and how do I follow it?", icon: Flame, tag: "Dharma" },
-    { text: "How should one handle difficult decisions with equanimity?", icon: Wind, tag: "Equanimity" },
-    { text: "What does the Gita teach about selfless action (Karma Yoga)?", icon: Sparkles, tag: "Karma Yoga" },
-    { text: "How can I find inner peace amid chaos?", icon: Star, tag: "Inner Peace" },
-    { text: "What is the path to self-realization according to Vedanta?", icon: BookOpen, tag: "Vedanta" },
-    { text: "How do I overcome fear and attachment?", icon: Flame, tag: "Liberation" },
+export function WelcomeScreen({ onExampleClick, className = '', userName, avatarUrl, suggestedQuestions }: WelcomeScreenProps) {
+  const defaultQuestions: SuggestedQuestion[] = [
+    { text: "What is the nature of dharma and how do I follow it?", tag: "Dharma" },
+    { text: "How should one handle difficult decisions with equanimity?", tag: "Equanimity" },
+    { text: "What does the Gita teach about selfless action (Karma Yoga)?", tag: "Karma Yoga" },
+    { text: "How can I find inner peace amid chaos?", tag: "Inner Peace" },
+    { text: "What is the path to self-realization according to Vedanta?", tag: "Vedanta" },
+    { text: "How do I overcome fear and attachment?", tag: "Liberation" },
   ];
+
+  const questionIcons = [Flame, Wind, Sparkles, Star, BookOpen, Flame];
+  const questions = suggestedQuestions && suggestedQuestions.length > 0 ? suggestedQuestions : defaultQuestions;
+  const isPersonalized = !!(suggestedQuestions && suggestedQuestions.length > 0);
+
+  const greetingName = userName ? userName.split(' ')[0] : 'Seeker';
+  const initials = userName
+    ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'ॐ';
 
   const containerVariants = {
     hidden: {},
@@ -108,48 +125,65 @@ export function WelcomeScreen({ onExampleClick, className = '' }: WelcomeScreenP
           <div className="relative inline-block mb-6">
             <div className="absolute inset-0 rounded-full bg-violet-600/20 blur-3xl scale-150" />
             <div className="absolute inset-0 rounded-full bg-indigo-600/15 blur-2xl scale-125 animate-pulse" />
-            <div className="relative w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-2xl shadow-violet-900/40 flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white text-3xl font-serif leading-none">ॐ</span>
-            </div>
+            {userName && avatarUrl ? (
+              <div className="relative w-20 h-20 mx-auto rounded-2xl shadow-2xl shadow-violet-900/40 ring-1 ring-white/10 overflow-hidden">
+                <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+              </div>
+            ) : userName ? (
+              <div className="relative w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-2xl shadow-violet-900/40 flex items-center justify-center ring-1 ring-white/10">
+                <span className="text-white text-2xl font-bold leading-none">{initials}</span>
+              </div>
+            ) : (
+              <div className="relative w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-2xl shadow-violet-900/40 flex items-center justify-center ring-1 ring-white/10">
+                <span className="text-white text-3xl font-serif leading-none">ॐ</span>
+              </div>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-serif font-bold bg-clip-text text-transparent bg-linear-to-r from-white via-white/90 to-white/60 mb-3">
-            Namaste, Seeker
+            Namaste, {greetingName}
           </h1>
           <p className="text-white/40 text-[15px] font-light leading-relaxed max-w-md mx-auto">
-            Receive guidance from the eternal wisdom of the Bhagavad Gita and universal spiritual traditions.
+            {userName
+              ? 'Continue your spiritual journey with personalized wisdom and guidance.'
+              : 'Receive guidance from the eternal wisdom of the Bhagavad Gita and universal spiritual traditions.'}
           </p>
         </motion.div>
 
         {/* Divider */}
         <motion.div variants={itemVariants} className="flex items-center gap-4">
           <div className="h-px flex-1 bg-linear-to-r from-transparent to-white/10" />
-          <span className="text-white/20 text-[10px] uppercase tracking-[0.3em] font-medium">Explore Questions</span>
+          <span className="text-white/20 text-[10px] uppercase tracking-[0.3em] font-medium">
+            {isPersonalized ? 'Daily Picks for You ✨' : 'Explore Questions'}
+          </span>
           <div className="h-px flex-1 bg-linear-to-l from-transparent to-white/10" />
         </motion.div>
 
         {/* Question grid */}
         {onExampleClick && (
           <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {exampleQuestions.map(({ text, icon: Icon, tag }, idx) => (
-              <motion.button
-                key={idx}
-                onClick={() => onExampleClick(text)}
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="group flex items-start gap-3.5 w-full text-left px-4 py-3.5 rounded-2xl bg-white/3 hover:bg-white/7 border border-white/6 hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-linear-to-br from-violet-600/0 to-indigo-600/0 group-hover:from-violet-600/5 group-hover:to-indigo-600/4 transition-all duration-300" />
-                <div className="relative shrink-0 w-8 h-8 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center group-hover:bg-violet-500/12 group-hover:border-violet-500/25 transition-all duration-300 mt-0.5">
-                  <Icon size={14} className="text-white/25 group-hover:text-violet-300 transition-colors" />
-                </div>
-                <div className="relative flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold text-violet-400/50 uppercase tracking-wider mb-1 group-hover:text-violet-400/80 transition-colors">{tag}</div>
-                  <span className="text-[13px] text-white/50 group-hover:text-white/80 font-light leading-snug transition-colors line-clamp-2">
-                    {text}
-                  </span>
-                </div>
-              </motion.button>
-            ))}
+            {questions.map(({ text, tag }, idx) => {
+              const Icon = questionIcons[idx % questionIcons.length];
+              return (
+                <motion.button
+                  key={idx}
+                  onClick={() => onExampleClick(text)}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group flex items-start gap-3.5 w-full text-left px-4 py-3.5 rounded-2xl bg-white/3 hover:bg-white/7 border border-white/6 hover:border-violet-500/30 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-linear-to-br from-violet-600/0 to-indigo-600/0 group-hover:from-violet-600/5 group-hover:to-indigo-600/4 transition-all duration-300" />
+                  <div className="relative shrink-0 w-8 h-8 rounded-xl bg-white/4 border border-white/6 flex items-center justify-center group-hover:bg-violet-500/12 group-hover:border-violet-500/25 transition-all duration-300 mt-0.5">
+                    <Icon size={14} className="text-white/25 group-hover:text-violet-300 transition-colors" />
+                  </div>
+                  <div className="relative flex-1 min-w-0">
+                    <div className="text-[10px] font-semibold text-violet-400/50 uppercase tracking-wider mb-1 group-hover:text-violet-400/80 transition-colors">{tag}</div>
+                    <span className="text-[13px] text-white/50 group-hover:text-white/80 font-light leading-snug transition-colors line-clamp-2">
+                      {text}
+                    </span>
+                  </div>
+                </motion.button>
+              );
+            })}
           </motion.div>
         )}
 

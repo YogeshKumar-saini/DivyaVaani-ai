@@ -67,7 +67,7 @@ export class ConversationService {
     const params = new URLSearchParams({
       user_id: userId,
     });
-    
+
     return apiClient.request<Conversation>(`/conversations?${params.toString()}`, {
       method: 'POST',
       body: JSON.stringify({
@@ -90,7 +90,7 @@ export class ConversationService {
       limit: limit.toString(),
       offset: offset.toString(),
     });
-    
+
     return apiClient.request<Conversation[]>(`/conversations?${params.toString()}`);
   }
 
@@ -105,11 +105,11 @@ export class ConversationService {
     const params = new URLSearchParams({
       include_messages: includeMessages.toString(),
     });
-    
+
     if (messageLimit) {
       params.append('message_limit', messageLimit.toString());
     }
-    
+
     return apiClient.request<ConversationWithMessages>(
       `/conversations/${conversationId}?${params.toString()}`
     );
@@ -143,7 +143,7 @@ export class ConversationService {
       limit: limit.toString(),
       offset: offset.toString(),
     });
-    
+
     return apiClient.request<Message[]>(
       `/conversations/${conversationId}/messages?${params.toString()}`
     );
@@ -180,11 +180,94 @@ export class ConversationService {
       q: query,
       limit: limit.toString(),
     });
-    
+
     return apiClient.request<Conversation[]>(
       `/conversations/search/?${params.toString()}`
     );
   }
+
+  /**
+   * Get personalized suggested questions based on user's chat behavior
+   */
+  async getSuggestedQuestions(
+    userId: string
+  ): Promise<{ questions: { text: string; tag: string }[]; personalized: boolean }> {
+    return apiClient.request(
+      `/conversations/users/${userId}/suggested-questions`
+    );
+  }
+
+  /**
+   * Get daily chat summaries within a date range
+   */
+  async getDailySummaries(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<DailySummary[]> {
+    const params = new URLSearchParams({
+      start_date: startDate,
+      end_date: endDate,
+    });
+    return apiClient.request<DailySummary[]>(
+      `/conversations/users/${userId}/daily-summaries?${params.toString()}`
+    );
+  }
+
+  /**
+   * Trigger daily summary generation for a specific date
+   */
+  async generateDailySummary(
+    userId: string,
+    date: string
+  ): Promise<{ message: string; generated: boolean }> {
+    const params = new URLSearchParams({ date });
+    return apiClient.request(
+      `/conversations/users/${userId}/generate-daily-summary?${params.toString()}`,
+      { method: 'POST' }
+    );
+  }
+
+  /**
+   * Get conversation context (STM + LTM) for memory-enhanced responses
+   */
+  async getConversationContext(
+    conversationId: string,
+    messageCount: number = 5
+  ): Promise<ConversationContext> {
+    const params = new URLSearchParams({
+      message_count: messageCount.toString(),
+    });
+    return apiClient.request<ConversationContext>(
+      `/conversations/${conversationId}/context?${params.toString()}`
+    );
+  }
+}
+
+// Types for new features
+export interface DailySummary {
+  id: string;
+  user_id: string;
+  date: string;
+  summary_text: string;
+  topics: string[];
+  conversation_count: number;
+  message_count: number;
+  mood: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationContext {
+  conversation_id: string;
+  title: string;
+  stm: {
+    messages: { role: string; content: string }[];
+  };
+  ltm: {
+    summary: string | null;
+    key_topics: string[];
+  };
 }
 
 export const conversationService = new ConversationService();
