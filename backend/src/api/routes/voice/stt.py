@@ -10,7 +10,7 @@ from src.services.voice_service import VoiceService
 router = APIRouter(tags=["speech-to-text"])
 
 
-@router.post("/")
+@router.post("")
 async def speech_to_text(
     audio_file: UploadFile = File(...),
     language: Optional[str] = Form("auto"),

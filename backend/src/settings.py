@@ -35,7 +35,7 @@ class Settings(BaseModel):
 
     # Vector stores
     api_host: str = Field(default="0.0.0.0")
-    api_port: int = Field(default=8000, ge=1, le=65535)
+    api_port: int = Field(default_factory=lambda: int(os.getenv("API_PORT", 8000)), ge=1, le=65535)
 
     # Pinecone Vector Store
     pinecone_api_key: Optional[str] = Field(default=None)

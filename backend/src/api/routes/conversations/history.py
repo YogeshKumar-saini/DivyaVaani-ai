@@ -65,7 +65,7 @@ class ConversationWithMessages(ConversationResponse):
 
 # ==================== Endpoints ====================
 
-@router.post("/", response_model=ConversationResponse)
+@router.post("", response_model=ConversationResponse)
 async def create_conversation(
     user_id: str = Query(..., description="User identifier"),
     conv_create: ConversationCreate = ConversationCreate(),
@@ -85,7 +85,7 @@ async def create_conversation(
         raise HTTPException(status_code=500, detail="Failed to create conversation")
 
 
-@router.get("/", response_model=List[ConversationResponse])
+@router.get("", response_model=List[ConversationResponse])
 async def get_user_conversations(
     user_id: str = Query(..., description="User identifier"),
     limit: int = Query(50, ge=1, le=100),
@@ -225,7 +225,7 @@ async def get_user_stats(
         raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
-@router.get("/search/")
+@router.get("/search")
 async def search_conversations(
     user_id: str = Query(..., description="User identifier"),
     query: str = Query(..., min_length=1, description="Search query"),

@@ -2,29 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 
 function getBackendOrigin(): string {
   const configured = (process.env.BACKEND_URL ?? '').trim();
+  console.log('[API Proxy] BACKEND_URL from env:', configured);
   if (configured) return configured.replace(/\/+$/, '');
-  // Local DX fallback: avoids hard failures when BACKEND_URL is missing in dev.
-  if (process.env.NODE_ENV !== 'production') return 'http://localhost:8000';
   return '';
 }
 
-// 25-second timeout — Vercel Hobby limit is 10s, Pro is 60s.
-// Keeps us well under the Pro limit while failing fast on a dead backend.
 const PROXY_TIMEOUT_MS = 25_000;
 
-/**
- * Forward a Next.js request to the backend and return the response.
- * Handles GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.
- */
 async function proxyRequest(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
   const backendOrigin = getBackendOrigin();
-  console.log('[API Proxy] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[API Proxy] BACKEND_URL:', process.env.BACKEND_URL);
-  console.log('[API Proxy] Resolved Origin:', backendOrigin);
-
   if (!backendOrigin) {
     return NextResponse.json(
       {
@@ -43,11 +32,29 @@ async function proxyRequest(
 
   // Forward request body for methods that carry one
   const hasBody = !['GET', 'HEAD'].includes(req.method);
-  const body = hasBody ? req.body : undefined;
+
+  // Read body as blob/buffer instead of streaming to avoid Node duplex issues
+  // Clone the request first to avoid "detached ArrayBuffer" errors
+  let body: BodyInit | null | undefined = undefined;
+  if (hasBody) {
+    try {
+      // Clone the request before reading the body to avoid detaching the original.
+      // Use Uint8Array (a copy of the ArrayBuffer) so the buffer is never
+      // transferred/detached when undici follows a redirect and re-reads the body.
+      const clonedReq = req.clone();
+      const arrayBuffer = await clonedReq.arrayBuffer();
+      if (arrayBuffer.byteLength > 0) {
+        body = new Uint8Array(arrayBuffer.slice(0));  // explicit copy prevents detachment
+      }
+    } catch (e) {
+      console.error('[API Proxy] Error reading request body:', e);
+    }
+  }
 
   // Build forwarded headers (strip host so EC2 doesn't see Vercel's hostname)
   const forwardedHeaders = new Headers(req.headers);
   forwardedHeaders.delete('host');
+  forwardedHeaders.delete('content-length'); // Let fetch recalculate content-length
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
@@ -61,9 +68,7 @@ async function proxyRequest(
       // Location: http://... header that would trigger a mixed-content block.
       redirect: 'follow',
       signal: controller.signal,
-      // Required so ReadableStream body is forwarded without buffering
-      // @ts-expect-error — Node 18+ fetch supports this flag
-      duplex: 'half',
+      cache: 'no-store',
     });
 
     clearTimeout(timer);

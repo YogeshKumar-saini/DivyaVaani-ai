@@ -54,7 +54,7 @@ export class VoiceService {
     // Create a File object with proper filename for backend validation
     const audioFile = new File([audioBlob], filename, { type: audioBlob.type });
 
-    const response = await apiClient.uploadFile('/voice/', audioFile, {
+    const response = await apiClient.uploadFile('/voice', audioFile, {
       user_id: options.userId || '',
       input_language: options.inputLanguage || 'auto',
       output_language: options.outputLanguage || 'auto',
@@ -92,7 +92,7 @@ export class VoiceService {
     language: string = 'auto',
     userId?: string
   ): Promise<STTResponse> {
-    const response = await apiClient.uploadFile('/voice/stt/', audioBlob, {
+    const response = await apiClient.uploadFile('/voice/stt', audioBlob, {
       language,
       user_id: userId || '',
     });
@@ -121,7 +121,7 @@ export class VoiceService {
       additionalData.user_id = userId;
     }
 
-    const response = await apiClient.uploadFile('/voice/tts/', new Blob([]), additionalData);
+    const response = await apiClient.uploadFile('/voice/tts', new Blob([]), additionalData);
     return response.blob();
   }
 

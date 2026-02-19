@@ -12,7 +12,7 @@ from src.services.voice_service import VoiceService
 router = APIRouter(tags=["text-to-speech"])
 
 
-@router.post("/", response_class=FileResponse)
+@router.post("", response_class=FileResponse)
 async def text_to_speech(
     text: str = Form(..., min_length=1, max_length=5000),
     language: Optional[str] = Form("en"),

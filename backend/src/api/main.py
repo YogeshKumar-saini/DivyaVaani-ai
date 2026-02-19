@@ -98,7 +98,8 @@ app = FastAPI(
     title="DivyaVaani AI - Universal Spiritual Guidance",
     description="Production-ready AI-powered spiritual guidance system drawing from all spiritual traditions using RAG",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False,  # Prevents 307 redirects on POST /text → /text/ which detaches request body
 )
 
 # Add security middleware

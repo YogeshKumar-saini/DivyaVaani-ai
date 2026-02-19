@@ -12,7 +12,7 @@ from src.services.voice_service import VoiceService
 router = APIRouter(tags=["voice-query"])
 
 
-@router.post("/", response_class=FileResponse)
+@router.post("", response_class=FileResponse)
 async def voice_query(
     audio_file: UploadFile = File(...),
     user_id: Optional[str] = Form(None),

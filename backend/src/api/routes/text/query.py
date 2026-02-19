@@ -67,7 +67,7 @@ class AnswerResponse(BaseModel):
 router = APIRouter(tags=["query"])
 
 
-@router.post("/", response_model=AnswerResponse)
+@router.post("", response_model=AnswerResponse)
 async def query(request: Request, query_req: QuestionRequest):
     """Query endpoint for asking questions with service layer integration."""
     try:
