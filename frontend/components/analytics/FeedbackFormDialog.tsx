@@ -102,7 +102,7 @@ export function FeedbackFormDialog({ onSubmit }: FeedbackFormDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px] bg-[#0e0e16] border border-white/10 text-white shadow-2xl shadow-black/60 p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] bg-[#0B0F19]/90 backdrop-blur-xl border border-white/10 text-white shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] p-0 overflow-hidden rounded-3xl">
         {/*
           Always-present accessible header (visually hidden).
           Radix requires DialogTitle to be present whenever DialogContent
@@ -249,9 +249,9 @@ export function FeedbackFormDialog({ onSubmit }: FeedbackFormDialogProps) {
                     onChange={(e) => setFeedback(prev => ({ ...prev, content: e.target.value }))}
                     placeholder={
                       feedback.type === 'bug' ? 'Describe what happened and steps to reproduce...' :
-                      feedback.type === 'feature' ? 'What feature would you like to see?' :
-                      feedback.type === 'accuracy' ? 'Which answer was inaccurate and why?' :
-                      'Tell us what you think about DivyaVaani...'
+                        feedback.type === 'feature' ? 'What feature would you like to see?' :
+                          feedback.type === 'accuracy' ? 'Which answer was inaccurate and why?' :
+                            'Tell us what you think about DivyaVaani...'
                     }
                     rows={4}
                     required

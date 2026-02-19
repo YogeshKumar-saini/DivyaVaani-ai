@@ -10,6 +10,7 @@ interface LanguageDetectorProps {
   isDetecting?: boolean;
   confidence?: number;
   disabled?: boolean;
+  isCollapsed?: boolean;
 }
 
 const languageInfo = {
@@ -22,7 +23,8 @@ export function LanguageDetector({
   currentDetectedLanguage,
   isDetecting = false,
   confidence = 1.0,
-  disabled = false
+  disabled = false,
+  isCollapsed = false
 }: LanguageDetectorProps) {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -31,21 +33,20 @@ export function LanguageDetector({
   return (
     <TooltipProvider>
       <div className="flex items-center space-x-2">
-        <Globe className="h-4 w-4 text-white/30 shrink-0" />
+        {!isCollapsed && <Globe className="h-4 w-4 text-white/30 shrink-0" />}
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg transition-all duration-200 ${
-                disabled
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-white/8 cursor-default'
-              }`}
+              className={`flex items-center space-x-2 rounded-lg transition-all duration-200 ${disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-white/8 cursor-default'
+                } ${isCollapsed ? 'justify-center w-full px-0 py-1' : 'px-2.5 py-1.5'}`}
               onClick={() => !disabled && setShowDetails(!showDetails)}
             >
-              <Languages className="h-3 w-3 text-white/30" />
+              {!isCollapsed && <Languages className="h-3 w-3 text-white/30" />}
               <span className="text-sm">{language.flag}</span>
-              <span className="text-[12px] font-medium text-white/55">{language.native}</span>
-              {isDetecting && (
+              {!isCollapsed && <span className="text-[12px] font-medium text-white/55">{language.native}</span>}
+              {!isCollapsed && isDetecting && (
                 <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
               )}
             </div>
@@ -71,7 +72,7 @@ export function LanguageDetector({
           </TooltipContent>
         </Tooltip>
 
-        {showDetails && !disabled && (
+        {showDetails && !disabled && !isCollapsed && (
           <Badge
             variant="outline"
             className="text-[10px] border-emerald-500/25 bg-emerald-500/10 text-emerald-400"

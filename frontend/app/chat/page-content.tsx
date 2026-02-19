@@ -14,6 +14,10 @@ import { GuestLimitModal } from '@/components/chat/GuestLimitModal';
 import { GuestMessageBanner } from '@/components/chat/GuestMessageBanner';
 import { useGuestChatLimit } from '@/lib/hooks/useGuestChatLimit';
 import { AnimatePresence, motion } from 'framer-motion';
+import { SourceCard, Source } from '@/components/chat/SourceCard';
+import { FollowUpQuestions } from '@/components/chat/FollowUpQuestions';
+import { Volume2, Loader2, StopCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,11 +39,14 @@ interface Message {
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
-  sources?: string[];
+  sources?: Source[];
   contexts?: Context[];
   language?: string;
   confidence_score?: number;
   processing_time?: number;
+  follow_up_questions?: string[];
+  isPlayingAudio?: boolean;
+  isLoadingAudio?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -52,6 +59,7 @@ export default function ChatPageContent() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState('en');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -59,6 +67,9 @@ export default function ChatPageContent() {
   const [isSyncing, setIsSyncing] = useState(false);
   // Guard: prevent double-sync if both onAuthSuccess + user?.id effect fire simultaneously
   const isSyncingRef = useRef(false);
+
+  // Audio state
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Guest limit system
   const {
@@ -94,6 +105,70 @@ export default function ChatPageContent() {
       );
     }
   }, [messages, isLoggedIn, saveGuestMessages]);
+
+  // ── TTS Handler ───────────────────────────────────────────────────────────
+  const handlePlayAudio = async (messageId: string, text: string) => {
+    // Stop current audio if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setMessages(prev => prev.map(m => ({ ...m, isPlayingAudio: false, isLoadingAudio: false })));
+
+      // If clicking the same message that is playing, just stop.
+      const playingMsg = messages.find(m => m.id === messageId && m.isPlayingAudio);
+      if (playingMsg) return;
+    }
+
+    setMessages(prev => prev.map(m =>
+      m.id === messageId ? { ...m, isLoadingAudio: true } : m
+    ));
+
+    try {
+      // Use fetch to get blob, then play
+      const formData = new FormData();
+      formData.append('text', text);
+      formData.append('language', detectedLanguage || 'en');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/voice/tts`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('TTS failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+
+      audio.onended = () => {
+        setMessages(prev => prev.map(m =>
+          m.id === messageId ? { ...m, isPlayingAudio: false } : m
+        ));
+        URL.revokeObjectURL(url);
+      };
+
+      audio.onerror = () => {
+        console.error("Audio playback error");
+        setMessages(prev => prev.map(m =>
+          m.id === messageId ? { ...m, isLoadingAudio: false, isPlayingAudio: false } : m
+        ));
+      }
+
+      await audio.play();
+      audioRef.current = audio;
+
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, isLoadingAudio: false, isPlayingAudio: true } : m
+      ));
+
+    } catch (error) {
+      console.error('Failed to play audio:', error);
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, isLoadingAudio: false } : m
+      ));
+    }
+  };
+
 
   // ── Sync guest messages after login ───────────────────────────────────────
   const syncGuestMessagesAfterLogin = useCallback(async () => {
@@ -186,7 +261,7 @@ export default function ChatPageContent() {
         timestamp: new Date(msg.created_at),
         confidence_score: msg.confidence_score,
         processing_time: msg.processing_time,
-        sources: msg.sources,
+        sources: msg.sources ? msg.sources.map(s => ({ verse: s, score: 1, text: s })) : [], // Shim for old format
       }));
       setMessages(uiMessages);
     } catch (error) {
@@ -225,10 +300,24 @@ export default function ChatPageContent() {
       timestamp: new Date(),
     };
 
+    // Add user message immediately
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setInitialLoad(false);
     setIsLoading(true);
+
+    // Initialize bot message placeholder
+    const botMessageId = (Date.now() + 1).toString();
+    const botMessagePlaceholder: Message = {
+      id: botMessageId,
+      type: 'bot',
+      content: '', // Start empty
+      timestamp: new Date(),
+      sources: [],
+      contexts: [],
+    };
+
+    setMessages((prev) => [...prev, botMessagePlaceholder]);
 
     try {
       // ── Persist conversation for logged-in users ──────────────────────
@@ -258,23 +347,85 @@ export default function ChatPageContent() {
         }
       }
 
-      // ── Actual AI request ─────────────────────────────────────────────
-      const response = await textService.askQuestion(questionToAsk);
+      // ── Stream Response ─────────────────────────────────────────────
+      let fullAnswer = '';
+      const sources: Source[] = [];
+      let confidenceScore = 0;
+      let processingTime = 0;
+      let followUpQuestions: string[] = [];
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: response.answer || "I'm processing your request...",
-        timestamp: new Date(),
-        sources: response.sources,
-        contexts: response.contexts,
-        language: response.language,
-        confidence_score: response.confidence || response.confidence_score,
-        processing_time: response.processing_time,
-      };
+      for await (const event of textService.streamQuestion(questionToAsk, user?.id, selectedLanguage)) {
+        switch (event.type) {
+          case 'token':
+            fullAnswer += event.data.token;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMessageId ? { ...msg, content: fullAnswer } : msg
+              )
+            );
+            break;
 
-      setMessages((prev) => [...prev, botMessage]);
-      if (response.language) setDetectedLanguage(response.language);
+          case 'source':
+            // Robustly handle source data
+            const sourceData: Source = {
+              verse: event.data.verse,
+              score: event.data.score,
+              text: event.data.text,
+              sanskrit: event.data.sanskrit,
+              translation: event.data.translation,
+              chapter: event.data.chapter
+            };
+            sources.push(sourceData);
+
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMessageId
+                  ? { ...msg, sources: [...(msg.sources || []), sourceData] }
+                  : msg
+              )
+            );
+            break;
+
+          case 'follow_up':
+            followUpQuestions = event.data.questions;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMessageId
+                  ? { ...msg, follow_up_questions: followUpQuestions }
+                  : msg
+              )
+            );
+            break;
+
+          case 'metadata':
+            confidenceScore = event.data.confidence;
+            processingTime = event.data.processing_time;
+            if (event.data.language) setDetectedLanguage(event.data.language);
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMessageId
+                  ? {
+                    ...msg,
+                    confidence_score: event.data.confidence,
+                    processing_time: event.data.processing_time,
+                  }
+                  : msg
+              )
+            );
+            break;
+
+          case 'error':
+            console.error('Streaming error:', event.data.error);
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMessageId
+                  ? { ...msg, content: msg.content + '\n\n[Error: ' + event.data.error + ']' }
+                  : msg
+              )
+            );
+            break;
+        }
+      }
 
       // ── Count this as a successful guest message ──────────────────────
       if (!isLoggedIn) {
@@ -283,12 +434,14 @@ export default function ChatPageContent() {
 
       if (conversationId && user) {
         try {
+          // Just save verse strings to DB for compatibility
+          const sourceVerses = sources.map(s => s.verse);
           conversationService.addMessage(conversationId, {
             role: 'assistant',
-            content: response.answer,
-            confidence_score: response.confidence,
-            processing_time: response.processing_time,
-            sources: response.sources,
+            content: fullAnswer,
+            confidence_score: confidenceScore,
+            processing_time: processingTime,
+            sources: sourceVerses,
           });
         } catch (e) {
           console.error('Failed to persist bot message', e);
@@ -298,7 +451,7 @@ export default function ChatPageContent() {
       console.error(error);
       // ── Network/server errors do NOT count toward the guest limit ─────
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         type: 'bot',
         content: 'I apologize, but I encountered an error. Please try again.',
         timestamp: new Date(),
@@ -313,21 +466,63 @@ export default function ChatPageContent() {
     console.log('Feedback:', messageId, rating);
   };
 
-  // ── Determine if input should be disabled ─────────────────────────────────
-  const isInputDisabled = isLoading || (!isLoggedIn && isHydrated && isLimitReached);
+  // Custom renderer for messages content to include TTS and Follow-ups
+  const renderMessageContent = (msg: Message) => {
+    return (
+      <div className="w-full">
+        <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
 
-  // ── Handle input submit with limit check ──────────────────────────────────
-  const handleSubmit = () => {
-    if (!isLoggedIn && isLimitReached) {
-      openModal();
-      return;
-    }
-    askQuestion();
+        {/* Sources */}
+        {msg.sources && msg.sources.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="text-[10px] uppercase tracking-wider text-white/30 font-semibold mb-2">Sources</div>
+            <div className="grid gap-2">
+              {msg.sources.map((source, idx) => (
+                <SourceCard key={idx} source={source} index={idx} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TTS Button */}
+        {msg.type === 'bot' && !isLoading && (
+          <div className="mt-3 flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={msg.isLoadingAudio}
+              onClick={() => handlePlayAudio(msg.id, msg.content)}
+              className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/5 gap-2"
+            >
+              {msg.isLoadingAudio ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : msg.isPlayingAudio ? (
+                <StopCircle className="w-4 h-4 text-cyan-400" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+              <span className="text-xs">{msg.isPlayingAudio ? 'Stop' : 'Listen'}</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Follow-up Questions */}
+        {msg.follow_up_questions && msg.follow_up_questions.length > 0 && (
+          <FollowUpQuestions
+            questions={msg.follow_up_questions}
+            onQuestionClick={(q) => askQuestion(q)}
+            disabled={isLoading}
+          />
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="h-full w-full relative bg-transparent overflow-hidden pt-16">
       <GrainOverlay />
+
+      {/* Language Selector moved to ChatInput */}
 
       {/* ── Guest Limit Modal ───────────────────────────────────────────────── */}
       <GuestLimitModal
@@ -418,7 +613,11 @@ export default function ChatPageContent() {
 
             {/* Messages area */}
             <div className="flex-1 pt-4 max-w-3xl mx-auto w-full">
-              <ChatMessages messages={messages} onFeedback={handleFeedback} />
+              <ChatMessages
+                messages={messages}
+                onFeedback={handleFeedback}
+                renderContent={renderMessageContent}
+              />
               {isLoading && (
                 <LoadingState
                   isTyping
@@ -448,8 +647,10 @@ export default function ChatPageContent() {
           <ChatInput
             input={input}
             setInput={setInput}
-            isLoading={isInputDisabled}
-            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            onSubmit={askQuestion}
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
             placeholder={
               !isLoggedIn && isHydrated && isLimitReached
                 ? 'Sign up to continue chatting...'

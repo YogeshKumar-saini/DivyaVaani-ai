@@ -157,7 +157,7 @@ export function ImportDataDialog({ onUploadSuccess }: ImportDataDialogProps) {
                     Import Data
                 </Button>
             </DialogTrigger>
-            <DialogContent className="w-[95%] sm:max-w-md bg-black/90 border-white/10 backdrop-blur-xl text-foreground overflow-hidden rounded-xl">
+            <DialogContent className="w-[95%] sm:max-w-md bg-[#0B0F19]/90 border border-white/10 backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] text-white overflow-hidden rounded-3xl">
                 <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>

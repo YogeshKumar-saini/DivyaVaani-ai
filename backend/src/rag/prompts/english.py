@@ -56,7 +56,7 @@ Respond naturally and appropriately to what they've asked, matching their tone a
             return ""
 
         formatted = []
-        for ctx in contexts[:3]:  # Use top 3 contexts only for English
-            formatted.append(f"[{ctx['verse']}] {ctx['text'][:200]}...")
+        for ctx in contexts[:5]:  # Use top 5 contexts
+            formatted.append(f"• Source [{ctx['verse']}]: {ctx['text'][:400]}...")
 
         return "\n\n".join(formatted)

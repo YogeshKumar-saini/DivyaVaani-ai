@@ -6,8 +6,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from google.oauth2 import id_token
-from google.auth.transport import requests
+# from google.oauth2 import id_token # No longer needed for access token flow
+import requests
 import secrets
 import string
 
@@ -53,12 +53,16 @@ async def google_login(
                 detail="Google Client ID not configured",
             )
 
-        # Verify the token
-        id_info = id_token.verify_oauth2_token(
-            login_data.token, 
-            requests.Request(), 
-            settings.google_client_id
+        # Verify the access token by calling Google's userinfo endpoint
+        response = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {login_data.token}"}
         )
+        
+        if response.status_code != 200:
+            raise ValueError("Invalid access token")
+            
+        id_info = response.json()
 
         email = id_info['email']
         name = id_info.get('name', '')

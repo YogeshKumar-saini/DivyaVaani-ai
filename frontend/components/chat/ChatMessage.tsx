@@ -23,7 +23,8 @@ interface Message {
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
-  sources?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sources?: any[];
   contexts?: Context[];
   language?: string;
   confidence_score?: number;
@@ -32,12 +33,13 @@ interface Message {
 
 interface ChatMessageProps {
   message: Message;
-  onFeedback?: (rating: 'excellent' | 'good' | 'needs_improvement') => Promise<void> | void;
+  onFeedback?: (type: 'up' | 'down') => void;
   feedbackSubmitted?: boolean;
   isLastBot?: boolean;
+  renderContent?: (message: Message) => React.ReactNode;
 }
 
-export function ChatMessage({ message, onFeedback, isLastBot = false }: ChatMessageProps) {
+export function ChatMessage({ message, onFeedback, isLastBot = false, renderContent }: ChatMessageProps) {
   const isBot = message.type === 'bot';
   const [copied, setCopied] = useState(false);
   const [showSources, setShowSources] = useState(false);
@@ -49,10 +51,10 @@ export function ChatMessage({ message, onFeedback, isLastBot = false }: ChatMess
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFeedback = (type: 'up' | 'down') => {
+  const handleFeedbackClick = (type: 'up' | 'down') => {
     setFeedbackGiven(type);
     if (onFeedback) {
-      onFeedback(type === 'up' ? 'excellent' : 'needs_improvement');
+      onFeedback(type);
     }
   };
 
@@ -93,61 +95,68 @@ export function ChatMessage({ message, onFeedback, isLastBot = false }: ChatMess
                 {isLastBot && (
                   <div className="absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-violet-500/30 to-transparent rounded-full" />
                 )}
-                <p className="text-white/88 font-light text-[15px] leading-[1.85] tracking-wide whitespace-pre-wrap m-0">
-                  {message.content}
-                </p>
 
-                {/* Meta footer */}
-                {(message.processing_time !== undefined || message.confidence_score !== undefined || (message.sources && message.sources.length > 0)) && (
-                  <div className="mt-3.5 pt-3 border-t border-white/6 flex flex-wrap items-center gap-3">
-                    {message.processing_time !== undefined && (
-                      <span className="flex items-center gap-1.5 text-[11px] text-white/25 font-medium">
-                        <Clock size={10} />
-                        {message.processing_time.toFixed(2)}s
-                      </span>
-                    )}
-                    {message.confidence_score !== undefined && (
-                      <span className={cn("flex items-center gap-1.5 text-[11px] font-medium",
-                        message.confidence_score > 0.8 ? "text-emerald-400/60" : message.confidence_score > 0.5 ? "text-amber-400/60" : "text-red-400/60"
-                      )}>
-                        <Target size={10} />
-                        {(message.confidence_score * 100).toFixed(0)}% confident
-                      </span>
-                    )}
-                    {message.sources && message.sources.length > 0 && (
-                      <button
-                        onClick={() => setShowSources(!showSources)}
-                        className="flex items-center gap-1.5 text-[11px] text-violet-400/60 hover:text-violet-300 font-medium transition-colors px-2 py-0.5 rounded-md hover:bg-violet-500/10"
-                      >
-                        <BookOpen size={10} />
-                        {message.sources.length} {message.sources.length === 1 ? 'Source' : 'Sources'}
-                        {showSources ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
-                      </button>
-                    )}
-                  </div>
-                )}
+                {renderContent ? (
+                  renderContent(message)
+                ) : (
+                  <>
+                    <p className="text-white/88 font-light text-[15px] leading-[1.85] tracking-wide whitespace-pre-wrap m-0">
+                      {message.content}
+                    </p>
 
-                {/* Sources */}
-                <AnimatePresence>
-                  {showSources && message.sources && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-3 space-y-1.5">
-                        {message.sources.map((src, i) => (
-                          <div key={i} className="flex items-start gap-2 text-[11px] text-white/40 bg-white/3 rounded-xl px-3 py-2 border border-white/6">
-                            <BookOpen size={9} className="shrink-0 mt-0.5 text-violet-400/40" />
-                            {src}
-                          </div>
-                        ))}
+                    {/* Meta footer - Only show if NO renderContent (default behavior) */}
+                    {(message.processing_time !== undefined || message.confidence_score !== undefined || (message.sources && message.sources.length > 0)) && (
+                      <div className="mt-3.5 pt-3 border-t border-white/6 flex flex-wrap items-center gap-3">
+                        {message.processing_time !== undefined && (
+                          <span className="flex items-center gap-1.5 text-[11px] text-white/25 font-medium">
+                            <Clock size={10} />
+                            {message.processing_time.toFixed(2)}s
+                          </span>
+                        )}
+                        {message.confidence_score !== undefined && (
+                          <span className={cn("flex items-center gap-1.5 text-[11px] font-medium",
+                            message.confidence_score > 0.8 ? "text-emerald-400/60" : message.confidence_score > 0.5 ? "text-amber-400/60" : "text-red-400/60"
+                          )}>
+                            <Target size={10} />
+                            {(message.confidence_score * 100).toFixed(0)}% confident
+                          </span>
+                        )}
+                        {message.sources && message.sources.length > 0 && (
+                          <button
+                            onClick={() => setShowSources(!showSources)}
+                            className="flex items-center gap-1.5 text-[11px] text-violet-400/60 hover:text-violet-300 font-medium transition-colors px-2 py-0.5 rounded-md hover:bg-violet-500/10"
+                          >
+                            <BookOpen size={10} />
+                            {message.sources.length} {message.sources.length === 1 ? 'Source' : 'Sources'}
+                            {showSources ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                          </button>
+                        )}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+
+                    {/* Sources - Only show if NO renderContent */}
+                    <AnimatePresence>
+                      {showSources && message.sources && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-3 space-y-1.5">
+                            {message.sources.map((src, i) => (
+                              <div key={i} className="flex items-start gap-2 text-[11px] text-white/40 bg-white/3 rounded-xl px-3 py-2 border border-white/6">
+                                <BookOpen size={9} className="shrink-0 mt-0.5 text-violet-400/40" />
+                                {src}
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
               </div>
 
               {/* Action bar — hover reveal */}
@@ -162,7 +171,7 @@ export function ChatMessage({ message, onFeedback, isLastBot = false }: ChatMess
                 </button>
                 <div className="h-3 w-px bg-white/10 mx-0.5" />
                 <button
-                  onClick={() => handleFeedback('up')}
+                  onClick={() => handleFeedbackClick('up')}
                   title="Good response"
                   className={cn(
                     "flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all",
@@ -172,7 +181,7 @@ export function ChatMessage({ message, onFeedback, isLastBot = false }: ChatMess
                   <ThumbsUp size={11} />
                 </button>
                 <button
-                  onClick={() => handleFeedback('down')}
+                  onClick={() => handleFeedbackClick('down')}
                   title="Poor response"
                   className={cn(
                     "flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg transition-all",
@@ -230,9 +239,10 @@ interface ChatMessagesProps {
   onFeedback?: (messageId: string, rating: 'excellent' | 'good' | 'needs_improvement') => Promise<void> | void;
   feedbackSubmitted?: boolean;
   className?: string;
+  renderContent?: (message: Message) => React.ReactNode;
 }
 
-export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, className = '' }: ChatMessagesProps) {
+export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, className = '', renderContent }: ChatMessagesProps) {
   const lastBotIndex = messages.map(m => m.type).lastIndexOf('bot');
   return (
     <div className={`py-2 ${className}`}>
@@ -241,8 +251,9 @@ export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, 
           key={message.id}
           message={message}
           isLastBot={message.type === 'bot' && idx === lastBotIndex}
-          onFeedback={onFeedback ? (rating) => onFeedback(message.id, rating) : undefined}
+          onFeedback={onFeedback ? (type) => onFeedback(message.id, type === 'up' ? 'excellent' : 'needs_improvement') : undefined}
           feedbackSubmitted={feedbackSubmitted}
+          renderContent={renderContent}
         />
       ))}
     </div>

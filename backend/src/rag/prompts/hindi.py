@@ -45,12 +45,17 @@ class HindiPrompt(BasePrompt):
             return ""
 
         formatted = []
-        for ctx in contexts[:4]:  # Use top 4 contexts for Hindi
+        formatted = []
+        for ctx in contexts[:5]:  # Use top 5 contexts for Hindi
+            # Parse source from verse ID (e.g., "ramayana_9039" -> "Ramayana")
+            verse_id = ctx['verse']
+            source_name = verse_id.split('_')[0].title() if '_' in verse_id else verse_id
+            
             formatted.append(
-                f"📖 श्लोक {ctx['verse']}:\n"
-                f"🔸 संस्कृत: {ctx.get('sanskrit', 'N/A')}\n"
-                f"🔸 हिंदी अनुवाद: {ctx.get('hindi_translation', 'N/A')}\n"
-                f"🔸 व्याख्या: {ctx['text'][:300]}..."
+                f"📖 {source_name} (श्लोक {verse_id}):\n"
+                f"🔸 संस्कृत: {ctx.get('sanskrit', 'उपलब्ध नहीं')}\n"
+                f"🔸 हिंदी अनुवाद: {ctx.get('hindi_translation', 'उपलब्ध नहीं')}\n"
+                f"🔸 अर्थ: {ctx['text'][:400]}..."
             )
 
         return "\n\n".join(formatted)

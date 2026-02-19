@@ -111,8 +111,8 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   backoffMultiplier: 2,
 };
 
-class APIClient {
-  private baseURL: string;
+export class APIClient {
+  public baseURL: string;
   private retryConfig: RetryConfig;
   private defaultTimeout: number = 30000; // 30 seconds
 

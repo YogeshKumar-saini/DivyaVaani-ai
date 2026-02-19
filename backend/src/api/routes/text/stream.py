@@ -103,6 +103,11 @@ async def generate_sse_stream(
                 yield f"event: source\n"
                 yield f"data: {json.dumps(chunk['data'])}\n\n"
 
+            # Send follow-up event
+            elif chunk.get('type') == 'follow_up':
+                yield f"event: follow_up\n"
+                yield f"data: {json.dumps(chunk['data'])}\n\n"
+
         # Send completion event
         yield f"event: done\n"
         yield f"data: {json.dumps({'status': 'completed'})}\n\n"

@@ -111,7 +111,7 @@ export function ChatSidebar({
     const filteredConversations = searchQuery.trim()
         ? conversations.filter(c =>
             (c.title || "New Conversation").toLowerCase().includes(searchQuery.toLowerCase())
-          )
+        )
         : conversations;
 
     const filteredGrouped = searchQuery.trim()
@@ -130,32 +130,46 @@ export function ChatSidebar({
                         onNewChat();
                         if (onOpenChange) onOpenChange(false);
                     }}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-linear-to-r from-violet-600/25 to-indigo-600/15 hover:from-violet-600/35 hover:to-indigo-600/25 border border-violet-500/25 hover:border-violet-400/50 text-white text-sm font-medium transition-all duration-300 group shadow-lg shadow-violet-900/15 active:scale-[0.98]"
+                    className={cn(
+                        "w-full flex items-center justify-center gap-2.5 rounded-2xl bg-linear-to-r from-violet-600/25 to-indigo-600/15 hover:from-violet-600/35 hover:to-indigo-600/25 border border-violet-500/25 hover:border-violet-400/50 text-white text-sm font-medium transition-all duration-300 group shadow-lg shadow-violet-900/15 active:scale-[0.98]",
+                        isCollapsed ? "px-2 py-3" : "px-4 py-3"
+                    )}
                 >
                     <MessageSquarePlus className="h-4 w-4 text-violet-300 group-hover:rotate-12 transition-transform duration-300" />
-                    <span>New Conversation</span>
-                    <div className="ml-auto text-[10px] text-violet-400/50 font-mono opacity-0 group-hover:opacity-100 transition-opacity">⌘N</div>
+                    {!isCollapsed && (
+                        <motion.span
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            className="whitespace-nowrap overflow-hidden"
+                        >
+                            New Conversation
+                        </motion.span>
+                    )}
+                    {!isCollapsed && <div className="ml-auto text-[10px] text-violet-400/50 font-mono opacity-0 group-hover:opacity-100 transition-opacity">⌘N</div>}
                 </button>
 
-                {/* Search input */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25 pointer-events-none" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search conversations..."
-                        className="w-full bg-white/4 border border-white/7 rounded-xl pl-9 pr-8 py-2 text-[13px] text-white/70 placeholder-white/20 focus:outline-none focus:border-violet-500/30 focus:bg-white/6 transition-all duration-200"
-                    />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery("")}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
-                        >
-                            <X size={12} />
-                        </button>
-                    )}
-                </div>
+                {/* Search input - Hide when collapsed for cleaner look, or show icon only if desired */}
+                {!isCollapsed && (
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search conversations..."
+                            className="w-full bg-white/4 border border-white/7 rounded-xl pl-9 pr-8 py-2 text-[13px] text-white/70 placeholder-white/20 focus:outline-none focus:border-violet-500/30 focus:bg-white/6 transition-all duration-200"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                            >
+                                <X size={12} />
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Conversations list */}
@@ -175,12 +189,16 @@ export function ChatSidebar({
                         <div className="w-12 h-12 mx-auto rounded-2xl bg-white/4 border border-white/6 flex items-center justify-center mb-4 shadow-inner">
                             <MessageSquare className="h-5 w-5 text-white/15" />
                         </div>
-                        <p className="text-white/30 text-[13px] font-light">
-                            {searchQuery ? "No results found" : "No conversations yet"}
-                        </p>
-                        <p className="text-white/15 text-[11px] mt-1.5">
-                            {searchQuery ? "Try a different search term" : "Start a new conversation above"}
-                        </p>
+                        {!isCollapsed && (
+                            <>
+                                <p className="text-white/30 text-[13px] font-light">
+                                    {searchQuery ? "No results found" : "No conversations yet"}
+                                </p>
+                                <p className="text-white/15 text-[11px] mt-1.5">
+                                    {searchQuery ? "Try a different search term" : "Start a new conversation above"}
+                                </p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-5 pb-6 pt-1">
@@ -194,9 +212,11 @@ export function ChatSidebar({
                                         exit={{ opacity: 0, y: -4 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <h3 className="text-[10px] font-semibold text-white/20 uppercase tracking-[0.18em] px-2 mb-2 mt-1">
-                                            {group}
-                                        </h3>
+                                        {!isCollapsed && (
+                                            <h3 className="text-[10px] font-semibold text-white/20 uppercase tracking-[0.18em] px-2 mb-2 mt-1">
+                                                {group}
+                                            </h3>
+                                        )}
                                         <div className="space-y-0.5">
                                             {convs.map((conv) => {
                                                 const isActive = currentConversationId === conv.id;
@@ -217,15 +237,20 @@ export function ChatSidebar({
                                                             if (onOpenChange) onOpenChange(false);
                                                         }}
                                                         className={cn(
-                                                            "group flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 relative overflow-hidden",
+                                                            "group flex items-center gap-2.5 rounded-xl cursor-pointer transition-all duration-200 relative overflow-hidden",
+                                                            isCollapsed ? "justify-center px-1 py-2" : "px-3 py-2.5",
                                                             isActive
                                                                 ? "bg-violet-500/12 border border-violet-500/25 text-white shadow-sm shadow-violet-900/10"
                                                                 : "text-white/45 hover:text-white/80 hover:bg-white/4 border border-transparent hover:border-white/5"
                                                         )}
+                                                        title={isCollapsed ? conv.title : undefined}
                                                     >
                                                         {/* Active left bar */}
                                                         {isActive && (
-                                                            <div className="absolute left-0 top-2.5 bottom-2.5 w-[3px] bg-linear-to-b from-violet-400 to-indigo-500 rounded-full" />
+                                                            <div className={cn(
+                                                                "absolute bg-linear-to-b from-violet-400 to-indigo-500 rounded-full",
+                                                                isCollapsed ? "bottom-1 left-1.5 right-1.5 h-[3px]" : "left-0 top-2.5 bottom-2.5 w-[3px]"
+                                                            )} />
                                                         )}
 
                                                         <MessageSquare className={cn(
@@ -233,20 +258,24 @@ export function ChatSidebar({
                                                             isActive ? "text-violet-400" : "text-white/20 group-hover:text-white/45"
                                                         )} />
 
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="truncate text-[13px] font-light leading-tight">
-                                                                {conv.title || "New Conversation"}
+                                                        {!isCollapsed && (
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="truncate text-[13px] font-light leading-tight">
+                                                                    {conv.title || "New Conversation"}
+                                                                </div>
+                                                                <div className="text-[10px] text-white/20 mt-0.5">{timeStr}</div>
                                                             </div>
-                                                            <div className="text-[10px] text-white/20 mt-0.5">{timeStr}</div>
-                                                        </div>
+                                                        )}
 
-                                                        <button
-                                                            onClick={(e) => handleDelete(e, conv.id)}
-                                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/15 hover:text-red-400 rounded-lg transition-all text-white/15 shrink-0"
-                                                            title="Delete conversation"
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </button>
+                                                        {!isCollapsed && (
+                                                            <button
+                                                                onClick={(e) => handleDelete(e, conv.id)}
+                                                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/15 hover:text-red-400 rounded-lg transition-all text-white/15 shrink-0"
+                                                                title="Delete conversation"
+                                                            >
+                                                                <Trash2 className="h-3 w-3" />
+                                                            </button>
+                                                        )}
                                                     </motion.div>
                                                 );
                                             })}
@@ -270,8 +299,8 @@ export function ChatSidebar({
                     </div>
                 )}
                 <div className="rounded-xl bg-white/3 border border-white/5 p-3">
-                    <h4 className="text-[10px] uppercase tracking-wider text-white/25 font-semibold mb-2">Language</h4>
-                    <LanguageDetector currentDetectedLanguage="en" />
+                    {!isCollapsed && <h4 className="text-[10px] uppercase tracking-wider text-white/25 font-semibold mb-2">Language</h4>}
+                    <LanguageDetector currentDetectedLanguage="en" isCollapsed={isCollapsed} />
                 </div>
             </div>
         </div>

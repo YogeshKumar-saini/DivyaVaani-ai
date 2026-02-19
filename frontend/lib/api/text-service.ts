@@ -39,6 +39,16 @@ export interface TextQueryResponse {
   question_hash?: string;
 }
 
+export type StreamEvent =
+  | { type: 'start'; data: { status: string; question: string } }
+  | { type: 'thinking'; data: { status: string } }
+  | { type: 'token'; data: { token: string } }
+  | { type: 'source'; data: { verse: string; score: number; text: string; sanskrit?: string; translation?: string; chapter?: string } }
+  | { type: 'follow_up'; data: { questions: string[] } }
+  | { type: 'metadata'; data: { confidence: number; processing_time: number; model_used: string; quality_score: number; sources_count?: number; language?: string } }
+  | { type: 'done'; data: { status: string } }
+  | { type: 'error'; data: { error: string; status_code: number } };
+
 export class TextService {
   /**
    * Ask a question and get an AI-powered response
@@ -58,6 +68,78 @@ export class TextService {
       method: 'POST',
       body: JSON.stringify(requestBody),
     });
+  }
+
+  /**
+   * Stream a question and get real-time response events
+   */
+  async *streamQuestion(
+    question: string,
+    userId?: string,
+    preferredLanguage?: string
+  ): AsyncGenerator<StreamEvent, void, unknown> {
+    const requestBody: TextQueryRequest = {
+      question,
+      user_id: userId,
+      preferred_language: preferredLanguage,
+    };
+
+    const response = await fetch(`${apiClient['baseURL']}/text/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Streaming failed: ${response.status} ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || '';
+
+        let currentEvent: string | null = null;
+        let currentData: string | null = null;
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            currentData = line.slice(6).trim();
+
+            if (currentEvent && currentData) {
+              try {
+                const parsedData = JSON.parse(currentData);
+                yield { type: currentEvent, data: parsedData } as StreamEvent;
+              } catch {
+                console.warn('Failed to parse SSE data:', currentData);
+              }
+              currentEvent = null;
+              currentData = null;
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   }
 }
 

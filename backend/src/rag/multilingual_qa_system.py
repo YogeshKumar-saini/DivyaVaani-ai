@@ -386,7 +386,10 @@ class MultilingualQASystem:
                         'data': {
                             'verse': ctx['verse'],
                             'score': round(ctx.get('score', 0), 3),
-                            'text': ctx['text'][:200] + '...' if len(ctx['text']) > 200 else ctx['text']
+                            'text': ctx['text'][:200] + '...' if len(ctx['text']) > 200 else ctx['text'],
+                            'sanskrit': ctx.get('sanskrit', ''),
+                            'translation': ctx.get('translation', ''),
+                            'chapter': ctx.get('chapter', '')
                         }
                     }
 
@@ -421,17 +424,11 @@ class MultilingualQASystem:
                     streaming=True  # Enable streaming
                 )
                 
-                system_content = (
-                    "You are Krishna, the divine teacher and guide from the Bhagavad Gita. "
-                    "Provide wisdom that leads to peace, clarity, and right action (Dharma). "
-                    "Answer with profound yet practical spiritual insight from the provided verses. "
-                    "Tone: Compassionate, authoritative, calm, uplifting."
-                )
+                # Use the language-specific prompt template which includes system instructions
+                formatted_prompt = prompt_template.format(context=context_text, question=question)
                 
-                system_message = SystemMessage(content=system_content)
                 messages = [
-                    system_message,
-                    HumanMessage(content=prompt_template.format(context=context_text, question=question))
+                    HumanMessage(content=formatted_prompt)
                 ]
                 
                 full_answer = ""
@@ -494,6 +491,19 @@ class MultilingualQASystem:
                 }
             }
             
+            # Generate and yield follow-up questions
+            try:
+                follow_ups = await self._generate_follow_up_questions(question, full_answer, language)
+                if follow_ups:
+                    yield {
+                        'type': 'follow_up',
+                        'data': {
+                            'questions': follow_ups
+                        }
+                    }
+            except Exception as e:
+                log.warning(f"Failed to generate follow-up questions: {e}")
+
             # Update memory
             self.memory_manager.save_context(question, full_answer)
             
@@ -509,6 +519,41 @@ class MultilingualQASystem:
                     'error': str(e)
                 }
             }
+
+    async def _generate_follow_up_questions(self, question: str, answer: str, language: str) -> List[str]:
+        """Generate 3 relevant follow-up questions."""
+        try:
+            # Simple heuristic for now, or use LLM if needed
+            # Using LLM for better quality
+            
+            prompt = f"""Based on the following user question and answer, suggest 3 relevant, short, and engaging follow-up questions.
+            
+            User Question: {question}
+            Answer: {answer}
+            
+            Return ONLY a JSON array of strings, e.g., ["Question 1?", "Question 2?", "Question 3?"].
+            Language: {language}
+            """
+            
+            # Use a lightweight model call or the same model
+            llm = ChatGroq(model_name="llama-3.1-8b-instant", temperature=0.5, max_tokens=150)
+            response = await llm.ainvoke([HumanMessage(content=prompt)])
+            
+            import json
+            import re
+            
+            # Extract JSON from response
+            content = response.content.strip()
+            match = re.search(r'\[.*\]', content, re.DOTALL)
+            if match:
+                questions = json.loads(match.group())
+                return questions[:3]
+                
+            return []
+            
+        except Exception as e:
+            log.warning(f"Error generating follow-up questions: {e}")
+            return []
 
     def _format_contexts(self, contexts: List[Dict]) -> List[Dict]:
         """Format contexts for response."""
