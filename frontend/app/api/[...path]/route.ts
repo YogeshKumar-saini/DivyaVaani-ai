@@ -1,21 +1,12 @@
-/**
- * Catch-all API proxy route
- *
- * Every request the browser sends to /api/* is handled here as a Vercel
- * serverless function. The function forwards the request to the FastAPI
- * backend on EC2 and streams the response back to the browser.
- *
- * Why a Route Handler instead of next.config.ts rewrites?
- * - Route Handlers are guaranteed to run on Vercel's serverless runtime
- * - They are NOT affected by `output: "standalone"` packaging
- * - BACKEND_URL is read at request-time (server-only), never baked into the
- *   client bundle, so no NEXT_PUBLIC_ variable can leak into the browser
- * - Works with streaming (SSE) responses via ReadableStream passthrough
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_ORIGIN = (process.env.BACKEND_URL ?? '').replace(/\/+$/, '');
+function getBackendOrigin(): string {
+  const configured = (process.env.BACKEND_URL ?? '').trim();
+  if (configured) return configured.replace(/\/+$/, '');
+  // Local DX fallback: avoids hard failures when BACKEND_URL is missing in dev.
+  if (process.env.NODE_ENV !== 'production') return 'http://localhost:8000';
+  return '';
+}
 
 // 25-second timeout — Vercel Hobby limit is 10s, Pro is 60s.
 // Keeps us well under the Pro limit while failing fast on a dead backend.
@@ -29,7 +20,12 @@ async function proxyRequest(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ): Promise<NextResponse> {
-  if (!BACKEND_ORIGIN) {
+  const backendOrigin = getBackendOrigin();
+  console.log('[API Proxy] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[API Proxy] BACKEND_URL:', process.env.BACKEND_URL);
+  console.log('[API Proxy] Resolved Origin:', backendOrigin);
+
+  if (!backendOrigin) {
     return NextResponse.json(
       {
         detail: 'BACKEND_URL is not set',
@@ -43,7 +39,7 @@ async function proxyRequest(
   // Reconstruct the backend URL: /api/foo/bar?x=1 → BACKEND/foo/bar?x=1
   const pathStr = path.join('/');
   const search = req.nextUrl.search; // includes leading '?'
-  const targetUrl = `${BACKEND_ORIGIN}/${pathStr}${search}`;
+  const targetUrl = `${backendOrigin}/${pathStr}${search}`;
 
   // Forward request body for methods that carry one
   const hasBody = !['GET', 'HEAD'].includes(req.method);
@@ -96,10 +92,10 @@ async function proxyRequest(
   }
 }
 
-export const GET     = proxyRequest;
-export const POST    = proxyRequest;
-export const PUT     = proxyRequest;
-export const PATCH   = proxyRequest;
-export const DELETE  = proxyRequest;
-export const HEAD    = proxyRequest;
+export const GET = proxyRequest;
+export const POST = proxyRequest;
+export const PUT = proxyRequest;
+export const PATCH = proxyRequest;
+export const DELETE = proxyRequest;
+export const HEAD = proxyRequest;
 export const OPTIONS = proxyRequest;

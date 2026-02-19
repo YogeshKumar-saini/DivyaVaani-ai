@@ -61,31 +61,26 @@ npm install
 # Copy environment variables
 cp .env.local.example .env.local
 
-# Configure API endpoint
-echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000" >> .env.local
-
 # Start development server
 npm run dev
 ```
 
 ### Environment Configuration
 ```env
-# API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+# Server-side only (used by app/api/[...path]/route.ts proxy)
+BACKEND_URL=http://localhost:8000
 
-# Application Configuration
-NEXT_PUBLIC_APP_NAME="Bhagavad Gita AI Assistant"
-NEXT_PUBLIC_APP_DESCRIPTION="Enterprise Spiritual Intelligence Platform"
-NEXT_PUBLIC_APP_VERSION="1.0.0"
-
-# Analytics Configuration
-NEXT_PUBLIC_ANALYTICS_UPDATE_INTERVAL=30000
-
-# Feature Flags
-NEXT_PUBLIC_ENABLE_ANALYTICS=true
-NEXT_PUBLIC_ENABLE_FEEDBACK=true
-NEXT_PUBLIC_ENABLE_CACHE_INDICATOR=true
+# Client-safe values
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
+
+Env precedence in local dev:
+1. `.env.local`
+2. `.env`
+
+Production:
+1. Runtime environment variable `BACKEND_URL` (Vercel or container env)
+2. `.env.production` for build-time `NEXT_PUBLIC_*` values only
 
 ## 🚀 Usage
 
@@ -152,13 +147,13 @@ frontend/
 
 ### API Integration
 The frontend communicates with the backend API through REST endpoints:
-- `POST /query` - Submit questions and receive answers
-- `GET /analytics` - Retrieve system analytics
-- `POST /feedback` - Submit user feedback
+- Browser calls `POST /api/text`, `GET /api/analytics`, etc.
+- Next.js proxy route `app/api/[...path]/route.ts` forwards to `BACKEND_URL`
+- Backend endpoints stay server-side and are never exposed as raw browser URLs
 
 ### Customization
 - **Branding**: Update colors and logos in `app/layout.tsx`
-- **API Endpoints**: Configure in `.env.local`
+- **Backend target**: Configure `BACKEND_URL` in `.env.local` (local) or runtime env (prod)
 - **UI Components**: Customize using Tailwind CSS classes
 - **Analytics**: Enable/disable features via environment variables
 
