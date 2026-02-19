@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { PanelLeftOpen, X } from "lucide-react";
 
 interface ChatLayoutProps {
@@ -18,7 +18,11 @@ export function ChatLayout({ children, sidebarContent, isSidebarOpen, onSidebarT
             {/* ── Sidebar (Sheet) ── */}
             <Sheet open={isSidebarOpen} onOpenChange={onSidebarToggle}>
                 <SheetContent side="left" className="p-0 border-r-0 w-[300px] bg-transparent shadow-2xl border-none">
-                    <div className="h-full w-full rounded-r-3xl overflow-hidden border-r border-white/10 bg-slate-950/80 backdrop-blur-2xl">
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>Chat Sidebar</SheetTitle>
+                        <SheetDescription>Navigate through your conversations</SheetDescription>
+                    </SheetHeader>
+                    <div className="flex flex-col h-full w-full rounded-r-3xl overflow-hidden border-r border-white/10 bg-slate-950/80 backdrop-blur-2xl">
                         {/* Sidebar header */}
                         <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/6 shrink-0">
                             <div className="flex items-center gap-2.5">

@@ -18,6 +18,7 @@ import { SourceCard, Source } from '@/components/chat/SourceCard';
 import { FollowUpQuestions } from '@/components/chat/FollowUpQuestions';
 import { Volume2, Loader2, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,66 +108,13 @@ export default function ChatPageContent() {
   }, [messages, isLoggedIn, saveGuestMessages]);
 
   // ── TTS Handler ───────────────────────────────────────────────────────────
+  // ── TTS Handler ───────────────────────────────────────────────────────────
+
   const handlePlayAudio = async (messageId: string, text: string) => {
-    // Stop current audio if playing
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setMessages(prev => prev.map(m => ({ ...m, isPlayingAudio: false, isLoadingAudio: false })));
-
-      // If clicking the same message that is playing, just stop.
-      const playingMsg = messages.find(m => m.id === messageId && m.isPlayingAudio);
-      if (playingMsg) return;
-    }
-
-    setMessages(prev => prev.map(m =>
-      m.id === messageId ? { ...m, isLoadingAudio: true } : m
-    ));
-
-    try {
-      // Use fetch to get blob, then play
-      const formData = new FormData();
-      formData.append('text', text);
-      formData.append('language', detectedLanguage || 'en');
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/voice/tts`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('TTS failed');
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-
-      audio.onended = () => {
-        setMessages(prev => prev.map(m =>
-          m.id === messageId ? { ...m, isPlayingAudio: false } : m
-        ));
-        URL.revokeObjectURL(url);
-      };
-
-      audio.onerror = () => {
-        console.error("Audio playback error");
-        setMessages(prev => prev.map(m =>
-          m.id === messageId ? { ...m, isLoadingAudio: false, isPlayingAudio: false } : m
-        ));
-      }
-
-      await audio.play();
-      audioRef.current = audio;
-
-      setMessages(prev => prev.map(m =>
-        m.id === messageId ? { ...m, isLoadingAudio: false, isPlayingAudio: true } : m
-      ));
-
-    } catch (error) {
-      console.error('Failed to play audio:', error);
-      setMessages(prev => prev.map(m =>
-        m.id === messageId ? { ...m, isLoadingAudio: false } : m
-      ));
-    }
+    toast("Coming Soon", {
+      description: "Voice features are currently being upgraded for a better experience.",
+      duration: 3000,
+    });
   };
 
 
@@ -469,8 +417,8 @@ export default function ChatPageContent() {
   // Custom renderer for messages content to include TTS and Follow-ups
   const renderMessageContent = (msg: Message) => {
     return (
-      <div className="w-full">
-        <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+      <div className="w-full text-white/90">
+        <div className="whitespace-pre-wrap leading-relaxed font-normal text-[15px] tracking-wide">{msg.content}</div>
 
         {/* Sources */}
         {msg.sources && msg.sources.length > 0 && (
