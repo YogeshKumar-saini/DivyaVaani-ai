@@ -563,3 +563,17 @@ button:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(56,189,248,0.42);
 }
+
+/* Cursor blink animation for streaming text */
+@keyframes cursorBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.streaming-cursor {
+  animation: cursorBlink 1s ease-in-out infinite;
+}

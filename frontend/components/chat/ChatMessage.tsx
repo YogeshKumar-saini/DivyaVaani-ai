@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Clock, Target, BookOpen, ThumbsUp, ThumbsDown, Copy, Check, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { StreamingText } from './StreamingText';
 
 interface Context {
   idx: number;
@@ -36,10 +37,11 @@ interface ChatMessageProps {
   onFeedback?: (type: 'up' | 'down') => void;
   feedbackSubmitted?: boolean;
   isLastBot?: boolean;
-  renderContent?: (message: Message) => React.ReactNode;
+  isStreaming?: boolean;
+  renderContent?: (message: Message, isStreaming?: boolean) => React.ReactNode;
 }
 
-export function ChatMessage({ message, onFeedback, isLastBot = false, renderContent }: ChatMessageProps) {
+export function ChatMessage({ message, onFeedback, isLastBot = false, isStreaming = false, renderContent }: ChatMessageProps) {
   const isBot = message.type === 'bot';
   const [copied, setCopied] = useState(false);
   const [showSources, setShowSources] = useState(false);
@@ -97,12 +99,20 @@ export function ChatMessage({ message, onFeedback, isLastBot = false, renderCont
                 )}
 
                 {renderContent ? (
-                  renderContent(message)
+                  renderContent(message, isStreaming)
                 ) : (
                   <>
-                    <p className="text-white/90 font-normal text-[15px] leading-7 tracking-wide whitespace-pre-wrap m-0">
-                      {message.content}
-                    </p>
+                    {isStreaming ? (
+                      <StreamingText 
+                        content={message.content} 
+                        isStreaming={isStreaming}
+                        className="text-white/90"
+                      />
+                    ) : (
+                      <p className="text-white/90 font-normal text-[15px] leading-7 tracking-wide whitespace-pre-wrap m-0">
+                        {message.content}
+                      </p>
+                    )}
 
                     {/* Meta footer - Only show if NO renderContent (default behavior) */}
                     {(message.processing_time !== undefined || message.confidence_score !== undefined || (message.sources && message.sources.length > 0)) && (
@@ -239,10 +249,11 @@ interface ChatMessagesProps {
   onFeedback?: (messageId: string, rating: 'excellent' | 'good' | 'needs_improvement') => Promise<void> | void;
   feedbackSubmitted?: boolean;
   className?: string;
-  renderContent?: (message: Message) => React.ReactNode;
+  streamingMessageId?: string | null;
+  renderContent?: (message: Message, isStreaming?: boolean) => React.ReactNode;
 }
 
-export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, className = '', renderContent }: ChatMessagesProps) {
+export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, className = '', streamingMessageId, renderContent }: ChatMessagesProps) {
   const lastBotIndex = messages.map(m => m.type).lastIndexOf('bot');
   return (
     <div className={`py-2 ${className}`}>
@@ -251,6 +262,7 @@ export function ChatMessages({ messages, onFeedback, feedbackSubmitted = false, 
           key={message.id}
           message={message}
           isLastBot={message.type === 'bot' && idx === lastBotIndex}
+          isStreaming={message.id === streamingMessageId}
           onFeedback={onFeedback ? (type) => onFeedback(message.id, type === 'up' ? 'excellent' : 'needs_improvement') : undefined}
           feedbackSubmitted={feedbackSubmitted}
           renderContent={renderContent}

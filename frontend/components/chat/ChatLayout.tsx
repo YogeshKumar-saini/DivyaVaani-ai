@@ -17,7 +17,7 @@ export function ChatLayout({ children, sidebarContent, isSidebarOpen, onSidebarT
         <div className="flex h-full w-full overflow-hidden bg-transparent">
             {/* ── Sidebar (Sheet) ── */}
             <Sheet open={isSidebarOpen} onOpenChange={onSidebarToggle}>
-                <SheetContent side="left" className="p-0 border-r-0 w-[300px] bg-transparent shadow-2xl border-none">
+                <SheetContent side="left" className="p-0 border-r-0 w-[280px] sm:w-[300px] bg-transparent shadow-2xl border-none">
                     <SheetHeader className="sr-only">
                         <SheetTitle>Chat Sidebar</SheetTitle>
                         <SheetDescription>Navigate through your conversations</SheetDescription>

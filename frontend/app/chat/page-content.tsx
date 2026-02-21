@@ -16,6 +16,7 @@ import { useGuestChatLimit } from '@/lib/hooks/useGuestChatLimit';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SourceCard, Source } from '@/components/chat/SourceCard';
 import { FollowUpQuestions } from '@/components/chat/FollowUpQuestions';
+import { StreamingText } from '@/components/chat/StreamingText';
 import { Volume2, Loader2, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ export default function ChatPageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState('en');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -138,7 +140,7 @@ export default function ChatPageContent() {
 
 
   // ── Sync guest messages after login ───────────────────────────────────────
-  const syncGuestMessagesAfterLogin = useCallback(async () => {
+  const syncGuestMessagesAfterLogin = useCallback(async (targetUserId?: string) => {
     // Prevent concurrent double-sync (onAuthSuccess + user?.id effect both fire)
     if (isSyncingRef.current) return;
 
@@ -148,10 +150,13 @@ export default function ChatPageContent() {
       return;
     }
 
+    // Use passed ID or falling back to user object ID
+    const effectiveUserId = targetUserId || user?.id;
+
     // NOTE: JWT sub field = email (not user ID). We MUST use user?.id from auth state.
     // If user state isn't set yet (called from onAuthSuccess before React re-renders),
     // return WITHOUT setting the guard so the user?.id useEffect can retry correctly.
-    if (!user?.id) return;
+    if (!effectiveUserId) return;
 
     isSyncingRef.current = true;
     setIsSyncing(true);
@@ -163,7 +168,7 @@ export default function ChatPageContent() {
         : 'Imported Guest Conversation';
 
       // Create a new conversation under the authenticated user's UUID
-      const newConv = await conversationService.createConversation(user.id, {
+      const newConv = await conversationService.createConversation(effectiveUserId, {
         title,
         language: detectedLanguage,
       });
@@ -196,7 +201,8 @@ export default function ChatPageContent() {
       console.error('Failed to sync guest messages:', err);
     } finally {
       isSyncingRef.current = false;
-      setIsSyncing(false);
+      setIsSyncing(true); // Keep syncing overlay for a split second for UX
+      setTimeout(() => setIsSyncing(false), 800);
       clearGuestData(); // Always clear after attempting sync
     }
   }, [loadGuestMessages, clearGuestData, detectedLanguage, user?.id]);
@@ -209,7 +215,7 @@ export default function ChatPageContent() {
     const justLoggedIn = wasGuest && currentUserId !== null;
 
     if (justLoggedIn) {
-      syncGuestMessagesAfterLogin();
+      syncGuestMessagesAfterLogin(currentUserId);
     }
     prevUserRef.current = currentUserId;
   }, [user?.id, syncGuestMessagesAfterLogin]);
@@ -237,6 +243,7 @@ export default function ChatPageContent() {
       console.error('Failed to load conversation', error);
     } finally {
       setIsLoading(false);
+      setStreamingMessageId(null);
     }
   };
 
@@ -289,6 +296,7 @@ export default function ChatPageContent() {
     };
 
     setMessages((prev) => [...prev, botMessagePlaceholder]);
+    setStreamingMessageId(botMessageId);
 
     try {
       // ── Persist conversation for logged-in users ──────────────────────
@@ -460,6 +468,7 @@ export default function ChatPageContent() {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setStreamingMessageId(null);
     }
   };
 
@@ -468,10 +477,19 @@ export default function ChatPageContent() {
   };
 
   // Custom renderer for messages content to include TTS and Follow-ups
-  const renderMessageContent = (msg: Message) => {
+  const renderMessageContent = (msg: Message, isStreaming?: boolean) => {
     return (
       <div className="w-full text-white/90">
-        <div className="whitespace-pre-wrap leading-relaxed font-normal text-[15px] tracking-wide">{msg.content}</div>
+        {/* Use StreamingText for smooth typing animation during streaming */}
+        {isStreaming ? (
+          <StreamingText 
+            content={msg.content} 
+            isStreaming={isStreaming}
+            className="text-white/90"
+          />
+        ) : (
+          <div className="whitespace-pre-wrap leading-relaxed font-normal text-[15px] tracking-wide">{msg.content}</div>
+        )}
 
         {/* Sources */}
         {msg.sources && msg.sources.length > 0 && (
@@ -485,8 +503,8 @@ export default function ChatPageContent() {
           </div>
         )}
 
-        {/* TTS Button */}
-        {msg.type === 'bot' && !isLoading && (
+        {/* TTS Button - hide during streaming */}
+        {msg.type === 'bot' && !isLoading && !isStreaming && (
           <div className="mt-3 flex items-center">
             <Button
               variant="ghost"
@@ -507,8 +525,8 @@ export default function ChatPageContent() {
           </div>
         )}
 
-        {/* Follow-up Questions */}
-        {msg.follow_up_questions && msg.follow_up_questions.length > 0 && (
+        {/* Follow-up Questions - hide during streaming */}
+        {!isStreaming && msg.follow_up_questions && msg.follow_up_questions.length > 0 && (
           <FollowUpQuestions
             questions={msg.follow_up_questions}
             onQuestionClick={(q) => askQuestion(q)}
@@ -645,6 +663,7 @@ export default function ChatPageContent() {
               <ChatMessages
                 messages={messages}
                 onFeedback={handleFeedback}
+                streamingMessageId={streamingMessageId}
                 renderContent={renderMessageContent}
               />
               {isLoading && (
@@ -680,6 +699,7 @@ export default function ChatPageContent() {
             onSubmit={askQuestion}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
+            className="sm:px-0"
             placeholder={
               !isLoggedIn && isHydrated && isLimitReached
                 ? 'Sign up to continue chatting...'

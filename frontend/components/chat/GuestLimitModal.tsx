@@ -33,7 +33,7 @@ interface GuestLimitModalProps {
   isOpen: boolean;
   onClose: () => void;
   guestCount: number;
-  onAuthSuccess?: () => void;
+  onAuthSuccess?: (userId: string) => void;
   defaultTab?: "login" | "register";
 }
 
@@ -101,11 +101,11 @@ interface BenefitItem {
 }
 
 const BENEFITS: BenefitItem[] = [
-  { icon: InfinityIcon, label: "Unlimited conversations",  sub: "No message caps, ever",            color: "from-violet-500/20 to-indigo-500/10",  border: "border-violet-500/20",  text: "text-violet-300" },
-  { icon: History,      label: "Persistent chat history",  sub: "Pick up where you left off",       color: "from-blue-500/20 to-cyan-500/10",      border: "border-blue-500/20",    text: "text-blue-300"   },
-  { icon: MessageSquare,label: "Chat sync restored",       sub: "Your guest messages imported",     color: "from-emerald-500/20 to-teal-500/10",  border: "border-emerald-500/20", text: "text-emerald-300"},
-  { icon: ShieldCheck,  label: "Private & secure",         sub: "Your data stays yours",            color: "from-amber-500/20 to-orange-500/10",  border: "border-amber-500/20",   text: "text-amber-300"  },
-  { icon: Zap,          label: "Priority responses",       sub: "Faster AI processing",             color: "from-rose-500/20 to-pink-500/10",     border: "border-rose-500/20",    text: "text-rose-300"   },
+  { icon: InfinityIcon, label: "Unlimited conversations", sub: "No message caps, ever", color: "from-violet-500/20 to-indigo-500/10", border: "border-violet-500/20", text: "text-violet-300" },
+  { icon: History, label: "Persistent chat history", sub: "Pick up where you left off", color: "from-blue-500/20 to-cyan-500/10", border: "border-blue-500/20", text: "text-blue-300" },
+  { icon: MessageSquare, label: "Chat sync restored", sub: "Your guest messages imported", color: "from-emerald-500/20 to-teal-500/10", border: "border-emerald-500/20", text: "text-emerald-300" },
+  { icon: ShieldCheck, label: "Private & secure", sub: "Your data stays yours", color: "from-amber-500/20 to-orange-500/10", border: "border-amber-500/20", text: "text-amber-300" },
+  { icon: Zap, label: "Priority responses", sub: "Faster AI processing", color: "from-rose-500/20 to-pink-500/10", border: "border-rose-500/20", text: "text-rose-300" },
 ];
 
 // ─── Progress Ring ────────────────────────────────────────────────────────────
@@ -164,11 +164,11 @@ function ProgressRing({ count, limit }: { count: number; limit: number }) {
 
 function Stars() {
   const positions = [
-    { top: "8%",  left: "12%",  size: 10, delay: 0 },
-    { top: "15%", left: "88%",  size: 7,  delay: 0.5 },
-    { top: "72%", left: "5%",   size: 8,  delay: 1 },
-    { top: "82%", left: "90%",  size: 6,  delay: 0.3 },
-    { top: "45%", left: "95%",  size: 9,  delay: 0.8 },
+    { top: "8%", left: "12%", size: 10, delay: 0 },
+    { top: "15%", left: "88%", size: 7, delay: 0.5 },
+    { top: "72%", left: "5%", size: 8, delay: 1 },
+    { top: "82%", left: "90%", size: 6, delay: 0.3 },
+    { top: "45%", left: "95%", size: 9, delay: 0.8 },
   ];
   return (
     <>
@@ -200,12 +200,12 @@ export function GuestLimitModal({
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { login, googleLogin, register } = useAuth();
 
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [fullName, setFullName]   = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError]         = useState("");
+  const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
@@ -221,8 +221,11 @@ export function GuestLimitModal({
     e.preventDefault();
     setIsLoading(true); setError("");
     try {
+      const response = await authService.login({ email, password });
+      // We manually call the provider's login logic but we need the ID immediately
+      const userData = await authService.me(response.access_token);
       await login({ email, password }, { redirectTo: false });
-      onAuthSuccess?.(); onClose();
+      onAuthSuccess?.(userData.id); onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please check your credentials.");
     } finally { setIsLoading(false); }
@@ -235,8 +238,10 @@ export function GuestLimitModal({
       await register({ email, password, full_name: fullName });
       setSuccessMessage("Account created! Signing you in…");
       try {
+        const response = await authService.login({ email, password });
+        const userData = await authService.me(response.access_token);
         await login({ email, password }, { redirectTo: false });
-        onAuthSuccess?.(); onClose();
+        onAuthSuccess?.(userData.id); onClose();
       } catch {
         setActiveTab("login");
         setSuccessMessage("Account created! Please sign in.");
@@ -288,7 +293,7 @@ export function GuestLimitModal({
             className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none"
           >
             <div
-              className="pointer-events-auto w-full max-w-[920px] relative rounded-[28px] overflow-hidden"
+              className="pointer-events-auto w-[95%] sm:w-full max-w-[920px] relative rounded-[20px] sm:rounded-[28px] overflow-hidden"
               role="dialog"
               aria-modal="true"
               aria-labelledby="guest-limit-modal-title"
@@ -347,7 +352,7 @@ export function GuestLimitModal({
                   {/* ════════════════════════════════════════════════
                       LEFT PANEL – Limit info + benefits
                   ════════════════════════════════════════════════ */}
-                  <div className="lg:w-[44%] p-7 lg:pr-5 flex flex-col gap-5 lg:border-r border-white/[0.05] relative">
+                  <div className="lg:w-[44%] p-5 sm:p-7 lg:pr-5 flex flex-col gap-4 sm:gap-5 lg:border-r border-white/[0.05] relative">
 
                     {/* Vertical accent line */}
                     <div className="hidden lg:block absolute top-8 right-0 bottom-8 w-px bg-gradient-to-b from-transparent via-violet-500/20 to-transparent" />
@@ -393,9 +398,9 @@ export function GuestLimitModal({
                       <div>
                         <h2
                           id="guest-limit-modal-title"
-                          className="text-[21px] font-bold text-white tracking-tight leading-tight"
+                          className="text-[19px] sm:text-[21px] font-bold text-white tracking-tight leading-tight"
                         >
-                          You&apos;ve reached your<br />
+                          You&apos;ve reached your<br className="hidden sm:block" />
                           <span
                             className="bg-clip-text text-transparent"
                             style={{ backgroundImage: "linear-gradient(135deg, #a78bfa, #f472b6, #fb923c)" }}
@@ -414,7 +419,7 @@ export function GuestLimitModal({
 
                     {/* ── Progress ring + stats ── */}
                     <div
-                      className="flex items-center gap-5 p-4 rounded-2xl"
+                      className="flex items-center gap-4 sm:gap-5 p-3 sm:p-4 rounded-2xl"
                       style={{
                         background: "rgba(255,255,255,0.025)",
                         border: "1px solid rgba(255,255,255,0.06)",
@@ -500,7 +505,7 @@ export function GuestLimitModal({
                   {/* ════════════════════════════════════════════════
                       RIGHT PANEL – Auth forms
                   ════════════════════════════════════════════════ */}
-                  <div className="lg:w-[56%] p-7 lg:pl-8 flex flex-col">
+                  <div className="lg:w-[56%] p-5 sm:p-7 lg:pl-8 flex flex-col">
 
                     {/* ── Tab toggle ── */}
                     {!isForgotPassword && (
@@ -528,9 +533,8 @@ export function GuestLimitModal({
                             key={tab}
                             type="button"
                             onClick={() => switchTab(tab)}
-                            className={`relative z-10 flex-1 py-2.5 text-[13px] font-semibold rounded-xl transition-colors duration-200 ${
-                              activeTab === tab ? "text-white" : "text-white/35 hover:text-white/60"
-                            }`}
+                            className={`relative z-10 flex-1 py-2.5 text-[13px] font-semibold rounded-xl transition-colors duration-200 ${activeTab === tab ? "text-white" : "text-white/35 hover:text-white/60"
+                              }`}
                           >
                             {tab === "login" ? "Sign In" : "Create Account"}
                           </button>
@@ -696,8 +700,10 @@ export function GuestLimitModal({
                               onSuccess={async (credentialResponse) => {
                                 if (credentialResponse.credential) {
                                   try {
+                                    const response = await authService.googleLogin(credentialResponse.credential);
+                                    const userData = await authService.me(response.access_token);
                                     await googleLogin(credentialResponse.credential, { redirectTo: false });
-                                    onAuthSuccess?.(); onClose();
+                                    onAuthSuccess?.(userData.id); onClose();
                                   } catch (e) {
                                     console.error("Google login failed", e);
                                     setError("Google authentication failed. Please try again.");
