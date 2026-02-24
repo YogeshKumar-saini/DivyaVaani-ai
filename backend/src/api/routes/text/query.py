@@ -17,6 +17,8 @@ class QuestionRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=1000, description="The question to ask")
     user_id: Optional[str] = Field(None, description="User identifier for analytics")
     preferred_language: Optional[str] = Field(None, description="Preferred response language")
+    conversation_history: Optional[str] = Field(None, description="Conversation history for context")
+    conversation_id: Optional[str] = Field(None, description="ID of the current conversation for memory consolidation")
 
     @field_validator('question')
     @classmethod
@@ -76,7 +78,9 @@ async def query(request: Request, query_req: QuestionRequest):
         result = await text_service.process_query(
             question=query_req.question,
             user_id=query_req.user_id,
-            preferred_language=query_req.preferred_language
+            preferred_language=query_req.preferred_language,
+            conversation_id=query_req.conversation_id,
+            conversation_history=query_req.conversation_history
         )
 
         # Log performance

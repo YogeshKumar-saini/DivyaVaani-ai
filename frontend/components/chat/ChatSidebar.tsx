@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { LanguageDetector } from "@/components/LanguageSelector";
+import { MemoryIndicator } from "@/components/chat/MemoryIndicator";
 
 interface ChatSidebarProps {
     currentConversationId?: string;
@@ -249,13 +250,13 @@ export function ChatSidebar({
                                                             if (onOpenChange) onOpenChange(false);
                                                         }}
                                                         className={cn(
-                                                            "group flex items-center gap-3 rounded-lg cursor-pointer transition-all duration-200 relative overflow-hidden",
+                                                            "group flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-200 relative overflow-hidden",
                                                             isCollapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
                                                             isActive
                                                                 ? "bg-slate-800/80 text-white shadow-sm"
                                                                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                                                         )}
-                                                        title={isCollapsed ? conv.title : undefined}
+                                                        title={conv.title || "New Conversation"}
                                                     >
                                                         {/* Active indicator */}
                                                         {isActive && (
@@ -268,27 +269,12 @@ export function ChatSidebar({
                                                         )} />
 
                                                         {!isCollapsed && (
-                                                            <div className="flex-1 min-w-0 relative overflow-hidden">
-                                                                {/* Title Container with Marquee Effect */}
-                                                                <div className="relative overflow-hidden h-[18px]">
-                                                                    <div className={cn(
-                                                                        "text-[13px] leading-tight whitespace-nowrap absolute top-0 left-0",
-                                                                        isActive ? "font-medium" : "font-normal",
-                                                                        // Only animate on hover if text is long enough? CSS makes this tricky without JS measure.
-                                                                        // Simpler: animate on hover regardless but paused otherwise.
-                                                                        "group-hover:animate-marquee"
-                                                                    )}
-                                                                        style={{
-                                                                            width: "max-content",
-                                                                            paddingRight: "100%" // Space to prevent abrupt repeat if we allow loop, or just ensures width is enough
-                                                                        }}>
-                                                                        {conv.title || "New Conversation"} &nbsp;&nbsp;&nbsp;&nbsp; {conv.title || "New Conversation"}
-                                                                    </div>
-                                                                    {/* Static overlay/version to show when not hovering? 
-                                                                        Tricky. Just duplicate content for seamless loop or use JS.
-                                                                        User said "going from right to left like instead of truncate".
-                                                                        Let's implement a simple transform translateX on hover.
-                                                                    */}
+                                                            <div className="flex-1 min-w-0 pr-6">
+                                                                <div className={cn(
+                                                                    "text-[13px] leading-tight truncate",
+                                                                    isActive ? "font-medium" : "font-normal"
+                                                                )}>
+                                                                    {conv.title || "New Conversation"}
                                                                 </div>
                                                             </div>
                                                         )}
@@ -296,7 +282,7 @@ export function ChatSidebar({
                                                         {!isCollapsed && (
                                                             <button
                                                                 onClick={(e) => handleDelete(e, conv.id)}
-                                                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-all text-slate-600 shrink-0 z-10 relative"
+                                                                className="absolute right-2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-all text-slate-500 shrink-0 z-10"
                                                                 title="Delete conversation"
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" />
@@ -317,13 +303,18 @@ export function ChatSidebar({
             {/* Footer - Pinned to bottom (mt-auto handled by flex-1 above taking available space) */}
             <div className="p-3 border-t border-white/6 z-10 space-y-2 mt-auto shrink-0 bg-transparent backdrop-blur-md">
                 {/* Stats row */}
-                {conversations.length > 0 && (
-                    <div className="flex items-center justify-between px-1 mb-2">
+                <div className="flex items-center justify-between px-1 mb-2 min-h-6">
+                    {conversations.length > 0 ? (
                         <span className="text-[10px] text-white/20 font-light">
                             {conversations.length} {conversations.length === 1 ? 'conversation' : 'conversations'}
                         </span>
-                    </div>
-                )}
+                    ) : (
+                        <span />
+                    )}
+                    {!isCollapsed && user && (
+                        <MemoryIndicator userId={user.id} />
+                    )}
+                </div>
                 <div className="rounded-xl bg-white/3 border border-white/5 p-3">
                     {!isCollapsed && <h4 className="text-[10px] uppercase tracking-wider text-white/25 font-semibold mb-2">Language</h4>}
                     <LanguageDetector currentDetectedLanguage="en" isCollapsed={isCollapsed} />

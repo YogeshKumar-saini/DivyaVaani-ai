@@ -84,7 +84,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65 }}
-          className="flex-1 space-y-8 lg:max-w-[54%]"
+          className="flex-1 flex flex-col items-center text-center lg:items-start lg:text-left space-y-8 lg:max-w-[54%] w-full"
         >
           {/* Badge */}
           <motion.div
@@ -110,7 +110,7 @@ export function HeroSection() {
           </div>
 
           {/* CTA buttons */}
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row justify-center lg:justify-start w-full">
             <Button
               size="lg"
               onClick={() => router.push(ROUTES.CHAT || '/chat')}
@@ -134,7 +134,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-white/10 pt-6"
+            className="flex flex-wrap items-center justify-center lg:justify-start w-full gap-x-7 gap-y-4 border-t border-white/10 pt-6"
           >
             {heroStats.map((item) => (
               <div key={item.label} className="text-center sm:text-left">
@@ -149,7 +149,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="flex items-center gap-2 text-xs text-slate-400"
+            className="flex items-center justify-center lg:justify-start gap-2 text-xs text-slate-400 w-full"
           >
             <Shield className="h-3.5 w-3.5 text-emerald-400" />
             100% private · No data sold · Open-source friendly

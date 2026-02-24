@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 # from google.oauth2 import id_token # No longer needed for access token flow
@@ -268,6 +268,56 @@ async def update_user_me(
     db.refresh(current_user)
     return current_user
 
+@router.post("/users/profile-image", response_model=User)
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload a profile image to S3 and update the user's avatar_url."""
+    # Check if it's an image
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be an image"
+        )
+
+    # Check size (limit to 5MB)
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    if file_size > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="Image size must be less than 5MB"
+        )
+        
+    from src.services.s3_service import s3_service
+    
+    # Upload to S3
+    public_url = await s3_service.upload_public_file(file, folder=f"profiles/{current_user.id}")
+    
+    if not public_url:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to upload image to S3"
+        )
+        
+    # Update user
+    try:
+        current_user = db.merge(current_user)
+        current_user.avatar_url = public_url
+        current_user.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(current_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database update failed: {str(e)}"
+        )
+    
+    return current_user
 @router.put("/users/password")
 async def update_password(
     password_update: PasswordUpdate,

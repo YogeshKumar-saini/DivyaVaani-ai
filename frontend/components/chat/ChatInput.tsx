@@ -2,7 +2,7 @@
 
 import { useToast } from '@/lib/context/ToastContext';
 import { useState, useRef, useLayoutEffect, useCallback, memo } from 'react';
-import { Paperclip, Send, Loader2, Sparkles, Mic } from 'lucide-react';
+import { Paperclip, Send, Loader2, Mic } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -144,35 +144,35 @@ const ChatInputInner = memo<ChatInputProps>(({
   const isNearLimit = charPercent > 80;
 
   return (
-    <div className={cn("w-full max-w-4xl mx-auto relative px-4 pb-4", className)}>
+    <div className={cn("w-full max-w-4xl mx-auto relative px-3 md:px-4 pb-3 md:pb-5", className)}>
       {/* Main input container */}
       <div
         className={cn(
-          "relative rounded-3xl transition-all duration-300",
-          "bg-slate-900/60 backdrop-blur-3xl border shadow-2xl",
+          "relative rounded-[24px] md:rounded-3xl transition-all duration-300 flex flex-col",
+          "bg-slate-900/70 backdrop-blur-3xl border shadow-2xl",
           isFocused
-            ? "border-violet-500/30 shadow-[0_0_50px_rgba(139,92,246,0.15),0_8px_32px_rgba(0,0,0,0.5)]"
+            ? "border-violet-500/40 shadow-[0_0_40px_rgba(139,92,246,0.15),0_8px_32px_rgba(0,0,0,0.5)]"
             : "border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-white/15"
         )}
       >
         {/* Top glow line when focused */}
         <div className={cn(
           "absolute top-0 left-10 right-10 h-px rounded-full transition-opacity duration-300",
-          "bg-linear-to-r from-transparent via-violet-500/40 to-transparent",
+          "bg-linear-to-r from-transparent via-violet-500/50 to-transparent",
           isFocused ? "opacity-100" : "opacity-0"
         )} />
 
-        <div className="flex items-end gap-3 p-4">
+        <div className="flex items-end gap-2 md:gap-3 p-3 md:p-4 pb-2">
           {/* Attach button */}
           <Button
             variant="ghost"
             size="icon"
-            className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl shrink-0 h-10 w-10 mb-0.5 transition-all duration-200"
+            className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl shrink-0 h-9 w-9 md:h-10 md:w-10 mb-0.5 transition-all duration-200"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             title="Attach file"
           >
-            {isUploading ? <Loader2 className="animate-spin h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
+            {isUploading ? <Loader2 className="animate-spin h-4 w-4 md:h-5 md:w-5" /> : <Paperclip className="h-4 w-4 md:h-5 md:w-5" />}
           </Button>
 
           {/* Textarea */}
@@ -186,7 +186,7 @@ const ChatInputInner = memo<ChatInputProps>(({
             placeholder={placeholder}
             disabled={isLoading}
             rows={1}
-            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none resize-none py-2.5 text-white/90 placeholder-white/40 text-[16px] leading-relaxed scrollbar-hide min-h-[44px] font-normal tracking-wide shadow-none"
+            className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none resize-none py-2 text-white/90 placeholder-white/30 text-[15px] md:text-[16px] leading-relaxed scrollbar-hide min-h-[40px] md:min-h-[44px] font-normal tracking-wide shadow-none"
           />
 
           {/* Send button */}
@@ -196,29 +196,31 @@ const ChatInputInner = memo<ChatInputProps>(({
               onClick={handleSubmit}
               disabled={!input.trim() || isLoading}
               className={cn(
-                "rounded-xl h-10 w-10 transition-all duration-300 relative overflow-hidden",
+                "rounded-xl h-9 w-9 md:h-10 md:w-10 transition-all duration-300 relative overflow-hidden",
                 input.trim() && !isLoading
                   ? "bg-linear-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-900/40 text-white hover:scale-105"
                   : "bg-white/5 text-white/20 cursor-not-allowed"
               )}
             >
               {isLoading
-                ? <Loader2 className="h-5 w-5 animate-spin" />
-                : <Send className="h-5 w-5 ml-0.5" />
+                ? <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
+                : <Send className="h-4 w-4 md:h-5 md:w-5 ml-0.5" />
               }
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-5 pb-3 pt-0">
-          <div className="flex items-center gap-4">
+        {/* Bottom Bar: Language & Voice on left, Char Count on right */}
+        <div className="flex items-center justify-between px-4 pb-3 pt-1">
+          <div className="flex items-center gap-3">
             {selectedLanguage && onLanguageChange && (
               <LanguageSelector
                 selectedLanguage={selectedLanguage}
                 onLanguageChange={onLanguageChange}
-                className="bg-white/5 border-white/5 hover:bg-white/10 px-3 py-1.5 h-auto text-xs font-medium text-white/60 rounded-lg"
+                className="bg-transparent border-none hover:bg-white/5 px-2 py-1 h-auto text-[11px] md:text-xs font-medium text-white/50 rounded-lg transition-colors"
               />
             )}
+            <div className="h-3 w-px bg-white/10 hidden md:block" />
             <button
               onClick={toggleRecording}
               className={cn(
@@ -230,20 +232,20 @@ const ChatInputInner = memo<ChatInputProps>(({
               title={isRecording ? "Stop recording" : "Voice input"}
             >
               <Mic size={12} className={cn("transition-colors", isRecording ? "text-red-400" : "text-white/40")} />
-              {isRecording ? "Listening..." : "Voice"}
+              <span className="hidden md:inline">{isRecording ? "Listening..." : "Voice"}</span>
             </button>
           </div>
           <div className="flex items-center gap-3">
-            {isNearLimit && (
-              <span className={cn(
-                "text-[10px] font-medium tabular-nums",
-                charPercent > 95 ? "text-red-400" : "text-amber-400/80"
-              )}>
-                {maxLength - input.length} left
-              </span>
-            )}
+            <span className={cn(
+              "text-[10px] font-medium tabular-nums transition-opacity duration-300",
+              isNearLimit ? "opacity-100" : "opacity-0",
+              charPercent > 95 ? "text-red-400" : "text-amber-400/80"
+            )}>
+              {maxLength - input.length}
+            </span>
           </div>
         </div>
+
       </div>
 
       <input
@@ -251,6 +253,7 @@ const ChatInputInner = memo<ChatInputProps>(({
         type="file"
         className="hidden"
         onChange={handleFileChange}
+        accept="image/*, .pdf, .txt, .doc, .docx"
       />
     </div>
   );

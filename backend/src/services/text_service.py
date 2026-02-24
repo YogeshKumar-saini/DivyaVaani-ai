@@ -41,7 +41,8 @@ class TextService:
         question: str,
         user_id: Optional[str] = None,
         preferred_language: Optional[str] = None,
-        conversation_history: Optional[str] = None
+        conversation_history: Optional[str] = None,
+        conversation_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process a text query through the QA system."""
         start_time = time.time()
@@ -68,7 +69,7 @@ class TextService:
 
             # Process query
             qa_system = await self._get_qa_system()
-            result = qa_system.ask(question, user_id, preferred_language, conversation_history)
+            result = qa_system.ask(question, user_id, preferred_language, conversation_history, conversation_id)
 
             if not result or not isinstance(result, dict) or not result.get('answer'):
                 raise ProcessingError("QA Processing", "No answer generated")
@@ -101,7 +102,8 @@ class TextService:
         question: str,
         user_id: Optional[str] = None,
         preferred_language: Optional[str] = None,
-        conversation_history: Optional[str] = None
+        conversation_history: Optional[str] = None,
+        conversation_id: Optional[str] = None
     ):
         """Process a text query with streaming response.
         
@@ -124,7 +126,7 @@ class TextService:
             qa_system = await self._get_qa_system()
             
             # Stream response from QA system
-            async for chunk in qa_system.ask_stream(question, user_id, preferred_language, conversation_history):
+            async for chunk in qa_system.ask_stream(question, user_id, preferred_language, conversation_history, conversation_id):
                 yield chunk
 
         except (APIError, ProcessingError, ServiceUnavailableError):

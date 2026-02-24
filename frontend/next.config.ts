@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+      },
+    ],
+  },
   // NOTE: No rewrites needed here.
   // app/api/[...path]/route.ts is a catch-all Route Handler that proxies all
   // /api/* requests to the backend server-side (reads BACKEND_URL at request

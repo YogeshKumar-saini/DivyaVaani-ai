@@ -9,6 +9,7 @@ export interface TextQueryRequest {
   user_id?: string;
   preferred_language?: string;
   conversation_history?: string;
+  conversation_id?: string;
 }
 
 export interface Context {
@@ -65,6 +66,7 @@ export class TextService {
       user_id: userId,
       preferred_language: preferredLanguage,
       conversation_history: conversationHistory,
+      conversation_id: undefined // Add if needed later for askQuestion
     };
 
     return apiClient.request<TextQueryResponse>('/text', {
@@ -80,13 +82,15 @@ export class TextService {
     question: string,
     userId?: string,
     preferredLanguage?: string,
-    conversationHistory?: string
+    conversationHistory?: string,
+    conversationId?: string
   ): AsyncGenerator<StreamEvent, void, unknown> {
     const requestBody: TextQueryRequest = {
       question,
       user_id: userId,
       preferred_language: preferredLanguage,
       conversation_history: conversationHistory,
+      conversation_id: conversationId,
     };
 
     const response = await fetch(`${apiClient['baseURL']}/text/stream`, {

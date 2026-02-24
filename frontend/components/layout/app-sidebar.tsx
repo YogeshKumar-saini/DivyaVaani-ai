@@ -160,7 +160,7 @@ export const AppSidebar = () => {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Avatar className="h-9 w-9 border border-white/10 cursor-pointer hover:border-white/30 transition-colors">
-                                    <AvatarImage src={user?.avatar_url} />
+                                    <AvatarImage src={user?.avatar_url} crossOrigin="anonymous" />
                                     <AvatarFallback className="bg-indigo-950 text-indigo-200 text-xs">
                                         {user?.full_name?.charAt(0) || "U"}
                                     </AvatarFallback>

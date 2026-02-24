@@ -39,17 +39,17 @@ export function TestimonialsSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex overflow-x-auto gap-6 pb-12 pt-4 px-4 -mx-4 sm:mx-0 sm:px-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0">
           {TESTIMONIALS.map((testimonial, idx) => (
             <motion.div
               key={testimonial.id}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.2, duration: 0.6 }}
-              className="relative group h-full"
+              transition={{ delay: idx * 0.1, duration: 0.6 }}
+              className="relative group shrink-0 w-[85vw] sm:w-[400px] snap-center stretch"
             >
-              <div className="h-full bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300 hover:-translate-y-2">
+              <div className="h-full bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300 hover:-translate-y-2 flex flex-col">
                 <Quote className="absolute top-8 right-8 w-10 h-10 text-white/5 rotate-180" />
 
                 <div className="flex items-center space-x-4 mb-6">

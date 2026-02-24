@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { PanelLeftOpen, X } from "lucide-react";
-
 interface ChatLayoutProps {
     children: React.ReactNode;
     sidebarContent: React.ReactNode;
@@ -61,20 +60,21 @@ export function ChatLayout({ children, sidebarContent, isSidebarOpen, onSidebarT
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.85 }}
                             transition={{ duration: 0.18 }}
-                            className="absolute top-3 left-3 z-40"
+                            className="absolute top-4 left-4 z-40"
                         >
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onSidebarToggle(true)}
-                                className="h-9 w-9 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-white/10 shadow-lg shadow-black/20 transition-all duration-200"
+                                className="h-10 w-10 md:h-9 md:w-9 rounded-xl bg-slate-900/60 backdrop-blur-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/15 shadow-xl shadow-black/40 transition-all duration-200"
                                 title="Open conversations"
                             >
-                                <PanelLeftOpen size={16} />
+                                <PanelLeftOpen size={18} className="md:w-4 md:h-4" />
                             </Button>
                         </motion.div>
                     )}
                 </AnimatePresence>
+
 
                 {children}
             </main>

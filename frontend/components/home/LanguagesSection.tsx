@@ -203,7 +203,7 @@ export function LanguagesSection() {
                 One Question, Infinite Expressions
               </h3>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex sm:grid overflow-x-auto sm:overflow-visible gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-8 pt-4 px-1 -mx-4 sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0 sm:after:hidden">
                 {[
                   { lang: 'English', text: 'What is the path to inner peace?', color: 'from-blue-400 to-blue-600' },
                   { lang: 'Hindi', text: 'आंतरिक शांति का मार्ग क्या है?', color: 'from-orange-400 to-orange-600' },
@@ -219,7 +219,7 @@ export function LanguagesSection() {
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: 1.03 }}
-                    className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all duration-300"
+                    className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all duration-300 shrink-0 w-[80vw] sm:w-auto snap-center"
                   >
                     <div className={`inline-block text-xs font-bold bg-linear-to-r ${item.color} text-transparent bg-clip-text mb-2 uppercase tracking-wider`}>
                       {item.lang}

@@ -5,12 +5,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth-provider';
 import { authService } from '@/lib/api/auth-service';
+import { memoryService, UserMemoryProfile, MemoryFact } from '@/lib/api/memory-service';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useRef } from 'react';
 import {
   ShieldCheck, BadgeCheck, Clock3, LogOut, User, Lock, Mail,
-  Camera, CheckCircle2, Pencil
+  Camera, CheckCircle2, Pencil, BrainCircuit, LibraryBig, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -21,7 +23,7 @@ const fadeUp: import('framer-motion').Variants = {
   visible: (d: number = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: d, ease: [0.4, 0, 0.2, 1] } }),
 };
 
-type Tab = 'profile' | 'security';
+type Tab = 'profile' | 'security' | 'memory';
 
 export default function ProfilePage() {
   const { user, token, logout } = useAuth();
@@ -38,6 +40,16 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
+  // Memory tab states
+  const [memoryProfile, setMemoryProfile] = useState<UserMemoryProfile | null>(null);
+  const [memoryFacts, setMemoryFacts] = useState<MemoryFact[]>([]);
+  const [isMemoryLoading, setIsMemoryLoading] = useState(false);
+  const [isErasingMemory, setIsErasingMemory] = useState(false);
+
+  // File upload state & ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   useEffect(() => {
     if (!user) {
       router.push('/');
@@ -52,13 +64,42 @@ export default function ProfilePage() {
     if (!token) return;
     setIsProfileLoading(true);
     try {
-      await authService.updateProfile(token, { full_name: fullName, avatar_url: avatarUrl });
+      await authService.updateProfile(token, { full_name: fullName });
       toast.success('Profile updated successfully');
       window.location.reload();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setIsProfileLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const updatedUser = await authService.uploadProfileImage(token, file);
+      setAvatarUrl(updatedUser.avatar_url || '');
+      toast.success('Profile image updated successfully');
+      window.location.reload();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+      // Reset input unneeded since we refresh or can just clear value
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -83,6 +124,59 @@ export default function ProfilePage() {
     }
   };
 
+  const loadMemoryData = async () => {
+    if (!user) return;
+    setIsMemoryLoading(true);
+    try {
+      const [profile, factsPage] = await Promise.all([
+        memoryService.getProfile(user.id),
+        memoryService.getFacts(user.id, 50, 0)
+      ]);
+      setMemoryProfile(profile);
+      setMemoryFacts(factsPage.items);
+    } catch (err) {
+      console.warn('Failed to load memory profile', err);
+    } finally {
+      setIsMemoryLoading(false);
+    }
+  };
+
+  const handleDeleteFact = async (factId: string) => {
+    if (!user) return;
+    try {
+      await memoryService.deleteFact(user.id, factId);
+      setMemoryFacts(prev => prev.filter(f => f.id !== factId));
+      toast.success('Memory deleted successfully');
+    } catch {
+      toast.error('Failed to delete memory');
+    }
+  };
+
+  const handleEraseAllMemory = async () => {
+    if (!user) return;
+    if (!window.confirm("Are you sure you want to completely erase the AI's memory of you? This cannot be undone.")) return;
+
+    setIsErasingMemory(true);
+    try {
+      await memoryService.eraseAllMemory(user.id);
+      setMemoryProfile(null);
+      setMemoryFacts([]);
+      toast.success('All memory history erased');
+    } catch {
+      toast.error('Failed to erase memory');
+    } finally {
+      setIsErasingMemory(false);
+    }
+  };
+
+  // Load memory data when switching tabs
+  useEffect(() => {
+    if (activeTab === 'memory' && !memoryProfile) {
+      loadMemoryData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, memoryProfile, user]);
+
   if (!user) return null;
 
   const initials = user.full_name
@@ -92,6 +186,7 @@ export default function ProfilePage() {
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Lock },
+    { id: 'memory', label: 'Memory', icon: BrainCircuit },
   ];
 
   const statusItems = [
@@ -148,15 +243,35 @@ export default function ProfilePage() {
             <div className="rounded-2xl bg-white/3 border border-white/7 p-6 flex flex-col items-center text-center">
               {/* Avatar */}
               <div className="relative group mb-4">
-                <Avatar className="h-24 w-24 ring-2 ring-white/10 group-hover:ring-violet-500/40 transition-all duration-500 shadow-2xl">
-                  <AvatarImage src={user.avatar_url} className="object-cover" />
-                  <AvatarFallback className="bg-linear-to-br from-violet-600/50 to-indigo-600/50 text-white text-2xl font-bold tracking-tight">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer shadow-lg">
-                  <Camera className="h-3.5 w-3.5 text-white/60" />
-                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  disabled={isUploadingImage}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingImage}
+                  className="rounded-full focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  title="Upload profile image"
+                >
+                  <Avatar className="h-24 w-24 ring-2 ring-white/10 group-hover:ring-violet-500/40 transition-all duration-500 shadow-2xl relative">
+                    <AvatarImage src={user.avatar_url} className="object-cover" crossOrigin="anonymous" />
+                    <AvatarFallback className="bg-linear-to-br from-violet-600/50 to-indigo-600/50 text-white text-2xl font-bold tracking-tight">
+                      {initials}
+                    </AvatarFallback>
+                    {isUploadingImage && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                        <span className="h-6 w-6 rounded-full border-2 border-white/60 border-t-white animate-spin" />
+                      </div>
+                    )}
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer shadow-lg">
+                    <Camera className="h-3.5 w-3.5 text-white/60" />
+                  </div>
+                </button>
               </div>
 
               <h2 className="font-bold text-white text-[16px] leading-tight">{user.full_name || 'User'}</h2>
@@ -263,21 +378,9 @@ export default function ProfilePage() {
                       />
                     </div>
 
-                    {/* Avatar URL */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="avatarUrl" className="text-[11px] uppercase tracking-widest text-white/35 font-semibold flex items-center gap-1.5">
-                        <Camera className="h-3 w-3" />
-                        Avatar URL
-                      </Label>
-                      <Input
-                        id="avatarUrl"
-                        value={avatarUrl}
-                        onChange={(e) => setAvatarUrl(e.target.value)}
-                        placeholder="https://example.com/avatar.jpg"
-                        className="bg-white/3 border-white/8 text-white h-11 rounded-xl focus:border-violet-500/40 focus:bg-white/5 transition-all placeholder:text-white/20"
-                      />
-                      <p className="text-[11px] text-white/25">Link to a publicly accessible image (PNG, JPG, WebP)</p>
-                    </div>
+                    {/* Avatar URL 
+                        Removed manually entering avatar URL since we directly upload files now 
+                     */}
 
                     <div className="flex justify-end pt-2">
                       <button
@@ -406,6 +509,110 @@ export default function ProfilePage() {
                       </button>
                     </div>
                   </form>
+                </motion.div>
+              )}
+
+              {activeTab === 'memory' && (
+                <motion.div
+                  key="memory-tab"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="rounded-2xl bg-white/3 border border-white/7 overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 px-6 py-5 border-b border-white/6">
+                    <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/15">
+                      <BrainCircuit className="h-4 w-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-white font-semibold text-[15px]">AI Memory & Preferences</h2>
+                      <p className="text-white/35 text-[12px]">Manage what the AI has learned about you</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-8">
+                    {isMemoryLoading ? (
+                      <div className="flex justify-center py-10">
+                        <span className="h-6 w-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      </div>
+                    ) : (
+                      <>
+                        {/* Summary Stats */}
+                        {memoryProfile && (
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="rounded-xl border border-white/6 bg-white/2 p-4 text-center">
+                              <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Spiritual Stage</p>
+                              <p className="text-sm font-semibold text-white capitalize">{memoryProfile.spiritual_stage || 'Unknown'}</p>
+                            </div>
+                            <div className="rounded-xl border border-white/6 bg-white/2 p-4 text-center">
+                              <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Top Language</p>
+                              <p className="text-sm font-semibold text-white uppercase">{memoryProfile.preferred_language || 'Auto'}</p>
+                            </div>
+                            <div className="rounded-xl border border-white/6 bg-white/2 p-4 text-center">
+                              <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Total Memories</p>
+                              <p className="text-sm font-semibold text-violet-300">{memoryProfile.total_facts || 0}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Topics */}
+                        {memoryProfile?.top_topics && memoryProfile.top_topics.length > 0 && (
+                          <div>
+                            <h3 className="text-xs uppercase tracking-widest text-white/50 mb-3 flex items-center gap-2">
+                              <LibraryBig className="w-3.5 h-3.5" /> Frequent Topics
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {memoryProfile.top_topics.map((topic, i) => (
+                                <span key={i} className="px-3 py-1 rounded-full text-xs bg-white/5 text-white/70 border border-white/10">
+                                  {topic}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Stored Facts */}
+                        <div>
+                          <h3 className="text-xs uppercase tracking-widest text-white/50 mb-3 flex items-center gap-2">
+                            <BrainCircuit className="w-3.5 h-3.5" /> Long-Term Memories
+                          </h3>
+
+                          {memoryFacts.length === 0 ? (
+                            <p className="text-sm text-white/40 italic text-center py-6 border border-dashed border-white/10 rounded-xl">
+                              The AI hasn&apos;t gathered any specific facts about you yet. Keep chatting to build your profile!
+                            </p>
+                          ) : (
+                            <ul className="space-y-2">
+                              {memoryFacts.map(fact => (
+                                <li key={fact.id} className="flex justify-between items-center bg-white/3 border border-white/5 px-4 py-3 rounded-xl group/fact">
+                                  <div className="max-w-[85%]">
+                                    <span className="text-[10px] uppercase text-violet-400 font-semibold mb-0.5 block tracking-widest">{fact.fact_type.replace('_', ' ')}</span>
+                                    <span className="text-sm text-white/90">{fact.content}</span>
+                                  </div>
+                                  <button onClick={() => handleDeleteFact(fact.id)} className="p-2 bg-red-500/0 hover:bg-red-500/20 rounded-lg text-white/20 hover:text-red-400 transition-colors" title="Delete memory">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* Danger Zone */}
+                        <div className="mt-8 pt-6 border-t border-red-500/20">
+                          <h3 className="text-sm font-semibold text-red-400 mb-2">Danger Zone</h3>
+                          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-4 rounded-xl border border-red-500/10 bg-red-500/5">
+                            <p className="text-xs text-red-200/60 max-w">Permanently erase all your memory profile, stored facts, and previous conversation summaries. The AI will forget everything it learned about you.</p>
+                            <button onClick={handleEraseAllMemory} disabled={isErasingMemory} className="whitespace-nowrap px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 text-xs rounded-lg border border-red-500/30 transition-colors font-semibold">
+                              {isErasingMemory ? "Erasing..." : "Erase All Memory"}
+                            </button>
+                          </div>
+                        </div>
+
+                      </>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

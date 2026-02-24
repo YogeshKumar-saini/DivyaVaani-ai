@@ -150,6 +150,10 @@ app.include_router(history_router, prefix="/conversations", tags=["conversation-
 from src.api.routes import auth
 app.include_router(auth.router)
 
+# Include memory management router
+from src.api.routes.memory import router as memory_router
+app.include_router(memory_router, prefix="/api/v1/memory", tags=["memory"])
+
 # Request/Response middleware for logging and metrics
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

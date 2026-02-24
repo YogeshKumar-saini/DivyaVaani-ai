@@ -12,6 +12,12 @@ class Settings(BaseModel):
     # Environment
     app_environment: str = Field(default="development")
 
+    # AWS S3 Settings
+    aws_access_key_id: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_ACCESS_KEY_ID"))
+    aws_secret_access_key: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_SECRET_ACCESS_KEY"))
+    aws_region: str = Field(default_factory=lambda: os.getenv("AWS_REGION", "us-east-1"))
+    s3_bucket_name: str = Field(default_factory=lambda: os.getenv("S3_BUCKET_NAME", "divyawaani"))
+
     # API Keys with validation
     groq_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
     gemini_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY"))

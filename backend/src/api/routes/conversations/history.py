@@ -368,6 +368,62 @@ class DailySummaryResponse(BaseModel):
     updated_at: str
 
 
+def _generate_summary_for_date(repo: ConversationRepository, user_id: str, date: str):
+    """Internal helper to generate a summary for a specific date."""
+    conversations = repo.get_conversations_for_date(user_id, date)
+    if not conversations:
+        return None
+
+    all_topics = []
+    total_messages = 0
+    conversation_texts = []
+
+    for conv in conversations:
+        messages = repo.get_conversation_messages(conv.id)
+        total_messages += len(messages)
+        if conv.tags:
+            all_topics.extend(conv.tags)
+
+        conv_text = f"Conversation: {conv.title or 'Untitled'}\n"
+        for msg in messages[:10]:
+            conv_text += f"  {msg.role}: {msg.content[:200]}\n"
+        conversation_texts.append(conv_text)
+
+    unique_topics = list(set(all_topics))
+    topics_str = ", ".join(unique_topics[:5]) if unique_topics else "general spiritual guidance"
+
+    summary_text = (
+        f"On this day, you had {len(conversations)} spiritual conversation(s) "
+        f"covering {total_messages} messages. "
+        f"Topics explored include: {topics_str}. "
+    )
+
+    for conv in conversations[:3]:
+        if conv.title and conv.title != "New Conversation":
+            summary_text += f'You explored "{conv.title[:80]}". '
+
+    mood_map = {
+        "peace": "contemplative", "meditation": "contemplative",
+        "karma": "seeking", "dharma": "seeking",
+        "liberation": "transcendent", "devotion": "devotional",
+    }
+    mood = "reflective"
+    for topic in unique_topics:
+        for key, m in mood_map.items():
+            if key in topic.lower():
+                mood = m
+                break
+
+    return repo.create_daily_summary(
+        user_id=user_id,
+        date=date,
+        summary_text=summary_text.strip(),
+        topics=unique_topics[:10],
+        conversation_count=len(conversations),
+        message_count=total_messages,
+        mood=mood
+    )
+
 @router.get("/users/{user_id}/daily-summaries", response_model=List[DailySummaryResponse])
 async def get_daily_summaries(
     user_id: str,
@@ -378,8 +434,41 @@ async def get_daily_summaries(
     """Get daily chat summaries for a user within a date range."""
     try:
         repo = ConversationRepository(db)
-        summaries = repo.get_daily_summaries(user_id, start_date, end_date)
-        return [DailySummaryResponse(**s.to_dict()) for s in summaries]
+        
+        # 1. Fetch all conversations in this date range to check what dates SHOULD have summaries
+        from datetime import datetime
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+        
+        # This gets all conversations for the user in the entire range
+        range_convs = db.query(Conversation).filter(
+            Conversation.user_id == user_id,
+            Conversation.created_at >= start_dt,
+            Conversation.created_at <= end_dt
+        ).all()
+        
+        # Group conversations by date string
+        dates_with_convs = set()
+        for conv in range_convs:
+            if conv.created_at:
+                dates_with_convs.add(conv.created_at.strftime("%Y-%m-%d"))
+                
+        # 2. Fetch existing summaries
+        existing_summaries = repo.get_daily_summaries(user_id, start_date, end_date)
+        existing_dates = {s.date for s in existing_summaries}
+        
+        # 3. Generate missing summaries
+        missing_dates = dates_with_convs - existing_dates
+        for missing_date in missing_dates:
+            log.info(f"Auto-generating missing summary for {user_id} on {missing_date}")
+            new_summary = _generate_summary_for_date(repo, user_id, missing_date)
+            if new_summary:
+                existing_summaries.append(new_summary)
+                
+        # Sort so that newest appears first
+        existing_summaries.sort(key=lambda x: x.date, reverse=True)
+                
+        return [DailySummaryResponse(**s.to_dict()) for s in existing_summaries]
     except Exception as e:
         log.error(f"Failed to get daily summaries: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve daily summaries")
@@ -394,64 +483,10 @@ async def generate_daily_summary(
     """Generate a daily summary from conversations on a given date."""
     try:
         repo = ConversationRepository(db)
-        conversations = repo.get_conversations_for_date(user_id, date)
+        daily_summary = _generate_summary_for_date(repo, user_id, date)
 
-        if not conversations:
+        if not daily_summary:
             return {"message": "No conversations found for this date", "generated": False}
-
-        # Collect all messages from the day's conversations
-        all_topics = []
-        total_messages = 0
-        conversation_texts = []
-
-        for conv in conversations:
-            messages = repo.get_conversation_messages(conv.id)
-            total_messages += len(messages)
-            if conv.tags:
-                all_topics.extend(conv.tags)
-
-            conv_text = f"Conversation: {conv.title or 'Untitled'}\n"
-            for msg in messages[:10]:  # Cap messages per conversation for summary
-                conv_text += f"  {msg.role}: {msg.content[:200]}\n"
-            conversation_texts.append(conv_text)
-
-        # Build a simple summary from conversation content
-        unique_topics = list(set(all_topics))
-        topics_str = ", ".join(unique_topics[:5]) if unique_topics else "general spiritual guidance"
-
-        summary_text = (
-            f"On this day, you had {len(conversations)} spiritual conversation(s) "
-            f"covering {total_messages} messages. "
-            f"Topics explored include: {topics_str}. "
-        )
-
-        # Add conversation highlights
-        for conv in conversations[:3]:
-            if conv.title and conv.title != "New Conversation":
-                summary_text += f'You explored "{conv.title[:80]}". '
-
-        # Determine mood from topics
-        mood_map = {
-            "peace": "contemplative", "meditation": "contemplative",
-            "karma": "seeking", "dharma": "seeking",
-            "liberation": "transcendent", "devotion": "devotional",
-        }
-        mood = "reflective"
-        for topic in unique_topics:
-            for key, m in mood_map.items():
-                if key in topic.lower():
-                    mood = m
-                    break
-
-        daily_summary = repo.create_daily_summary(
-            user_id=user_id,
-            date=date,
-            summary_text=summary_text.strip(),
-            topics=unique_topics[:10],
-            conversation_count=len(conversations),
-            message_count=total_messages,
-            mood=mood
-        )
 
         return {
             "message": "Daily summary generated successfully",

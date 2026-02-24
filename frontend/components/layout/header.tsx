@@ -60,7 +60,7 @@ export const Header = React.memo(({ items }: HeaderProps) => {
         <div className="section-shell relative flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <MobileSidebar items={items} />
-            <Link href="/" className="group flex items-center gap-3">
+            <Link href="/" className="group hidden sm:flex items-center gap-3">
               <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/15 bg-white/10 shadow-lg shadow-cyan-950/60">
                 <Image
                   src="/images/logo.png"
@@ -117,7 +117,7 @@ export const Header = React.memo(({ items }: HeaderProps) => {
                     className="relative h-9 w-9 rounded-full p-0 overflow-hidden border border-white/15 bg-white/6 hover:bg-white/12"
                   >
                     <Avatar className="h-full w-full">
-                      <AvatarImage src={user.avatar_url} alt={user.full_name || 'User'} />
+                      <AvatarImage src={user.avatar_url} alt={user.full_name || 'User'} crossOrigin="anonymous" />
                       <AvatarFallback className="bg-cyan-500/20 text-cyan-100 font-bold text-sm">
                         {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>

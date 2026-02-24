@@ -97,3 +97,4 @@ python-memcached==1.59
 # Utilities
 tqdm==4.66.1
 loguru==0.7.2
+boto3==1.34.60

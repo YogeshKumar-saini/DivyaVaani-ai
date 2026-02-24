@@ -35,7 +35,7 @@ export function FeaturesSection() {
           </p>
         </motion.div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex sm:grid overflow-x-auto sm:overflow-visible gap-5 sm:grid-cols-2 lg:grid-cols-4 pb-8 pt-4 px-4 -mx-4 sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0 sm:after:hidden">
           {FEATURES.map((feature, idx) => {
             const Icon = iconMap[feature.icon as keyof typeof iconMap] || Globe;
             const glowColors = [
@@ -65,7 +65,7 @@ export function FeaturesSection() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: idx * 0.07 }}
                 whileHover={{ y: -6 }}
-                className={`group relative h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 transition-all duration-300 ${glowColors[idx % 4]} ${borderColors[idx % 4]}`}
+                className={`group relative h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 transition-all duration-300 ${glowColors[idx % 4]} ${borderColors[idx % 4]} shrink-0 w-[85vw] sm:w-auto snap-center`}
               >
                 {/* Top gradient line */}
                 <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent" />

@@ -242,6 +242,20 @@ export class ConversationService {
       `/conversations/${conversationId}/context?${params.toString()}`
     );
   }
+
+  /**
+   * Trigger memory consolidation for a conversation
+   */
+  async triggerMemoryConsolidation(
+    conversationId: string,
+    userId: string
+  ): Promise<{ status: string; facts_saved: number }> {
+    const params = new URLSearchParams({ user_id: userId });
+    return apiClient.request(
+      `/api/v1/memory/consolidate/${conversationId}?${params.toString()}`,
+      { method: 'POST' }
+    );
+  }
 }
 
 // Types for new features

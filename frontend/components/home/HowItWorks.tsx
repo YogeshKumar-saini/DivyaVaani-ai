@@ -36,7 +36,7 @@ export function HowItWorks() {
             <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="flex md:grid overflow-x-auto md:overflow-visible gap-5 md:grid-cols-3 pb-8 pt-4 px-4 -mx-4 md:mx-0 md:px-0 md:pt-0 md:pb-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0 md:after:hidden">
             {HOW_IT_WORKS_STEPS.map((step, index) => {
               const Icon = iconMap[step.icon as keyof typeof iconMap];
               return (
@@ -47,7 +47,7 @@ export function HowItWorks() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: index * 0.1 }}
                   whileHover={{ y: -5 }}
-                  className="group relative h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 transition-all duration-300 hover:border-cyan-300/35 hover:shadow-[0_0_40px_rgba(6,182,212,0.18)]"
+                  className="group relative h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 transition-all duration-300 hover:border-cyan-300/35 hover:shadow-[0_0_40px_rgba(6,182,212,0.18)] shrink-0 w-[85vw] md:w-auto snap-center"
                 >
                   {/* Step number badge */}
                   <div className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border border-cyan-200/30 bg-cyan-300/10 text-[10px] font-bold text-cyan-300">

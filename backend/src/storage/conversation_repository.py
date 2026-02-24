@@ -297,10 +297,19 @@ class ConversationRepository:
         date: str
     ) -> List[Conversation]:
         """Get all conversations for a user on a specific date."""
-        from sqlalchemy import cast, Date as SqlDate
+        from datetime import datetime, time
+        
+        # Parse the date string
+        dt = datetime.strptime(date, "%Y-%m-%d")
+        
+        # Start and end of day in UTC (or simple naive match depending on created_at timezone)
+        start_date = datetime.combine(dt.date(), time.min)
+        end_date = datetime.combine(dt.date(), time.max)
+        
         return self.db.query(Conversation).filter(
             Conversation.user_id == user_id,
-            func.date(Conversation.created_at) == date
+            Conversation.created_at >= start_date,
+            Conversation.created_at <= end_date
         ).order_by(Conversation.created_at).all()
 
     def get_user_topic_distribution(self, user_id: str, limit: int = 20) -> List[str]:

@@ -43,6 +43,8 @@ class AnswerResponse(BaseModel):
 class UserBase(BaseModel):
     email: str
     full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    display_name: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str

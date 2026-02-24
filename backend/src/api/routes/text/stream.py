@@ -22,6 +22,7 @@ class StreamRequest(BaseModel):
     user_id: Optional[str] = Field(None, description="User identifier for analytics")
     preferred_language: Optional[str] = Field(None, description="Preferred response language")
     conversation_history: Optional[str] = Field(None, description="Conversation history for context")
+    conversation_id: Optional[str] = Field(None, description="ID of the current conversation for memory consolidation")
 
     @field_validator('question')
     @classmethod
@@ -63,7 +64,8 @@ async def generate_sse_stream(
     question: str,
     user_id: Optional[str] = None,
     preferred_language: Optional[str] = None,
-    conversation_history: Optional[str] = None
+    conversation_history: Optional[str] = None,
+    conversation_id: Optional[str] = None
 ) -> AsyncGenerator[str, None]:
     """Generate Server-Sent Events stream for question answering.
     
@@ -89,7 +91,8 @@ async def generate_sse_stream(
             question=question,
             user_id=user_id,
             preferred_language=preferred_language,
-            conversation_history=conversation_history
+            conversation_history=conversation_history,
+            conversation_id=conversation_id
         ):
             # Send token event
             if chunk.get('type') == 'token':
@@ -168,7 +171,8 @@ async def stream_query(request: Request, stream_req: StreamRequest):
                 question=stream_req.question,
                 user_id=stream_req.user_id,
                 preferred_language=stream_req.preferred_language,
-                conversation_history=stream_req.conversation_history
+                conversation_history=stream_req.conversation_history,
+                conversation_id=stream_req.conversation_id
             ),
             media_type="text/event-stream",
             headers={

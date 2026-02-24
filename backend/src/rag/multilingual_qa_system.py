@@ -172,7 +172,7 @@ class MultilingualQASystem:
         content = f"{question.lower().strip()}_{language}_{user_id}_{conversation_history or ''}"
         return hashlib.sha256(content.encode()).hexdigest()
     
-    def ask(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None) -> Dict[str, Any]:
+    def ask(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None, conversation_id: Optional[str] = None) -> Dict[str, Any]:
         """Refactored Q&A method using modular components."""
         start_time = datetime.now()
 
@@ -206,7 +206,7 @@ class MultilingualQASystem:
 
             # Handle no contexts - BUT check if we have history first
             # If we have history/memory, we might still want to try answering (conversational)
-            memory_context = self.memory_manager.get_context()
+            memory_context = self.memory_manager.get_full_context(user_id, question)
             has_history = bool(conversation_history or memory_context)
 
             if not contexts and not has_history:
@@ -229,7 +229,7 @@ class MultilingualQASystem:
 
             # Retrieve memory context if we haven't already (in case contexts specific path triggered)
             if not memory_context:
-                memory_context = self.memory_manager.get_context()
+                memory_context = self.memory_manager.get_full_context(user_id, question)
 
             # Get language-specific prompt and context
             prompt_template, context_text = self.prompt_manager.get_prompt(language, contexts, question)
@@ -305,8 +305,29 @@ class MultilingualQASystem:
                 user_id=user_id, question_hash=question_hash
             )
 
-            # Update memory
-            self.memory_manager.save_context(question, answer)
+            # Update memory (multi-tier: saves to user's STM)
+            self.memory_manager.save_message(user_id, "user", question)
+            self.memory_manager.save_message(user_id, "assistant", answer)
+
+            # --- AUTO CONSOLIDATION TRIGGER ---
+            if conversation_id and self.memory_manager.consolidator:
+                stm = self.memory_manager._get_stm(user_id)
+                messages = stm.get_messages()
+                # If STM has reached a good chunk of messages (e.g., 6 messages = 3 interactions)
+                if len(messages) >= 6:
+                    import asyncio
+                    log.info(f"Auto-consolidating memory for user {user_id} in background")
+                    
+                    # We need to run the synchronous consolidate method in a thread pool to avoid blocking
+                    loop = asyncio.get_event_loop()
+                    loop.run_in_executor(
+                        None, 
+                        self.memory_manager.consolidator.consolidate, 
+                        user_id, 
+                        conversation_id, 
+                        messages
+                    )
+            # ----------------------------------
 
             # Cache response
             ttl_seconds = 3600 if confidence_score > 0.7 else 1800
@@ -351,7 +372,7 @@ class MultilingualQASystem:
             )
             return error_response.to_dict()
 
-    async def ask_stream(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None):
+    async def ask_stream(self, question: str, user_id: str = "default", preferred_language: str = "en", conversation_history: Optional[str] = None, conversation_id: Optional[str] = None):
         """Stream Q&A response token-by-token for better UX.
         
         Yields chunks in the format:
@@ -401,7 +422,7 @@ class MultilingualQASystem:
                     }
 
             # Get memory context
-            memory_context = self.memory_manager.get_context()
+            memory_context = self.memory_manager.get_full_context(user_id, question)
             has_history = bool(conversation_history or memory_context)
 
             # Handle no contexts
@@ -514,8 +535,25 @@ class MultilingualQASystem:
             except Exception as e:
                 log.warning(f"Failed to generate follow-up questions: {e}")
 
-            # Update memory
-            self.memory_manager.save_context(question, full_answer)
+            # Update memory (multi-tier)
+            self.memory_manager.save_message(user_id, "user", question)
+            self.memory_manager.save_message(user_id, "assistant", full_answer)
+            
+            # --- AUTO CONSOLIDATION TRIGGER ---
+            if conversation_id and self.memory_manager.consolidator:
+                stm = self.memory_manager._get_stm(user_id)
+                messages = stm.get_messages()
+                if len(messages) >= 6:
+                    log.info(f"Auto-consolidating memory for user {user_id} in background")
+                    loop = asyncio.get_event_loop()
+                    loop.run_in_executor(
+                        None, 
+                        self.memory_manager.consolidator.consolidate, 
+                        user_id, 
+                        conversation_id, 
+                        messages
+                    )
+            # ----------------------------------
             
             # Track analytics
             self.analytics_tracker.track_query(language, processing_time, quality_metrics["overall_score"], question, user_id)

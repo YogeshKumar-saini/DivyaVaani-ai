@@ -77,9 +77,6 @@ export default function ChatPageContent() {
   // Conversation title for active chat
   const [conversationTitle, setConversationTitle] = useState<string | undefined>(undefined);
 
-  // Audio state
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
   // Guest limit system
   const {
     guestCount,
@@ -131,7 +128,7 @@ export default function ChatPageContent() {
   // ── TTS Handler ───────────────────────────────────────────────────────────
   // ── TTS Handler ───────────────────────────────────────────────────────────
 
-  const handlePlayAudio = async (messageId: string, text: string) => {
+  const handlePlayAudio = async () => {
     toast("Coming Soon", {
       description: "Voice features are currently being upgraded for a better experience.",
       duration: 3000,
@@ -222,6 +219,13 @@ export default function ChatPageContent() {
 
   // ── Load a conversation from sidebar ──────────────────────────────────────
   const handleSelectConversation = async (id: string) => {
+    // Before switching, consolidate the memory of the current conversation
+    if (currentConversationId && user?.id && currentConversationId !== id) {
+      conversationService.triggerMemoryConsolidation(currentConversationId, user.id).catch(e => {
+        console.warn('Background memory consolidation failed:', e);
+      });
+    }
+
     setCurrentConversationId(id);
     setInitialLoad(false);
     setIsLoading(true);
@@ -248,6 +252,13 @@ export default function ChatPageContent() {
   };
 
   const handleNewChat = () => {
+    // Before creating new, consolidate the memory of the current conversation
+    if (currentConversationId && user?.id) {
+      conversationService.triggerMemoryConsolidation(currentConversationId, user.id).catch(e => {
+        console.warn('Background memory consolidation failed:', e);
+      });
+    }
+
     setCurrentConversationId(undefined);
     setMessages([]);
     setInitialLoad(true);
@@ -363,7 +374,7 @@ export default function ChatPageContent() {
       let processingTime = 0;
       let followUpQuestions: string[] = [];
 
-      for await (const event of textService.streamQuestion(questionToAsk, user?.id, selectedLanguage, conversationHistory)) {
+      for await (const event of textService.streamQuestion(questionToAsk, user?.id, selectedLanguage, conversationHistory, conversationId)) {
         switch (event.type) {
           case 'token':
             fullAnswer += event.data.token;
@@ -482,8 +493,8 @@ export default function ChatPageContent() {
       <div className="w-full text-white/90">
         {/* Use StreamingText for smooth typing animation during streaming */}
         {isStreaming ? (
-          <StreamingText 
-            content={msg.content} 
+          <StreamingText
+            content={msg.content}
             isStreaming={isStreaming}
             className="text-white/90"
           />
@@ -510,7 +521,7 @@ export default function ChatPageContent() {
               variant="ghost"
               size="sm"
               disabled={msg.isLoadingAudio}
-              onClick={() => handlePlayAudio(msg.id, msg.content)}
+              onClick={() => handlePlayAudio()}
               className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/5 gap-2"
             >
               {msg.isLoadingAudio ? (
@@ -536,6 +547,12 @@ export default function ChatPageContent() {
       </div>
     );
   };
+
+  // Computed states for UI rendering
+  const streamingMsg = messages.find(m => m.id === streamingMessageId);
+  const isWaitingForToken = streamingMsg && !streamingMsg.content && (!streamingMsg.sources || streamingMsg.sources.length === 0);
+  const displayMessages = messages.filter(m => !(m.id === streamingMessageId && isWaitingForToken));
+  const showLoadingState = isLoading && (!streamingMessageId || isWaitingForToken);
 
   return (
     <div className="h-full w-full relative bg-transparent overflow-hidden pt-16">
@@ -610,7 +627,7 @@ export default function ChatPageContent() {
       >
         {/* ── Main Scrollable Area ─────────────────────────────────────────── */}
         <div className="flex-1 w-full overflow-y-auto scrollbar-custom relative">
-          <div className="min-h-full flex flex-col pb-4 px-3 md:px-6 pt-14 md:pt-3">
+          <div className="min-h-full flex flex-col pb-8 md:pb-12 px-3 md:px-6 pt-16 md:pt-4">
 
             {/* Welcome screen */}
             <AnimatePresence>
@@ -620,11 +637,11 @@ export default function ChatPageContent() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, scale: 0.97 }}
                   transition={{ duration: 0.3 }}
-                  className="flex-1 flex flex-col items-center justify-center"
+                  className="flex-1 flex flex-col items-center justify-center my-auto"
                 >
                   <WelcomeScreen
                     onExampleClick={handleExampleQuestion}
-                    className="text-white max-w-2xl mx-auto"
+                    className="text-white max-w-2xl mx-auto px-4"
                     userName={user?.full_name}
                     avatarUrl={user?.avatar_url}
                     suggestedQuestions={suggestedQuestions}
@@ -640,9 +657,9 @@ export default function ChatPageContent() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="max-w-3xl mx-auto w-full mb-2"
+                  className="max-w-3xl mx-auto w-full mb-4"
                 >
-                  <div className="flex items-center gap-3 px-1 py-2">
+                  <div className="flex items-center gap-3 px-1 py-4">
                     <div className="h-px flex-1 bg-white/6" />
                     <span className="text-[11px] font-medium text-white/25 uppercase tracking-wider truncate max-w-[200px]">
                       {conversationTitle}
@@ -659,26 +676,26 @@ export default function ChatPageContent() {
             </AnimatePresence>
 
             {/* Messages area */}
-            <div className="flex-1 pt-4 max-w-3xl mx-auto w-full">
+            <div className="flex-1 max-w-3xl mx-auto w-full flex flex-col justify-end">
               <ChatMessages
-                messages={messages}
+                messages={displayMessages}
                 onFeedback={handleFeedback}
                 streamingMessageId={streamingMessageId}
                 renderContent={renderMessageContent}
               />
-              {isLoading && (
+              {showLoadingState && (
                 <LoadingState
                   isTyping
                   message="Seeking wisdom from ancient teachings..."
                   className="mt-2"
                 />
               )}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="h-4" />
             </div>
 
             {/* Guest banner - shown inline after messages */}
             {!isLoggedIn && isHydrated && (
-              <div className="max-w-3xl mx-auto w-full mt-3 mb-1">
+              <div className="max-w-3xl mx-auto w-full mt-4 mb-2">
                 <GuestMessageBanner
                   remainingMessages={remainingMessages}
                   isNearLimit={isNearLimit}
@@ -691,7 +708,7 @@ export default function ChatPageContent() {
         </div>
 
         {/* ── Input Area ───────────────────────────────────────────────────── */}
-        <div className="shrink-0 w-full z-30 px-3 md:px-6 pb-5 pt-2">
+        <div className="shrink-0 w-full z-30 pt-2 pb-2 md:pb-4 relative bg-linear-to-t from-slate-950 via-slate-950/90 to-transparent">
           <ChatInput
             input={input}
             setInput={setInput}
@@ -699,7 +716,7 @@ export default function ChatPageContent() {
             onSubmit={askQuestion}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
-            className="sm:px-0"
+            className="px-0 sm:px-2"
             placeholder={
               !isLoggedIn && isHydrated && isLimitReached
                 ? 'Sign up to continue chatting...'
@@ -712,14 +729,14 @@ export default function ChatPageContent() {
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center mt-2"
+              className="flex justify-center mt-2 absolute -top-8 left-1/2 -translate-x-1/2"
             >
               <button
                 onClick={openModal}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/4 border border-white/6 hover:bg-white/7 hover:border-white/10 transition-all duration-200 group"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur border border-white/10 hover:bg-slate-800/80 hover:border-white/20 transition-all duration-200 group shadow-lg"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-violet-400/60 group-hover:bg-violet-400 transition-colors" />
-                <span className="text-[11px] text-white/25 group-hover:text-white/45 transition-colors">
+                <span className="text-[11px] text-white/50 group-hover:text-white/70 transition-colors">
                   {remainingMessages} of {10} free messages left
                 </span>
               </button>

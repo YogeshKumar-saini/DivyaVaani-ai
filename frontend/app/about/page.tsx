@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { BookOpen, Globe, Mic, Compass, Users, Sparkles, ShieldCheck, BrainCircuit, Languages, ArrowRight, ChevronDown, MessageCircle, Cpu, Database, Zap, Star } from 'lucide-react';
+import { BookOpen, Globe, Mic, Compass, Users, Sparkles, ShieldCheck, BrainCircuit, Languages, ArrowRight, ChevronDown, MessageCircle, Cpu, Database, Zap, Star, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { FeedbackFormDialog } from '@/components/about/FeedbackFormDialog';
 import Link from 'next/link';
 
 const pillars = [
@@ -347,6 +348,42 @@ export default function AboutPage() {
             ))}
           </div>
         </section>
+
+        {/* Feedback CTA Card */}
+        <motion.div
+          variants={fadeUp}
+          custom={20}
+          initial="hidden"
+          animate="visible"
+          className="rounded-2xl border border-cyan-500/15 bg-white/2 overflow-hidden relative"
+        >
+          <div className="absolute inset-0 bg-linear-to-br from-cyan-600/5 via-transparent to-sky-600/4 pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-cyan-500/25 to-transparent" />
+
+          <div className="relative p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <MessageSquare className="h-5 w-5 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-[16px] font-semibold text-white mb-1">Share Your Feedback</h2>
+                <p className="text-[13px] text-white/40 font-light leading-relaxed max-w-sm">
+                  Help us improve DivyaVaani. Report bugs, request features, or rate answer accuracy.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {['Bug Report', 'Feature Request', 'Accuracy', 'Performance'].map((tag) => (
+                    <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full border border-white/8 bg-white/4 text-white/35">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="shrink-0 w-full md:w-auto mt-4 md:mt-0">
+              <FeedbackFormDialog />
+            </div>
+          </div>
+        </motion.div>
 
         {/* CTA */}
         <motion.div

@@ -36,7 +36,7 @@ const roadmap: RoadmapItem[] = [
     icon: Smartphone,
     title: 'Mobile App (iOS & Android)',
     description: 'Native app with offline access to wisdom, push notifications for daily mantras, and seamless voice guidance on the go.',
-    quarter: 'Q2 2025',
+    quarter: 'Q2 2026',
     status: 'in-progress',
     color: 'from-violet-500/20 to-indigo-500/10',
     glow: 'bg-violet-500/20',
@@ -46,7 +46,7 @@ const roadmap: RoadmapItem[] = [
     icon: Brain,
     title: 'Personalized Spiritual Journeys',
     description: 'AI-curated learning paths tailored to your spiritual goals — from beginner meditation to advanced Vedanta philosophy.',
-    quarter: 'Q2 2025',
+    quarter: 'Q2 2026',
     status: 'in-progress',
     color: 'from-cyan-500/20 to-blue-500/10',
     glow: 'bg-cyan-500/15',
@@ -56,7 +56,7 @@ const roadmap: RoadmapItem[] = [
     icon: Users,
     title: 'Community Satsang Circles',
     description: 'Live group meditation sessions and discussion spaces where seekers connect with shared wisdom in real time.',
-    quarter: 'Q3 2025',
+    quarter: 'Q3 2026',
     status: 'coming-soon',
     color: 'from-emerald-500/20 to-teal-500/10',
     glow: 'bg-emerald-500/15',
@@ -66,7 +66,7 @@ const roadmap: RoadmapItem[] = [
     icon: Music4,
     title: 'Sacred Music & Mantra Generator',
     description: 'AI-composed personalized bhajans, mantras, and shloka recitations in your preferred raag, tempo, and tradition.',
-    quarter: 'Q3 2025',
+    quarter: 'Q3 2026',
     status: 'coming-soon',
     color: 'from-amber-500/20 to-orange-500/10',
     glow: 'bg-amber-500/15',
@@ -76,7 +76,7 @@ const roadmap: RoadmapItem[] = [
     icon: BookOpen,
     title: 'Multi-Scripture Cross-Reference',
     description: 'Discover parallels and connections across Bhagavad Gita, Upanishads, Vedas, Bible, Quran, and Buddhist texts side by side.',
-    quarter: 'Q3 2025',
+    quarter: 'Q3 2026',
     status: 'planned',
     color: 'from-rose-500/20 to-pink-500/10',
     glow: 'bg-rose-500/15',
@@ -86,7 +86,7 @@ const roadmap: RoadmapItem[] = [
     icon: Globe2,
     title: 'Sanskrit Learning with AI',
     description: 'Conversational AI tutor teaching Devanagari script, Sanskrit grammar, and pronunciation through interactive dialogue.',
-    quarter: 'Q4 2025',
+    quarter: 'Q4 2026',
     status: 'planned',
     color: 'from-indigo-500/20 to-purple-500/10',
     glow: 'bg-indigo-500/15',
@@ -96,7 +96,7 @@ const roadmap: RoadmapItem[] = [
     icon: Telescope,
     title: 'AR Meditation Spaces',
     description: 'Augmented reality environments — sacred temples, Himalayan peaks, forest ashrams — for immersive guided meditation.',
-    quarter: 'Q4 2025',
+    quarter: 'Q4 2026',
     status: 'planned',
     color: 'from-sky-500/20 to-blue-500/10',
     glow: 'bg-sky-500/15',
@@ -106,7 +106,7 @@ const roadmap: RoadmapItem[] = [
     icon: Watch,
     title: 'Wearable & Smart Device Integration',
     description: 'Mindfulness nudges, breathing guides, and spiritual quotes on Apple Watch, Wear OS, and smart speakers.',
-    quarter: '2026',
+    quarter: '2027',
     status: 'planned',
     color: 'from-violet-500/20 to-fuchsia-500/10',
     glow: 'bg-violet-500/15',
@@ -116,7 +116,7 @@ const roadmap: RoadmapItem[] = [
     icon: Mic2,
     title: 'Live Guided Rituals & Puja AI',
     description: 'Real-time voice-guided havan, puja, and ritual ceremonies with correct mantras, steps, and timing cues.',
-    quarter: '2026',
+    quarter: '2027',
     status: 'planned',
     color: 'from-orange-500/20 to-amber-500/10',
     glow: 'bg-orange-500/15',
@@ -126,7 +126,7 @@ const roadmap: RoadmapItem[] = [
     icon: Map,
     title: 'Visual Philosophy Mind Maps',
     description: 'Interactive knowledge graphs connecting concepts across Advaita, Dvaita, Yoga, Tantra, and Samkhya philosophies.',
-    quarter: '2026',
+    quarter: '2027',
     status: 'planned',
     color: 'from-teal-500/20 to-emerald-500/10',
     glow: 'bg-teal-500/15',
@@ -136,7 +136,7 @@ const roadmap: RoadmapItem[] = [
     icon: Wand2,
     title: 'Dream Journal & Spiritual Analysis',
     description: 'Log dreams and receive AI-powered interpretations through the lens of Jungian psychology and Vedic dream science.',
-    quarter: '2026',
+    quarter: '2027',
     status: 'planned',
     color: 'from-purple-500/20 to-violet-500/10',
     glow: 'bg-purple-500/15',
@@ -146,7 +146,7 @@ const roadmap: RoadmapItem[] = [
     icon: Sparkles,
     title: 'Guru Connect — Teacher Matchmaking',
     description: 'Get matched with verified spiritual teachers, monks, and practitioners for one-on-one virtual satsang sessions.',
-    quarter: '2026',
+    quarter: '2027',
     status: 'planned',
     color: 'from-cyan-500/20 to-indigo-500/10',
     glow: 'bg-cyan-500/15',
@@ -233,7 +233,7 @@ export function FutureWorksSection() {
         </motion.div>
 
         {/* ── Grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex overflow-x-auto gap-6 pb-12 pt-4 px-4 -mx-4 sm:mx-0 sm:px-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0">
           {roadmap.map((item, i) => {
             const scfg = statusConfig[item.status];
             return (
@@ -244,7 +244,7 @@ export function FutureWorksSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-60px' }}
-                className="group relative rounded-2xl border border-white/8 bg-slate-950/60 backdrop-blur-xl overflow-hidden hover:border-white/14 transition-all duration-300 hover:-translate-y-0.5"
+                className="group relative rounded-2xl border border-white/8 bg-slate-950/60 backdrop-blur-xl overflow-hidden hover:border-white/14 transition-all duration-300 hover:-translate-y-0.5 flex flex-col shrink-0 w-[85vw] sm:w-[350px] snap-center stretch"
               >
                 {/* Card top shimmer */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />

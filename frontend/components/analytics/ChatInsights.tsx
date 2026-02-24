@@ -84,9 +84,32 @@ export default function ChatInsights({ userId }: ChatInsightsProps) {
     const fetchSummaries = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await conversationService.getDailySummaries(userId, dateRange.start, dateRange.end);
+            let data = await conversationService.getDailySummaries(userId, dateRange.start, dateRange.end);
+
+            // Check if today's summary is missing and auto-generate it
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            // Only try if today falls within our selected date range
+            const isTodayInRange = todayStr >= dateRange.start && todayStr <= dateRange.end;
+
+            if (isTodayInRange) {
+                const hasToday = data.some(s => s.date === todayStr);
+                if (!hasToday) {
+                    try {
+                        const generateRes = await conversationService.generateDailySummary(userId, todayStr);
+                        if (generateRes.generated) {
+                            // Fetch again to include the newly generated summary
+                            data = await conversationService.getDailySummaries(userId, dateRange.start, dateRange.end);
+                        }
+                    } catch (genError) {
+                        console.error('Failed to auto-generate daily summary:', genError);
+                    }
+                }
+            }
+
             setSummaries(data);
-        } catch {
+        } catch (error) {
+            console.error('Failed to fetch summaries:', error);
             setSummaries([]);
         } finally {
             setLoading(false);
@@ -161,8 +184,8 @@ export default function ChatInsights({ userId }: ChatInsightsProps) {
                             key={p}
                             onClick={() => { setPeriod(p); setOffset(0); }}
                             className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 capitalize ${period === p
-                                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/30'
-                                    : 'text-white/40 hover:text-white/70'
+                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/30'
+                                : 'text-white/40 hover:text-white/70'
                                 }`}
                         >
                             {p}

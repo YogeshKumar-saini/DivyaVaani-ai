@@ -67,7 +67,7 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex overflow-x-auto gap-6 pb-12 pt-4 px-4 -mx-4 sm:mx-0 sm:px-0 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-px after:shrink-0">
           {SAMPLE_QUESTIONS.map((item, idx) => (
             <motion.button
               key={idx}
@@ -78,7 +78,7 @@ export function SampleQuestions({ onQuestionClick }: SampleQuestionsProps) {
               whileHover={{ scale: 1.02, y: -5 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleQuestionClick(item.question)}
-              className="group relative text-left bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:border-orange-500/30 transition-all duration-300 h-full flex flex-col"
+              className="group relative text-left bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:border-orange-500/30 transition-all duration-300 h-full flex flex-col shrink-0 w-[85vw] sm:w-[320px] snap-center stretch"
             >
               <div className="flex items-start space-x-4 mb-4">
                 <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${categoryColors[item.category as keyof typeof categoryColors]} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 shrink-0`}>

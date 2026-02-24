@@ -88,7 +88,7 @@ export function ChatMessage({ message, onFeedback, isLastBot = false, isStreamin
 
               {/* Bubble */}
               <div className={cn(
-                "relative bg-white/5 backdrop-blur-2xl border rounded-2xl rounded-tl-sm px-6 py-4",
+                "relative bg-white/5 backdrop-blur-2xl border rounded-2xl rounded-tl-sm px-4 py-3 sm:px-6 sm:py-4",
                 "shadow-sm hover:shadow-md transition-all duration-300",
                 isLastBot
                   ? "border-violet-500/30 shadow-[0_4px_24px_rgba(0,0,0,0.2),0_0_0_1px_rgba(139,92,246,0.1)] bg-violet-900/10"
@@ -103,8 +103,8 @@ export function ChatMessage({ message, onFeedback, isLastBot = false, isStreamin
                 ) : (
                   <>
                     {isStreaming ? (
-                      <StreamingText 
-                        content={message.content} 
+                      <StreamingText
+                        content={message.content}
                         isStreaming={isStreaming}
                         className="text-white/90"
                       />
@@ -223,7 +223,7 @@ export function ChatMessage({ message, onFeedback, isLastBot = false, isStreamin
       <div className="max-w-[85%] md:max-w-[70%] flex flex-col items-end">
         <div className="text-[11px] font-medium text-white/40 tracking-wide mb-1 pr-1">You</div>
         <div className="relative">
-          <div className="bg-linear-to-br from-violet-600 to-indigo-700 rounded-2xl rounded-tr-sm px-6 py-3.5 shadow-lg shadow-violet-900/20 border border-white/10">
+          <div className="bg-linear-to-br from-violet-600 to-indigo-700 rounded-2xl rounded-tr-sm px-4 py-2.5 sm:px-6 sm:py-3.5 shadow-lg shadow-violet-900/20 border border-white/10">
             <div className="absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
             <p className="text-white text-[15px] font-normal leading-7 tracking-wide">{message.content}</p>
           </div>

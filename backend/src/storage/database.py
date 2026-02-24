@@ -70,6 +70,7 @@ def init_db():
     try:
         # Import all models here to ensure they're registered
         from src.storage import models  # noqa
+        from src.storage import memory_models  # noqa
         
         # Create all tables
         Base.metadata.create_all(bind=engine)

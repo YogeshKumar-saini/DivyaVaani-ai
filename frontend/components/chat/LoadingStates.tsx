@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Flame, Wind, Star, BookOpen } from 'lucide-react';
+import Image from "next/image";
 
 interface LoadingStateProps {
   isTyping?: boolean;
@@ -127,7 +128,7 @@ export function WelcomeScreen({ onExampleClick, className = '', userName, avatar
             <div className="absolute inset-0 rounded-full bg-indigo-600/15 blur-2xl scale-125 animate-pulse" />
             {userName && avatarUrl ? (
               <div className="relative w-20 h-20 mx-auto rounded-2xl shadow-2xl shadow-violet-900/40 ring-1 ring-white/10 overflow-hidden">
-                <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                <Image src={avatarUrl} alt={userName} width={80} height={80} className="w-full h-full object-cover" />
               </div>
             ) : userName ? (
               <div className="relative w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-2xl shadow-violet-900/40 flex items-center justify-center ring-1 ring-white/10">

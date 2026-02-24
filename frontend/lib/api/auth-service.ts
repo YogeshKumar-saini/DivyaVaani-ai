@@ -133,6 +133,28 @@ export const authService = {
     return response.json();
   },
 
+  async uploadProfileImage(token: string, file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/auth/users/profile-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData,
+    });
+    if (!response.ok) {
+      let errorMessage = 'Failed to upload profile image';
+      try {
+        const error = await response.json();
+        errorMessage = error.detail || errorMessage;
+      } catch { }
+      throw new APIError(errorMessage, response.status);
+    }
+    return response.json();
+  },
+
   async updatePassword(token: string, data: { old_password: string; new_password: string }): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/auth/users/password`, {
       method: 'PUT',
