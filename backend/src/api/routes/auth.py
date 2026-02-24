@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 # from google.oauth2 import id_token # No longer needed for access token flow
 import requests
 import secrets
@@ -40,6 +41,11 @@ class GoogleLoginRequest(BaseModel):
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
+
+def normalize_email(email: str) -> str:
+    """Normalize email for consistent auth lookups."""
+    return (email or "").strip().lower()
+
 @router.post("/google", response_model=Token)
 async def google_login(
     login_data: GoogleLoginRequest,
@@ -64,13 +70,13 @@ async def google_login(
             
         id_info = response.json()
 
-        email = id_info['email']
+        email = normalize_email(id_info['email'])
         name = id_info.get('name', '')
         google_id = id_info['sub']
         avatar_url = id_info.get('picture', '')
 
         # Check if user exists
-        user = db.query(models.User).filter(models.User.email == email).first()
+        user = db.query(models.User).filter(func.lower(models.User.email) == email).first()
 
         if not user:
             # Create new user
@@ -132,7 +138,8 @@ async def register(
 ) -> Any:
     """Create new user and send a welcome email."""
     try:
-        user = db.query(models.User).filter(models.User.email == user_in.email).first()
+        normalized_email = normalize_email(user_in.email)
+        user = db.query(models.User).filter(func.lower(models.User.email) == normalized_email).first()
         if user:
             raise HTTPException(
                 status_code=400,
@@ -141,7 +148,7 @@ async def register(
         
         now = datetime.utcnow()
         db_user = models.User(
-            email=user_in.email,
+            email=normalized_email,
             password_hash=get_password_hash(user_in.password),
             full_name=user_in.full_name,
             created_at=now,
@@ -173,7 +180,8 @@ async def login_access_token(
 ) -> Any:
     """Login endpoint to get access token."""
     # Try to authenticate with email 
-    user = db.query(models.User).filter(models.User.email == login_data.email).first()
+    normalized_email = normalize_email(login_data.email)
+    user = db.query(models.User).filter(func.lower(models.User.email) == normalized_email).first()
     
     if not user or not verify_password(login_data.password, user.password_hash):
         raise HTTPException(
@@ -209,7 +217,8 @@ async def forgot_password(
     db: Session = Depends(get_db)
 ):
     """Request a password reset email."""
-    user = db.query(models.User).filter(models.User.email == request.email).first()
+    normalized_email = normalize_email(request.email)
+    user = db.query(models.User).filter(func.lower(models.User.email) == normalized_email).first()
     if not user:
         # Return 202 even if user doesn't exist to prevent enumeration
         return {"message": "If the email exists, a reset link has been sent."}
@@ -222,7 +231,7 @@ async def forgot_password(
     
     # Send email (background task would be better but simple await for now)
     from src.utils.email import send_password_reset_email
-    await send_password_reset_email(request.email, token)
+    await send_password_reset_email(normalized_email, token)
     
     return {"message": "If the email exists, a reset link has been sent."}
 

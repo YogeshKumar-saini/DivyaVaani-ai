@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from src.settings import settings
 from src.storage.database import get_db
@@ -54,11 +55,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-        token_data = TokenData(email=email)
+        token_data = TokenData(email=email.strip().lower())
     except JWTError:
         raise credentials_exception
         
-    user = db.query(User).filter(User.email == token_data.email).first()
+    user = db.query(User).filter(func.lower(User.email) == token_data.email).first()
     if user is None:
         raise credentials_exception
     return user
