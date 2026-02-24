@@ -61,6 +61,19 @@ class TextToSpeechProcessor:
                     logger.error(f"Failed to initialize Cartesia TTS client: {e}")
                     self.client = None
 
+            elif self.provider == "gtts":
+                # Google Translate TTS (free, lightweight, Python 3.12 compatible)
+                try:
+                    import gtts
+                    self.client = "gtts"
+                    logger.info("gTTS client initialized successfully")
+                except ImportError:
+                    logger.error("gTTS package not installed. Install with: pip install gTTS")
+                    self.client = None
+                except Exception as e:
+                    logger.error(f"Failed to initialize gTTS client: {e}")
+                    self.client = None
+
             elif self.provider == "azure":
                 # Azure Speech Services (placeholder)
                 logger.warning("Azure TTS not implemented, using mock")
@@ -119,6 +132,9 @@ class TextToSpeechProcessor:
             if self.provider == "openai":
                 # OpenAI TTS implementation (Async wrapper or todo)
                 return self._synthesize_openai_speech(text, language, voice, speed)
+            elif self.provider == "gtts":
+                # gTTS implementation
+                return await self._synthesize_gtts_speech(text, language, voice, speed)
             elif self.client == "cartesia":
                 # Cartesia TTS implementation
                 return await self._synthesize_cartesia_speech(text, language, voice, speed)
@@ -414,6 +430,77 @@ class TextToSpeechProcessor:
         # Get voice config for language
         lang_voices = voice_map.get(language, voice_map["en"])
         return lang_voices.get(voice, lang_voices["default"])
+
+    async def _synthesize_gtts_speech(
+        self,
+        text: str,
+        language: str = "en",
+        voice: str = "default",
+        speed: float = 1.0
+    ) -> Dict[str, Any]:
+        """Synthesize speech using Google Translate TTS (gTTS)."""
+        try:
+            import tempfile
+            import os
+            from gtts import gTTS
+            import asyncio
+
+            # gTTS language validation — fallback unsupported languages
+            # gTTS only supports languages available in Google Translate
+            GTTS_LANG_FALLBACK = {
+                'sa': 'hi',   # Sanskrit → Hindi (closest Devanagari language)
+                'or': 'hi',   # Odia may not be supported in some gTTS versions
+            }
+            # Map for gTTS-compatible language codes
+            GTTS_LANG_MAP = {
+                'en': 'en', 'hi': 'hi', 'bn': 'bn', 'te': 'te',
+                'ta': 'ta', 'mr': 'mr', 'gu': 'gu', 'kn': 'kn',
+                'ml': 'ml', 'pa': 'pa',
+            }
+            gtts_lang = GTTS_LANG_FALLBACK.get(language, GTTS_LANG_MAP.get(language, 'en'))
+
+            # Generate audio to a temporary MP3 file
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
+                temp_path = temp_file.name
+
+            try:
+                def generate():
+                    try:
+                        tts = gTTS(text=text, lang=gtts_lang, slow=(speed < 1.0))
+                        tts.save(temp_path)
+                    except ValueError as ve:
+                        # Language not supported by gTTS, fallback to English
+                        logger.warning(f"gTTS does not support language '{gtts_lang}', falling back to English: {ve}")
+                        tts = gTTS(text=text, lang='en', slow=(speed < 1.0))
+                        tts.save(temp_path)
+
+                # Run TTS synthesis in a thread pool to avoid blocking the event loop
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(None, generate)
+
+                # Read the generated audio file
+                with open(temp_path, 'rb') as f:
+                    audio_data = f.read()
+
+                return {
+                    "audio_data": audio_data,
+                    "format": "mp3",
+                    "sample_rate": 24000,
+                    "language": language,
+                    "voice": "female",
+                    "speed": speed,
+                    "duration": len(text.split()) * 0.4,
+                    "provider": "gtts",
+                    "audio_length": len(audio_data)
+                }
+
+            finally:
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+
+        except Exception as e:
+            logger.error(f"gTTS error: {e}")
+            raise
 
     def _map_cartesia_language(self, language: str) -> str:
         """Map language codes to Cartesia language format."""

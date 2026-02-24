@@ -51,11 +51,12 @@ export function useAudioAnalyzer(stream: MediaStream | null, isRecording: boolea
             }
             setVolume(0);
 
-            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-                audioContextRef.current.close().then(() => {
-                    audioContextRef.current = null;
-                });
+            // Disconnect the source but keep the AudioContext alive for reuse
+            if (sourceRef.current) {
+                try { sourceRef.current.disconnect(); } catch { /* already disconnected */ }
+                sourceRef.current = null;
             }
+            analyserRef.current = null;
         }
 
         return () => {

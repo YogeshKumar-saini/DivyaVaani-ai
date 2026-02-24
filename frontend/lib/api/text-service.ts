@@ -112,6 +112,8 @@ export class TextService {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let currentEvent: string | null = null;
+    let currentData: string | null = null;
 
     try {
       while (true) {
@@ -123,9 +125,6 @@ export class TextService {
 
         // Keep the last incomplete line in the buffer
         buffer = lines.pop() || '';
-
-        let currentEvent: string | null = null;
-        let currentData: string | null = null;
 
         for (const line of lines) {
           if (line.startsWith('event: ')) {

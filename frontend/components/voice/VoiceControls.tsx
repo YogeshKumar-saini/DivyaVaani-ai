@@ -2,7 +2,7 @@
 'use client';
 
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, X, Headphones } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,10 +22,15 @@ interface VoiceControlsProps {
     isPlaying: boolean;
     isMuted: boolean;
     volume: number;
+    availableVoices?: string[];
+    selectedVoice?: string;
+    autoListen?: boolean;
     onTogglePlayback: () => void;
     onReset: () => void;
     onMuteToggle: () => void;
     onVolumeChange: (val: number) => void;
+    onVoiceChange?: (voice: string) => void;
+    onAutoListenToggle?: () => void;
     onClose?: () => void;
 }
 
@@ -34,10 +39,15 @@ export function VoiceControls({
     isPlaying,
     isMuted,
     volume,
+    availableVoices = [],
+    selectedVoice = 'default',
+    autoListen,
     onTogglePlayback,
     onReset,
     onMuteToggle,
     onVolumeChange,
+    onVoiceChange,
+    onAutoListenToggle,
     onClose
 }: VoiceControlsProps) {
 
@@ -61,14 +71,14 @@ export function VoiceControls({
                 {/* Subtle violet top accent */}
                 <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-violet-500/40 to-transparent" />
 
-                <div className="flex items-center gap-4 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-4">
 
                     {/* Reset button */}
                     <button
                         onClick={onReset}
                         disabled={!hasMessage}
                         className={cn(
-                            'h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200',
+                            'h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl transition-all duration-200',
                             hasMessage
                                 ? 'text-white/50 hover:text-white/90 hover:bg-white/8'
                                 : 'text-white/20 cursor-not-allowed'
@@ -83,7 +93,7 @@ export function VoiceControls({
                         onClick={onTogglePlayback}
                         disabled={!hasMessage}
                         className={cn(
-                            'h-11 w-11 flex items-center justify-center rounded-xl transition-all duration-300 shadow-lg',
+                            'h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl transition-all duration-300 shadow-lg',
                             hasMessage
                                 ? isPlaying
                                     ? 'bg-white text-slate-950 hover:bg-white/90 shadow-white/10'
@@ -109,7 +119,7 @@ export function VoiceControls({
                     </button>
 
                     {/* Status / time */}
-                    <div className="flex flex-col min-w-14">
+                    <div className="flex flex-col min-w-12 sm:min-w-14">
                         <AnimatePresence mode="wait">
                             <motion.span
                                 key={isPlaying ? 'playing' : 'ready'}
@@ -133,11 +143,8 @@ export function VoiceControls({
                         </span>
                     </div>
 
-                    {/* Divider */}
-                    <div className="h-8 w-px bg-white/8 mx-1 hidden sm:block" />
-
                     {/* Volume */}
-                    <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-[150px]">
                         <button
                             onClick={onMuteToggle}
                             className="text-white/35 hover:text-white/80 transition-colors duration-200 shrink-0"
@@ -163,10 +170,43 @@ export function VoiceControls({
                         </span>
                     </div>
 
+                    {/* Voice selector */}
+                    {onVoiceChange && (
+                        <select
+                            id="voice-select"
+                            value={selectedVoice}
+                            onChange={(e) => onVoiceChange(e.target.value)}
+                            className="h-9 min-w-[120px] sm:min-w-[170px] rounded-xl border border-white/10 bg-slate-900/70 px-2 text-xs text-white/85 outline-none focus:ring-2 focus:ring-violet-500/40 shrink-0"
+                            title="Select TTS voice"
+                        >
+                            {availableVoices.map((voice) => (
+                                <option key={voice} value={voice}>
+                                    {voice}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+
+                    {/* Auto-Listen Toggle */}
+                    {onAutoListenToggle && (
+                        <button
+                            onClick={onAutoListenToggle}
+                            className={cn(
+                                'h-9 px-2.5 sm:px-3 flex items-center justify-center gap-1.5 rounded-xl transition-all duration-200 shrink-0',
+                                autoListen
+                                    ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30'
+                                    : 'text-white/50 bg-white/5 hover:text-white/70 hover:bg-white/10'
+                            )}
+                            title={autoListen ? 'Auto-listen ON (tap to turn off)' : 'Auto-listen OFF (tap to turn on)'}
+                        >
+                            <Headphones className="h-4 w-4" />
+                            <span className="text-[11px] font-medium">Auto</span>
+                        </button>
+                    )}
+
                     {/* Close */}
                     {onClose && (
                         <>
-                            <div className="h-8 w-px bg-white/8 ml-1 shrink-0" />
                             <button
                                 onClick={onClose}
                                 className="h-9 w-9 flex items-center justify-center rounded-xl text-white/30 hover:text-red-400/80 hover:bg-red-500/10 transition-all duration-200 shrink-0"

@@ -11,8 +11,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export const LANGUAGES = [
+    { code: 'auto', name: 'Auto Detect', native: 'Auto' },
     { code: 'en', name: 'English', native: 'English' },
     { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+    { code: 'sa', name: 'Sanskrit', native: 'संस्कृत' },
     { code: 'bn', name: 'Bengali', native: 'বাংলা' },
     { code: 'te', name: 'Telugu', native: 'తెలుగు' },
     { code: 'ta', name: 'Tamil', native: 'தமிழ்' },

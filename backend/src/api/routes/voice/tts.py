@@ -46,6 +46,15 @@ async def text_to_speech(
         import os
 
         audio_format = result.get('format', 'mp3')
+        media_type_map = {
+            "mp3": "audio/mpeg",
+            "wav": "audio/wav",
+            "ogg": "audio/ogg",
+            "webm": "audio/webm",
+            "m4a": "audio/mp4",
+            "mp4": "audio/mp4",
+        }
+        media_type = media_type_map.get(audio_format.lower(), "application/octet-stream")
         with tempfile.NamedTemporaryFile(mode='wb', suffix=f'.{audio_format}', delete=False) as temp_file:
             temp_file.write(result["audio_data"])
             temp_path = temp_file.name
@@ -54,7 +63,7 @@ async def text_to_speech(
         from starlette.background import BackgroundTask
         return FileResponse(
             path=temp_path,
-            media_type=f"audio/{audio_format}",
+            media_type=media_type,
             filename=f"tts_output.{audio_format}",
             headers={
                 "X-Processing-Time": str(time.time() - start_time),

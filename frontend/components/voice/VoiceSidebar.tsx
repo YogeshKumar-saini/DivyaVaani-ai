@@ -45,7 +45,7 @@ export function VoiceSidebar({ onClose, isPanel = false }: VoiceSidebarProps) {
             <p className="text-xs text-white/50">Configure your audio experience</p>
           </div>
         </div>
-        {!isPanel && (
+        {onClose && (
           <Button
             variant="ghost"
             size="icon"

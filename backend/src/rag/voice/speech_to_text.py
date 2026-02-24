@@ -68,6 +68,23 @@ class SpeechToTextProcessor:
                  # Deepgram - For development, force mock implementation
                 logger.info("Deepgram STT configured for development (using mock)")
                 self.client = None  # Force mock implementation
+            elif self.provider == "groq_whisper":
+                # Groq Whisper STT (free, fast)
+                try:
+                    from groq import Groq
+                    self.api_key = os.getenv('GROQ_API_KEY') or self.api_key
+                    if self.api_key:
+                        self.client = Groq(api_key=self.api_key)
+                        logger.info("Groq Whisper STT client initialized successfully")
+                    else:
+                        logger.error("GROQ_API_KEY not found for Whisper STT")
+                        self.client = None
+                except ImportError:
+                    logger.error("groq package not installed, falling back to mock")
+                    self.client = None
+                except Exception as e:
+                    logger.error(f"Failed to initialize Groq Whisper client: {e}")
+                    self.client = None
             else:
                 logger.warning(f"Unknown provider {self.provider}, using mock implementation")
                 self.client = None
@@ -101,6 +118,8 @@ class SpeechToTextProcessor:
                 return await self._transcribe_whisper(audio_data, language)
             elif self.provider == "deepgram":
                 return await self._transcribe_deepgram(audio_data, language, mimetype)
+            elif self.provider == "groq_whisper":
+                return await self._transcribe_groq_whisper(audio_data, language)
             else:
                 # Google Speech-to-Text implementation
                 return await self._transcribe_google(audio_data, language)
@@ -326,6 +345,52 @@ class SpeechToTextProcessor:
         }
         return language_map.get(language, "en")
 
+    async def _transcribe_groq_whisper(self, audio_data: bytes, language: str = "auto") -> Dict[str, Any]:
+        """Transcribe audio using Groq Whisper API (whisper-large-v3)."""
+        try:
+            import tempfile
+            import os
+
+            # Save audio data to temporary file (Groq SDK requires file object)
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                temp_file.write(audio_data)
+                temp_path = temp_file.name
+
+            try:
+                with open(temp_path, 'rb') as audio_file:
+                    # Build kwargs for Groq Whisper
+                    kwargs = {
+                        "model": "whisper-large-v3",
+                        "file": audio_file,
+                        "response_format": "verbose_json",
+                    }
+                    if language != "auto":
+                        kwargs["language"] = self._map_whisper_language(language)
+
+                    # Call Groq Whisper API
+                    transcription = self.client.audio.transcriptions.create(**kwargs)
+
+                # Extract results
+                text = transcription.text.strip() if hasattr(transcription, 'text') else str(transcription).strip()
+                detected_lang = getattr(transcription, 'language', language if language != "auto" else "en")
+                duration = getattr(transcription, 'duration', len(audio_data) / (16000 * 2))
+
+                return {
+                    "text": text,
+                    "confidence": 0.95,  # Whisper doesn't provide confidence per se
+                    "language": detected_lang,
+                    "duration": duration,
+                    "provider": "groq_whisper",
+                    "is_final": True
+                }
+
+            finally:
+                os.unlink(temp_path)
+
+        except Exception as e:
+            logger.error(f"Groq Whisper transcription error: {e}")
+            raise
+
     def transcribe_file(self, audio_path: Path, language: str = "auto") -> Dict[str, Any]:
         """Transcribe audio from file.
 
@@ -363,4 +428,3 @@ class SpeechToTextProcessor:
         return [
             "flac", "wav", "mp3", "m4a", "ogg", "webm", "amr", "awb"
         ]
-        """Get list of supported audio formats."""

@@ -2,7 +2,7 @@
  * Voice Service - Handles voice-based interactions with the backend
  */
 
-import { apiClient } from './client';
+import { APIError, apiClient } from './client';
 
 export interface VoiceQueryOptions {
   userId?: string;
@@ -28,6 +28,32 @@ export interface VoiceQueryResponse {
   };
   response_text: string;
   processing_time: number;
+}
+
+function asciiPrefix(bytes: Uint8Array, length: number): string {
+  return String.fromCharCode(...bytes.slice(0, length));
+}
+
+function hasKnownAudioSignature(bytes: Uint8Array): boolean {
+  if (bytes.length < 4) return false;
+
+  const head3 = asciiPrefix(bytes, 3);
+  const head4 = asciiPrefix(bytes, 4);
+  const head8 = asciiPrefix(bytes, 8);
+
+  // MP3: ID3 tag or MPEG frame sync
+  const isMp3 =
+    head3 === 'ID3' ||
+    (bytes.length >= 2 && bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0);
+
+  // WAV/AIFF/OGG/FLAC/WEBM containers
+  const isWav = head4 === 'RIFF' && asciiPrefix(bytes.slice(8), 4) === 'WAVE';
+  const isAiff = head4 === 'FORM' && asciiPrefix(bytes.slice(8), 4) === 'AIFF';
+  const isOgg = head4 === 'OggS';
+  const isFlac = head4 === 'fLaC';
+  const isWebm = head4 === '\x1aE\xdf\xa3' || head8 === '\x1aE\xdf\xa3\x9fB\x86\x81';
+
+  return isMp3 || isWav || isAiff || isOgg || isFlac || isWebm;
 }
 
 export class VoiceService {
@@ -92,7 +118,8 @@ export class VoiceService {
     language: string = 'auto',
     userId?: string
   ): Promise<STTResponse> {
-    const response = await apiClient.uploadFile('/voice/stt', audioBlob, {
+    const audioFile = new File([audioBlob], 'recording.webm', { type: audioBlob.type || 'audio/webm' });
+    const response = await apiClient.uploadFile('/voice/stt', audioFile, {
       language,
       user_id: userId || '',
     });
@@ -122,7 +149,32 @@ export class VoiceService {
     }
 
     const response = await apiClient.uploadFile('/voice/tts', new Blob([]), additionalData);
-    return response.blob();
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    const audioBlob = await response.blob();
+
+    // Some backends return JSON/text errors with HTTP 200. Guard playback against non-audio payloads.
+    if ((contentType && !contentType.startsWith('audio/')) || audioBlob.size === 0) {
+      let details: unknown = `content-type=${contentType || 'unknown'} size=${audioBlob.size}`;
+      try {
+        details = await audioBlob.text();
+      } catch {
+        // no-op, keep fallback details
+      }
+      throw new APIError('TTS service returned an invalid audio payload', response.status, undefined, details);
+    }
+
+    const probe = new Uint8Array(await audioBlob.slice(0, 64).arrayBuffer());
+    if (!hasKnownAudioSignature(probe)) {
+      let details: unknown = `Unrecognized audio signature, content-type=${contentType || 'unknown'}, size=${audioBlob.size}`;
+      try {
+        details = await audioBlob.slice(0, 256).text();
+      } catch {
+        // no-op, keep fallback details
+      }
+      throw new APIError('TTS service returned undecodable audio data', response.status, undefined, details);
+    }
+
+    return audioBlob;
   }
 
   /**

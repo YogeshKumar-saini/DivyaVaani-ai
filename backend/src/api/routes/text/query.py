@@ -49,7 +49,7 @@ class QuestionRequest(BaseModel):
         if v is None:
             return v
 
-        allowed_languages = ['en', 'hi', 'bn', 'te', 'ta', 'mr', 'gu', 'kn', 'ml', 'pa', 'or']
+        allowed_languages = ['en', 'hi', 'bn', 'te', 'ta', 'mr', 'gu', 'kn', 'ml', 'pa', 'or', 'sa']
         if v.lower() not in allowed_languages:
             raise ValueError(f"Unsupported language. Supported: {', '.join(allowed_languages)}")
 

@@ -94,7 +94,18 @@ fastapi-mail
 redis==5.0.1
 python-memcached==1.59
 
+# Voice AI (Groq Whisper STT + Google TTS)
+groq>=0.4.0
+gTTS>=2.5.1
+
 # Utilities
 tqdm==4.66.1
 loguru==0.7.2
 boto3==1.34.60
+# Audio recording & playback
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy<2.0.0
+
+# Environment variable loading
+python-dotenv>=1.0.0

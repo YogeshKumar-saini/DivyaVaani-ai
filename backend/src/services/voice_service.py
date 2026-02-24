@@ -15,8 +15,8 @@ class VoiceService:
 
     def __init__(
         self,
-        stt_provider: str = "deepgram",
-        tts_provider: str = "cartesia",  # Use Cartesia since we have API key
+        stt_provider: str = "groq_whisper",
+        tts_provider: str = "gtts",  # gTTS: free, lightweight, Python 3.12 compatible
         stt_api_key: Optional[str] = None,
         tts_api_key: Optional[str] = None
     ):

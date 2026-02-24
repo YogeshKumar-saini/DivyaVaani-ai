@@ -24,8 +24,8 @@ async def speech_to_text(
 
     try:
         # Validate audio file
-        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac', '.ogg')):
-            raise APIError("INVALID_AUDIO_FORMAT", "Supported formats: WAV, MP3, M4A, FLAC, OGG", 400)
+        if not audio_file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.flac', '.ogg', '.webm')):
+            raise APIError("INVALID_AUDIO_FORMAT", "Supported formats: WAV, MP3, M4A, FLAC, OGG, WEBM", 400)
 
         # Read audio data
         audio_data = await audio_file.read()

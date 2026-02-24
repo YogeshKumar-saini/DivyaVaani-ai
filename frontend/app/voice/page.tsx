@@ -3,23 +3,22 @@
 import { useState } from 'react';
 import { VoiceChat } from '@/components/voice/VoiceChat';
 import { VoiceSidebar } from '@/components/voice/VoiceSidebar';
-import { Settings, Mic, Volume2, Info, X } from 'lucide-react';
+import { LanguageSelector } from '@/components/chat/LanguageSelector';
+import { Settings, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const voiceFeatures = [
-  { icon: Mic, label: 'Multi-language', desc: 'Speak in Hindi, English, Sanskrit & more' },
-  { icon: Volume2, label: 'AI Voice Response', desc: 'Hear answers in natural, clear speech' },
-  { icon: Info, label: 'Scripture-based', desc: 'Responses grounded in ancient wisdom' },
-];
+
 
 export default function VoicePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState('auto');
+  const [autoListen, setAutoListen] = useState(false);
 
   return (
-    <div className="h-full w-full relative overflow-hidden flex flex-col bg-transparent pt-16">
+    <div className="h-full min-h-0 w-full relative overflow-hidden flex flex-col pt-16 sm:pt-20">
 
       {/* Ambient background orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -27,28 +26,33 @@ export default function VoicePage() {
         <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-amber-300/10 blur-[90px]" />
       </div>
 
-      {/* Top bar - voice mode header */}
-      <header className="relative z-40 flex items-center justify-between px-6 pt-3 pb-2 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-300 to-amber-200 flex items-center justify-center ring-1 ring-white/20 shadow-lg shadow-cyan-900/30">
-            <span className="text-slate-950 text-sm font-bold">ॐ</span>
-          </div>
-          <div>
-            <h1 className="text-white font-semibold text-sm tracking-wide">Voice Mode</h1>
-            <p className="text-white/30 text-[11px]">Speak · Listen · Discover</p>
-          </div>
+      {/* Voice Interface Controls - Now relative to take up space and avoid overlap */}
+      <div className="relative z-40 w-full max-w-4xl mx-auto px-3 sm:px-6 mb-3 sm:mb-4 flex items-center justify-between pointer-events-none">
+        <div className="flex flex-col gap-0.5 pointer-events-auto">
+          <h1 className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-white/90">Voice Mode</h1>
+          <p className="text-[9px] sm:text-[10px] text-white/30 font-medium">DivyaVaani Live</p>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(true)}
-          className="text-white/40 hover:text-white hover:bg-white/10 rounded-xl h-9 w-9"
-          aria-label="Open voice settings"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
-      </header>
+        <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+          <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/5 rounded-2xl p-0.5 shadow-2xl">
+            <LanguageSelector
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
+              className="bg-transparent border-none text-white/50 hover:text-white h-8 text-[11px] font-bold uppercase tracking-wider px-3"
+            />
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            className="bg-slate-900/40 backdrop-blur-2xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 rounded-2xl h-9 w-9 shadow-2xl"
+            aria-label="Open voice settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Tip banner */}
       <AnimatePresence>
@@ -58,11 +62,11 @@ export default function VoicePage() {
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="relative z-30 mx-6 mt-2 shrink-0"
+            className="relative z-30 mx-auto mt-2 sm:mt-4 max-w-2xl px-3 sm:px-6 shrink-0"
           >
-            <div className="flex items-center gap-3 rounded-xl bg-cyan-300/10 border border-cyan-300/25 px-4 py-2.5 text-[12px] text-cyan-100/80">
+            <div className="flex items-center gap-2 sm:gap-3 rounded-xl bg-violet-500/10 border border-violet-500/20 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-[11px] text-violet-200/70 backdrop-blur-md">
               <Info size={13} className="shrink-0 text-cyan-200" />
-              <span className="flex-1">Tap the orb to begin speaking. Ask about dharma, karma, moksha or any spiritual topic.</span>
+              <span className="flex-1">Tap the orb or press <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/50 font-mono text-[10px]">Space</kbd> to begin speaking.</span>
               <button
                 onClick={() => setShowTip(false)}
                 className="ml-auto text-white/30 hover:text-white/60 shrink-0 transition-colors"
@@ -76,23 +80,13 @@ export default function VoicePage() {
       </AnimatePresence>
 
       {/* Main Voice Area */}
-      <main className="flex-1 relative z-10 flex flex-col overflow-hidden min-h-0">
-        <VoiceChat />
+      <main className="flex-1 min-h-0 relative z-10 flex flex-col overflow-hidden">
+        <VoiceChat
+          selectedLanguage={selectedLanguage}
+          autoListen={autoListen}
+          onAutoListenChange={setAutoListen}
+        />
       </main>
-
-      {/* Feature pills - bottom decoration */}
-      <div className="relative z-20 flex justify-center gap-2 sm:gap-3 px-6 pb-4 shrink-0 flex-wrap">
-        {voiceFeatures.map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-[11px] text-white/50"
-          >
-            <Icon size={11} className="text-cyan-200/60" />
-            <span>{label}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Settings Panel - using VoiceSidebar component */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent

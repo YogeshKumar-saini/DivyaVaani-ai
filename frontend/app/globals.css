@@ -261,6 +261,34 @@
     background: rgba(139,92,246,0.52);
   }
 
+  /* Voice chat scrollbar — nearly invisible, appears on hover */
+  .scrollbar-voice {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139,92,246,0.15) transparent;
+  }
+
+  .scrollbar-voice::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .scrollbar-voice::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-voice::-webkit-scrollbar-thumb {
+    background: rgba(139,92,246,0.12);
+    border-radius: 999px;
+    transition: background 0.3s;
+  }
+
+  .scrollbar-voice:hover::-webkit-scrollbar-thumb {
+    background: rgba(139,92,246,0.35);
+  }
+
+  .scrollbar-voice::-webkit-scrollbar-thumb:hover {
+    background: rgba(139,92,246,0.5);
+  }
+
   .stat-card {
     @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:border-cyan-300/30 hover:bg-white/7 hover:shadow-cyan-500/20 relative overflow-hidden p-6;
   }
